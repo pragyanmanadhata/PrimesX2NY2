@@ -14,16 +14,49 @@ quadratic reciprocity). It develops the classical theory of binary quadratic for
 their class group, and genus theory, culminating in congruence criteria for
 representation by the principal form.
 
-\section{Fermat, Euler, and descent}
+\section{Fermat, Euler, and quadratic reciprocity}
 
-\begin{theorem}[Descent step]
+This section follows Cox \S1. The three Fermat theorems are obtained from Euler's
+two-step strategy (Descent Step plus Reciprocity Step); the Reciprocity Step is
+solved in general by quadratic reciprocity, packaged through the character
+$\chi$ of Lemma 1.14 and Corollary 1.19.
+
+\begin{theorem}[Two-square identity; Cox (1.3)]
+  \label{eq:mul_sq_add_sq}
+  \lean{PrimesXNY2.Fermat.mul_sq_add_sq}
+  \leanok
+  $(x^2+y^2)(z^2+w^2) = (xz - yw)^2 + (xw + yz)^2$.
+\end{theorem}
+
+\begin{theorem}[Identity for $x^2+ny^2$; Cox (1.6)]
+  \label{eq:mul_sq_add_nsq}
+  \lean{PrimesXNY2.Fermat.mul_sq_add_nsq}
+  \leanok
+  $(x^2+ny^2)(z^2+nw^2) = (xz - nyw)^2 + n(xw + yz)^2$.
+\end{theorem}
+
+\begin{theorem}[Cox Lemma 1.4]
+  \label{lem:descent_lemma}
+  \lean{PrimesXNY2.Fermat.descent_lemma}
+  \leanok
+  If $N$ is a sum of two relatively prime squares and a prime $q = x^2+y^2$
+  divides $N$, then $N/q$ is again a sum of two relatively prime squares.
+\end{theorem}
+\begin{proof}
+  \uses{eq:mul_sq_add_sq}
+\end{proof}
+
+\begin{theorem}[Descent Step, $n=1$; Cox \S1]
   \label{thm:descent}
   \lean{PrimesXNY2.Fermat.descent_step}
   \leanok
-  If a prime $p$ divides a primitively represented value $x^2 + n y^2$
-  (with $\gcd(x,y)=1$), then $p$ is itself represented by the principal form
-  $x^2 + n y^2$. This is the inductive heart of Fermat's method of descent.
+  If an odd prime $p$ divides $x^2+y^2$ with $\gcd(x,y)=1$, then $p$ is itself a
+  sum of two squares.
 \end{theorem}
+\begin{proof}
+  \uses{lem:descent_lemma}
+  Repeated application of Lemma 1.4 (\ref{lem:descent_lemma}) descends to $p$.
+\end{proof}
 
 \begin{theorem}[Two squares; Cox Thm 1.2]
   \label{thm:fermat_two_squares}
@@ -33,10 +66,10 @@ representation by the principal form.
   $p \equiv 1 \pmod 4$.
 \end{theorem}
 \begin{proof}
-  \uses{thm:descent}
+  \uses{thm:descent, thm:legendre_supplementary}
   Reciprocity shows $-1$ is a quadratic residue mod $p$ exactly when
   $p \equiv 1 \pmod 4$; descent (\ref{thm:descent}) then produces the
-  representation. (Scaffold: Lean proof is \texttt{sorry}.)
+  representation.
 \end{proof}
 
 \begin{theorem}[$x^2 + 2y^2$]
@@ -46,7 +79,7 @@ representation by the principal form.
   An odd prime $p$ satisfies $p = x^2 + 2y^2$ iff $p \equiv 1, 3 \pmod 8$.
 \end{theorem}
 \begin{proof}
-  \uses{thm:descent}
+  \uses{thm:descent, thm:legendre_supplementary}
 \end{proof}
 
 \begin{theorem}[$x^2 + 3y^2$]
@@ -56,8 +89,302 @@ representation by the principal form.
   A prime $p > 3$ satisfies $p = x^2 + 3y^2$ iff $p \equiv 1 \pmod 3$.
 \end{theorem}
 \begin{proof}
-  \uses{thm:descent}
+  \uses{thm:descent, thm:quadratic_reciprocity}
 \end{proof}
+
+\begin{definition}[Legendre symbol]
+  \label{def:legendre_symbol}
+  \lean{legendreSym}
+  \leanok
+  For an odd prime $p$ and $a \in \mathbb Z$, the Legendre symbol $(a/p)$ is
+  $0, 1, -1$ according as $p \mid a$, $a$ is a nonzero square, or a nonsquare mod
+  $p$. (Provided by Mathlib.)
+\end{definition}
+
+\begin{theorem}[Cox Lemma 1.7]
+  \label{lem:dvd_iff_isSquare}
+  \lean{PrimesXNY2.Fermat.dvd_sq_add_nsq_iff_isSquare}
+  \leanok
+  For nonzero $n$ and an odd prime $p \nmid n$, $p$ divides a primitive value
+  $x^2+ny^2$ iff $(-n/p) = 1$.
+\end{theorem}
+\begin{proof}
+  \uses{def:legendre_symbol}
+\end{proof}
+
+\begin{theorem}[Euler's form of reciprocity; Cox Conjecture 1.9]
+  \label{conj:euler_reciprocity}
+  \lean{PrimesXNY2.Fermat.euler_reciprocity}
+  \leanok
+  For distinct odd primes $p,q$, $(q/p)=1$ iff $p \equiv \pm\beta^2 \pmod{4q}$ for
+  some odd $\beta$.
+\end{theorem}
+\begin{proof}
+  \uses{def:legendre_symbol}
+\end{proof}
+
+\begin{theorem}[Quadratic Reciprocity; Cox Proposition 1.10]
+  \label{thm:quadratic_reciprocity}
+  \lean{PrimesXNY2.Fermat.quadratic_reciprocity}
+  \leanok
+  For distinct odd primes $p,q$,
+  $(p/q)(q/p) = (-1)^{\frac{p-1}{2}\cdot\frac{q-1}{2}}$.
+\end{theorem}
+\begin{proof}
+  \uses{conj:euler_reciprocity, def:legendre_symbol}
+\end{proof}
+
+\begin{theorem}[Supplementary laws]
+  \label{thm:legendre_supplementary}
+  \lean{PrimesXNY2.Fermat.legendreSym_supplementary}
+  \leanok
+  $(-1/p) = (-1)^{(p-1)/2}$ and $(2/p) = (-1)^{(p^2-1)/8}$.
+\end{theorem}
+\begin{proof}
+  \uses{def:legendre_symbol}
+\end{proof}
+
+\begin{theorem}[Cox Lemma 1.14]
+  \label{lem:quadraticChar}
+  \lean{PrimesXNY2.Fermat.exists_quadraticChar}
+  \leanok
+  For nonzero $D \equiv 0,1 \pmod 4$ there is a homomorphism
+  $\chi : (\mathbb Z/D\mathbb Z)^\times \to \{\pm 1\}$ with $\chi([m]) = (D/m)$
+  (Jacobi symbol) for odd $m$ prime to $D$.
+\end{theorem}
+\begin{proof}
+  \uses{thm:quadratic_reciprocity, def:legendre_symbol}
+\end{proof}
+
+\begin{theorem}[Reciprocity Step solved; Cox Corollary 1.19]
+  \label{thm:reciprocity_step}
+  \lean{PrimesXNY2.Fermat.reciprocity_step}
+  \leanok
+  For each $n>0$ there is a set of residues mod $4n$ characterizing the odd
+  primes $p \nmid n$ that divide a primitive $x^2+ny^2$.
+\end{theorem}
+\begin{proof}
+  \uses{lem:dvd_iff_isSquare, lem:quadraticChar}
+\end{proof}
+
+\subsection{Exercises}
+
+\begin{theorem}[Exercise 1.1(a)]
+  \label{exr:s1_1_a}
+  \lean{PrimesXNY2.PartI.S1.ex_1_1_a}
+  \leanok
+  Prove the identity (1.3).
+\end{theorem}
+\begin{proof}\uses{eq:mul_sq_add_sq}\end{proof}
+
+\begin{theorem}[Exercise 1.1(b)]
+  \label{exr:s1_1_b}
+  \lean{PrimesXNY2.PartI.S1.ex_1_1_b}
+  \leanok
+  Euler's generalization
+  $(ax^2+cy^2)(az^2+cw^2) = (axz - cyw)^2 + ac(xw + yz)^2$.
+\end{theorem}
+\begin{proof}\uses{eq:mul_sq_add_nsq}\end{proof}
+
+\begin{theorem}[Exercise 1.2(a)]
+  \label{exr:s1_2_a}
+  \lean{PrimesXNY2.PartI.S1.ex_1_2_a}
+  \leanok
+  For $k \ge 1$, $\Delta^k$ applied to $g$ is an integral linear combination of
+  $g(x), \dots, g(x+k)$.
+\end{theorem}
+
+\begin{theorem}[Exercise 1.2(b)]
+  \label{exr:s1_2_b}
+  \lean{PrimesXNY2.PartI.S1.ex_1_2_b}
+  \leanok
+  For a monic $f$ of degree $d$, $\Delta^d f = d!$.
+\end{theorem}
+
+\begin{theorem}[Exercise 1.2(c)]
+  \label{exr:s1_2_c}
+  \lean{PrimesXNY2.PartI.S1.ex_1_2_c}
+  \leanok
+  A monic integer polynomial of degree $< p$ is not identically $0 \bmod p$.
+\end{theorem}
+\begin{proof}\uses{exr:s1_2_a, exr:s1_2_b}\end{proof}
+
+\begin{theorem}[Exercise 1.3(a)]
+  \label{exr:s1_3_a}
+  \lean{PrimesXNY2.PartI.S1.ex_1_3_a}
+  \leanok
+  Lemma 1.4 for the form $x^2+ny^2$.
+\end{theorem}
+\begin{proof}\uses{lem:descent_lemma}\end{proof}
+
+\begin{theorem}[Exercise 1.3(b)]
+  \label{exr:s1_3_b}
+  \lean{PrimesXNY2.PartI.S1.ex_1_3_b}
+  \leanok
+  The descent works for $n=3$, $q=4$.
+\end{theorem}
+\begin{proof}\uses{exr:s1_3_a}\end{proof}
+
+\begin{theorem}[Exercise 1.4(a)]
+  \label{exr:s1_4_a}
+  \lean{PrimesXNY2.PartI.S1.ex_1_4_a}
+  \leanok
+  Descent Step for $x^2+2y^2$.
+\end{theorem}
+\begin{proof}\uses{exr:s1_3_a}\end{proof}
+
+\begin{theorem}[Exercise 1.4(b)]
+  \label{exr:s1_4_b}
+  \lean{PrimesXNY2.PartI.S1.ex_1_4_b}
+  \leanok
+  Descent Step for $x^2+3y^2$ (odd $p$).
+\end{theorem}
+\begin{proof}\uses{exr:s1_3_b}\end{proof}
+
+\begin{theorem}[Exercise 1.5]
+  \label{exr:s1_5}
+  \lean{PrimesXNY2.PartI.S1.ex_1_5}
+  \leanok
+  If $p = 3k+1$ is prime then $(-3/p) = 1$.
+\end{theorem}
+
+\begin{theorem}[Exercise 1.6]
+  \label{exr:s1_6}
+  \lean{PrimesXNY2.PartI.S1.ex_1_6}
+  \leanok
+  Prove Lemma 1.7.
+\end{theorem}
+\begin{proof}\uses{lem:dvd_iff_isSquare}\end{proof}
+
+\begin{theorem}[Exercise 1.7]
+  \label{exr:s1_7}
+  \lean{PrimesXNY2.PartI.S1.ex_1_7}
+  \leanok
+  Quadratic reciprocity in the form (1.12): $(p^*/q) = (q/p)$.
+\end{theorem}
+\begin{proof}\uses{thm:quadratic_reciprocity}\end{proof}
+
+\begin{theorem}[Exercise 1.8]
+  \label{exr:s1_8}
+  \lean{PrimesXNY2.PartI.S1.ex_1_8}
+  \leanok
+  The reciprocity statement (1.13).
+\end{theorem}
+\begin{proof}\uses{conj:euler_reciprocity}\end{proof}
+
+\begin{theorem}[Exercise 1.9(a)]
+  \label{exr:s1_9_a}
+  \lean{PrimesXNY2.PartI.S1.ex_1_9_a}
+  \leanok
+  For $p>3$: $(-3/p)=1 \iff p \equiv 1 \pmod 3$.
+\end{theorem}
+\begin{proof}\uses{lem:dvd_iff_isSquare}\end{proof}
+
+\begin{theorem}[Exercise 1.9(b)]
+  \label{exr:s1_9_b}
+  \lean{PrimesXNY2.PartI.S1.ex_1_9_b}
+  \leanok
+  The cases $x^2+y^2$, $x^2+2y^2$ are the supplementary laws.
+\end{theorem}
+\begin{proof}\uses{thm:legendre_supplementary}\end{proof}
+
+\begin{theorem}[Exercise 1.10(a)]
+  \label{exr:s1_10_a}
+  \lean{PrimesXNY2.PartI.S1.ex_1_10_a}
+  \leanok
+  $(M/m) = (N/m)$ when $M \equiv N \pmod m$.
+\end{theorem}
+
+\begin{theorem}[Exercise 1.10(b)]
+  \label{exr:s1_10_b}
+  \lean{PrimesXNY2.PartI.S1.ex_1_10_b}
+  \leanok
+  Multiplicativity of the Jacobi symbol (1.15).
+\end{theorem}
+
+\begin{theorem}[Exercise 1.10(c)]
+  \label{exr:s1_10_c}
+  \lean{PrimesXNY2.PartI.S1.ex_1_10_c}
+  \leanok
+  The supplementary laws (1.16) for the Jacobi symbol.
+\end{theorem}
+
+\begin{theorem}[Exercise 1.10(d)]
+  \label{exr:s1_10_d}
+  \lean{PrimesXNY2.PartI.S1.ex_1_10_d}
+  \leanok
+  If $M$ is a quadratic residue mod $m$ then $(M/m)=1$ (converse false).
+\end{theorem}
+
+\begin{theorem}[Exercise 1.11]
+  \label{exr:s1_11}
+  \lean{PrimesXNY2.PartI.S1.ex_1_11}
+  \leanok
+  Completion of (1.17): $(D/m) = (D/n)$ for odd $m \equiv n \pmod D$.
+\end{theorem}
+\begin{proof}\uses{exr:s1_10_b, exr:s1_10_c}\end{proof}
+
+\begin{theorem}[Exercise 1.12(a)]
+  \label{exr:s1_12_a}
+  \lean{PrimesXNY2.PartI.S1.ex_1_12_a}
+  \leanok
+  $\chi([m]) = (D/m)$ is a well-defined homomorphism.
+\end{theorem}
+\begin{proof}\uses{lem:quadraticChar}\end{proof}
+
+\begin{theorem}[Exercise 1.12(b)]
+  \label{exr:s1_12_b}
+  \notready
+  $\chi([-1]) = 1$ if $D > 0$ and $-1$ if $D < 0$. \emph{UNVERIFIED: a faithful
+  self-contained statement must fix the specific $\chi$ of Lemma 1.14; flagged.}
+\end{theorem}
+
+\begin{theorem}[Exercise 1.12(c)]
+  \label{exr:s1_12_c}
+  \notready
+  Value of $\chi([2])$ when $D \equiv 1 \pmod 4$. \emph{UNVERIFIED: same reason as
+  1.12(b); flagged.}
+\end{theorem}
+
+\begin{theorem}[Exercise 1.13(a)]
+  \label{exr:s1_13_a}
+  \lean{PrimesXNY2.PartI.S1.ex_1_13_a}
+  \leanok
+  Quadratic reciprocity, assuming Lemma 1.14.
+\end{theorem}
+\begin{proof}\uses{lem:quadraticChar}\end{proof}
+
+\begin{theorem}[Exercise 1.13(b)]
+  \label{exr:s1_13_b}
+  \lean{PrimesXNY2.PartI.S1.ex_1_13_b}
+  \leanok
+  The supplementary laws, assuming Lemma 1.14.
+\end{theorem}
+\begin{proof}\uses{lem:quadraticChar}\end{proof}
+
+\begin{theorem}[Exercise 1.14]
+  \label{exr:s1_14}
+  \lean{PrimesXNY2.PartI.S1.ex_1_14}
+  \leanok
+  When $n \equiv 3 \pmod 4$ the Reciprocity Step congruence can be taken mod $n$.
+\end{theorem}
+\begin{proof}\uses{thm:reciprocity_step}\end{proof}
+
+\begin{theorem}[Exercise 1.15]
+  \label{exr:s1_15}
+  \lean{PrimesXNY2.PartI.S1.ex_1_15}
+  \leanok
+  The residue classes in $(\mathbb Z/84\mathbb Z)^\times$ with $(-21/p)=1$.
+\end{theorem}
+\begin{proof}\uses{thm:quadratic_reciprocity}\end{proof}
+
+\begin{theorem}[Exercise 1.16]
+  \label{exr:s1_16}
+  \notready
+  When $D = 4q$ ($q$ an odd prime), properties (i) and (ii) suffice to determine
+  $K = \ker\chi$. \emph{UNVERIFIED: a faithful statement of the uniqueness
+  characterization of the index-two subgroup is delicate; flagged.}
+\end{theorem}
 
 \section{Binary quadratic forms and reduction}
 

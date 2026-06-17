@@ -9,6 +9,7 @@ import PrimesXNY2.PartI_Forms.Fermat
 import PrimesXNY2.PartI_Forms.Forms
 import PrimesXNY2.PartI_Forms.FormClassGroup
 import PrimesXNY2.PartI_Forms.Genus
+import PrimesXNY2.PartI_Forms.Exercises.S1
 
 -- Part II — Class Field Theory
 import PrimesXNY2.PartII_ClassFieldTheory.Orders
