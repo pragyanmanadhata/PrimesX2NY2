@@ -1,0 +1,472 @@
+% Blueprint content for "Primes of the Form x^2 + ny^2" (Cox, 2nd ed.).
+%
+% Each node carries \label, \lean (the matching Lean declaration), \uses (its
+% dependencies in the DAG), and \leanok on every statement whose Lean signature
+% typechecks. Proof environments deliberately carry no \leanok: every Lean proof
+% is currently `sorry` (this is a scaffold).
+%
+% See ROADMAP.md for the Mathlib audit of each node.
+
+\chapter{Part I — From Fermat to Gauss}
+
+This part is largely formalizable with current Mathlib (quadratic forms, \texttt{ZMod},
+quadratic reciprocity). It develops the classical theory of binary quadratic forms,
+their class group, and genus theory, culminating in congruence criteria for
+representation by the principal form.
+
+\section{Fermat, Euler, and descent}
+
+\begin{theorem}[Descent step]
+  \label{thm:descent}
+  \lean{PrimesXNY2.Fermat.descent_step}
+  \leanok
+  If a prime $p$ divides a primitively represented value $x^2 + n y^2$
+  (with $\gcd(x,y)=1$), then $p$ is itself represented by the principal form
+  $x^2 + n y^2$. This is the inductive heart of Fermat's method of descent.
+\end{theorem}
+
+\begin{theorem}[Two squares; Cox Thm 1.2]
+  \label{thm:fermat_two_squares}
+  \lean{PrimesXNY2.Fermat.prime_sq_add_sq}
+  \leanok
+  An odd prime $p$ is a sum of two squares, $p = x^2 + y^2$, if and only if
+  $p \equiv 1 \pmod 4$.
+\end{theorem}
+\begin{proof}
+  \uses{thm:descent}
+  Reciprocity shows $-1$ is a quadratic residue mod $p$ exactly when
+  $p \equiv 1 \pmod 4$; descent (\ref{thm:descent}) then produces the
+  representation. (Scaffold: Lean proof is \texttt{sorry}.)
+\end{proof}
+
+\begin{theorem}[$x^2 + 2y^2$]
+  \label{thm:fermat_x2_2y2}
+  \lean{PrimesXNY2.Fermat.prime_sq_add_two_sq}
+  \leanok
+  An odd prime $p$ satisfies $p = x^2 + 2y^2$ iff $p \equiv 1, 3 \pmod 8$.
+\end{theorem}
+\begin{proof}
+  \uses{thm:descent}
+\end{proof}
+
+\begin{theorem}[$x^2 + 3y^2$]
+  \label{thm:fermat_x2_3y2}
+  \lean{PrimesXNY2.Fermat.prime_sq_add_three_sq}
+  \leanok
+  A prime $p > 3$ satisfies $p = x^2 + 3y^2$ iff $p \equiv 1 \pmod 3$.
+\end{theorem}
+\begin{proof}
+  \uses{thm:descent}
+\end{proof}
+
+\section{Binary quadratic forms and reduction}
+
+\begin{definition}[Binary quadratic form]
+  \label{def:binary_qf}
+  \lean{PrimesXNY2.Forms.BinaryQF}
+  \leanok
+  An integral binary quadratic form $f(x,y) = a x^2 + b x y + c y^2$, recorded by
+  its coefficient triple $(a,b,c)$.
+\end{definition}
+
+\begin{definition}[Discriminant]
+  \label{def:discriminant}
+  \lean{PrimesXNY2.Forms.BinaryQF.discr}
+  \leanok
+  \uses{def:binary_qf}
+  The discriminant of $f = (a,b,c)$ is $D = b^2 - 4ac$.
+\end{definition}
+
+\begin{definition}[Proper equivalence]
+  \label{def:proper_equiv}
+  \lean{PrimesXNY2.Forms.ProperlyEquivalent}
+  \leanok
+  \uses{def:binary_qf}
+  Two forms are properly equivalent if related by a determinant-one integer change
+  of variables, i.e.\ by an element of $\mathrm{SL}_2(\mathbb Z)$.
+\end{definition}
+
+\begin{definition}[Reduced form]
+  \label{def:reduced}
+  \lean{PrimesXNY2.Forms.BinaryQF.Reduced}
+  \leanok
+  \uses{def:binary_qf, def:discriminant}
+  A positive definite form $(a,b,c)$ is reduced when $|b| \le a \le c$, with
+  $b \ge 0$ whenever $|b| = a$ or $a = c$.
+\end{definition}
+
+\begin{theorem}[Reduction theorem; Cox Thm 2.8]
+  \label{thm:reduction}
+  \lean{PrimesXNY2.Forms.exists_unique_reduced}
+  \leanok
+  Every positive definite form is properly equivalent to a unique reduced form.
+\end{theorem}
+\begin{proof}
+  \uses{def:reduced, def:proper_equiv}
+\end{proof}
+
+\begin{theorem}[Finiteness of the class number; Cox Thm 2.13]
+  \label{thm:finite_class_number}
+  \lean{PrimesXNY2.Forms.finite_reduced_of_discr}
+  \leanok
+  For each $D < 0$ there are only finitely many reduced forms of discriminant $D$.
+\end{theorem}
+\begin{proof}
+  \uses{thm:reduction}
+\end{proof}
+
+\section{The form class group and Dirichlet composition}
+
+\begin{definition}[Form class group]
+  \label{def:form_class_group}
+  \lean{PrimesXNY2.Forms.FormClassGroup}
+  \leanok
+  \uses{def:proper_equiv, def:discriminant}
+  $C(D)$ is the set of proper equivalence classes of forms of discriminant $D$.
+\end{definition}
+
+\begin{definition}[Dirichlet composition]
+  \label{def:dirichlet_composition}
+  \lean{PrimesXNY2.Forms.compose}
+  \leanok
+  \uses{def:form_class_group}
+  The group law on $C(D)$ given by Dirichlet composition of forms.
+\end{definition}
+
+\begin{theorem}[$C(D)$ is a finite abelian group; Cox Thm 3.9]
+  \label{thm:form_class_group_is_group}
+  \lean{PrimesXNY2.Forms.isCommGroup}
+  \leanok
+  Under Dirichlet composition, $C(D)$ is a finite abelian group with identity the
+  principal class.
+\end{theorem}
+\begin{proof}
+  \uses{def:dirichlet_composition, thm:reduction}
+\end{proof}
+
+\section{Genus theory and representation}
+
+\begin{definition}[Proper representation]
+  \label{def:represents}
+  \lean{PrimesXNY2.Genus.ProperlyRepresents}
+  \leanok
+  \uses{def:binary_qf}
+  $f$ properly represents $m$ if $m = f(x,y)$ with $\gcd(x,y) = 1$.
+\end{definition}
+
+\begin{definition}[Genus]
+  \label{def:genus}
+  \lean{PrimesXNY2.Genus.genus}
+  \leanok
+  \uses{def:form_class_group}
+  The genus of a form: the residues mod $D$ it represents, constant on each genus.
+\end{definition}
+
+\begin{definition}[Principal genus]
+  \label{def:principal_genus}
+  \lean{PrimesXNY2.Genus.principalGenus}
+  \leanok
+  \uses{def:genus}
+  The genus of the principal form, equivalently the subgroup of squares in $C(D)$.
+\end{definition}
+
+\begin{theorem}[Representation by residues; Cox Thm 2.16]
+  \label{thm:representation_residue}
+  \lean{PrimesXNY2.Genus.properlyRepresents_iff_isSquare}
+  \leanok
+  A prime $p \nmid D$ is properly represented by some form of discriminant $D$ iff
+  $D$ is a quadratic residue mod $p$.
+\end{theorem}
+\begin{proof}
+  \uses{def:represents}
+\end{proof}
+
+\begin{theorem}[Congruence criterion]
+  \label{thm:genus_congruence}
+  \lean{PrimesXNY2.Genus.represents_principal_iff_congruence}
+  \leanok
+  When each genus contains a single class, the form $x^2 + ny^2$ represents $p$ iff
+  $p$ lies in a prescribed set of residues mod $4n$.
+\end{theorem}
+\begin{proof}
+  \uses{def:principal_genus, thm:representation_residue}
+\end{proof}
+
+\chapter{Part II — Class Field Theory}
+
+This part states the structural bridge between forms and ideals, then the deep
+class field theory inputs (Artin reciprocity, Čebotarev) that current Mathlib does
+not yet provide; those are stated to be cited or assumed. See ROADMAP.md.
+
+\section{Orders in imaginary quadratic fields}
+
+\begin{definition}[Order]
+  \label{def:quad_order}
+  \lean{PrimesXNY2.Order.QuadOrder}
+  \leanok
+  An order $\mathcal O = \mathbb Z + f\,\mathcal O_K$ of conductor $f$ in an
+  imaginary quadratic field $K$.
+\end{definition}
+
+\begin{definition}[Discriminant of an order]
+  \label{def:order_discriminant}
+  \lean{PrimesXNY2.Order.QuadOrder.discr}
+  \leanok
+  \uses{def:quad_order}
+  The discriminant $D = f^2 d_K$ of the order $\mathcal O$.
+\end{definition}
+
+\begin{definition}[Ideal class group of an order]
+  \label{def:ideal_class_group_order}
+  \lean{PrimesXNY2.Order.QuadOrder.idealClassGroup}
+  \leanok
+  \uses{def:quad_order}
+  $C(\mathcal O)$: proper fractional $\mathcal O$-ideals modulo principal ideals.
+\end{definition}
+
+\begin{theorem}[$C(\mathcal O)$ is a finite abelian group; Cox Prop 7.19]
+  \label{thm:ideal_class_group_finite}
+  \lean{PrimesXNY2.Order.QuadOrder.idealClassGroup_isCommGroup}
+  \leanok
+  \uses{def:ideal_class_group_order}
+  The ideal class group of an order is a finite abelian group.
+\end{theorem}
+
+\section{The bridge: forms and ideals}
+
+\begin{theorem}[Bridge; Cox Thm 7.7]
+  \label{thm:form_ideal_bridge}
+  \lean{PrimesXNY2.Bridge.formClassGroup_equiv_idealClassGroup}
+  \leanok
+  For the order $\mathcal O$ of discriminant $D < 0$, the form class group $C(D)$ is
+  isomorphic, as a group, to the ideal class group $C(\mathcal O)$.
+\end{theorem}
+\begin{proof}
+  \uses{def:form_class_group, def:ideal_class_group_order, def:order_discriminant}
+\end{proof}
+
+\begin{theorem}[Bridge respects composition]
+  \label{thm:bridge_composition}
+  \lean{PrimesXNY2.Bridge.bridge_respects_composition}
+  \leanok
+  The bridge intertwines Dirichlet composition with ideal multiplication.
+\end{theorem}
+\begin{proof}
+  \uses{thm:form_ideal_bridge, def:dirichlet_composition}
+\end{proof}
+
+\section{Class fields, Artin reciprocity, Čebotarev (deep)}
+
+\begin{definition}[Hilbert class field]
+  \label{def:hilbert_class_field}
+  \lean{PrimesXNY2.RingClassField.hilbertClassField}
+  \leanok
+  \uses{def:quad_order}
+  The maximal unramified abelian extension $H$ of $K$.
+\end{definition}
+
+\begin{definition}[Ring class field]
+  \label{def:ring_class_field}
+  \lean{PrimesXNY2.RingClassField.ringClassField}
+  \leanok
+  \uses{def:quad_order}
+  The abelian extension $L/K$ with $\mathrm{Gal}(L/K) \cong C(\mathcal O)$.
+\end{definition}
+
+\begin{theorem}[Artin reciprocity; Cox Thm 8.2 — deep]
+  \label{thm:artin_reciprocity}
+  \lean{PrimesXNY2.RingClassField.artinReciprocity}
+  \leanok
+  The Artin map induces an isomorphism $C(\mathcal O) \cong \mathrm{Gal}(L/K)$.
+  \emph{Deep: cite or assume.}
+\end{theorem}
+\begin{proof}
+  \uses{def:ring_class_field, def:ideal_class_group_order}
+\end{proof}
+
+\begin{definition}[Complete splitting]
+  \label{def:splits_completely}
+  \lean{PrimesXNY2.RingClassField.SplitsCompletely}
+  \leanok
+  \uses{def:ring_class_field}
+  A prime $p$ splits completely in the ring class field of $\mathcal O$.
+\end{definition}
+
+\begin{theorem}[Čebotarev density; deep]
+  \label{thm:chebotarev}
+  \lean{PrimesXNY2.RingClassField.chebotarev_splitting}
+  \leanok
+  The primes splitting completely in the ring class field are infinite (density
+  $1/|C(\mathcal O)|$). \emph{Deep: cite or assume.}
+\end{theorem}
+\begin{proof}
+  \uses{def:splits_completely}
+\end{proof}
+
+\section{The Main Theorem}
+
+\begin{definition}[Class polynomial]
+  \label{def:class_polynomial}
+  \lean{PrimesXNY2.MainTheorem.classPolynomial}
+  \leanok
+  \uses{def:ring_class_field}
+  The integer polynomial $f_n(x)$ whose roots generate the ring class field of
+  $\mathbb Z[\sqrt{-n}]$.
+\end{definition}
+
+\begin{theorem}[Main Theorem, splitting form; Cox Thm 9.2]
+  \label{thm:main_splitting}
+  \lean{PrimesXNY2.MainTheorem.prime_repr_iff_splits}
+  \leanok
+  A prime $p \nmid n$ is of the form $x^2 + n y^2$ iff $p$ splits completely in the
+  ring class field.
+\end{theorem}
+\begin{proof}
+  \uses{thm:form_ideal_bridge, thm:artin_reciprocity, def:splits_completely, thm:chebotarev}
+\end{proof}
+
+\begin{theorem}[Main Theorem, class polynomial form; Cox Cor 9.4]
+  \label{thm:main_class_poly}
+  \lean{PrimesXNY2.MainTheorem.prime_repr_iff_classPoly_root}
+  \leanok
+  $p = x^2 + n y^2$ iff $(-n/p) = 1$ and $f_n(x) \equiv 0 \pmod p$ has a root.
+\end{theorem}
+\begin{proof}
+  \uses{thm:main_splitting, def:class_polynomial}
+\end{proof}
+
+\chapter{Part III — Complex Multiplication}
+
+The deepest part: elliptic functions, the $j$-invariant, modular functions for
+$\mathrm{SL}_2(\mathbb Z)$, complex multiplication, and Weber functions with
+explicit class polynomials and Shimura reciprocity (2nd ed.). Almost entirely
+to be formalized; see ROADMAP.md.
+
+\section{Elliptic functions and the j-invariant}
+
+\begin{definition}[Lattice]
+  \label{def:lattice}
+  \lean{PrimesXNY2.Elliptic.Lattice}
+  \leanok
+  A lattice $L = \mathbb Z\omega_1 + \mathbb Z\omega_2 \subseteq \mathbb C$.
+\end{definition}
+
+\begin{definition}[Weierstrass $\wp$]
+  \label{def:weierstrass_p}
+  \lean{PrimesXNY2.Elliptic.weierstrassP}
+  \leanok
+  \uses{def:lattice}
+  The Weierstrass $\wp$-function of a lattice $L$.
+\end{definition}
+
+\begin{definition}[$j$-invariant of a lattice]
+  \label{def:j_invariant_lattice}
+  \lean{PrimesXNY2.Elliptic.jInvariant}
+  \leanok
+  \uses{def:lattice}
+  $j(L) = 1728\, g_2^3 / (g_2^3 - 27 g_3^2)$.
+\end{definition}
+
+\begin{theorem}[Weierstrass differential equation]
+  \label{thm:weierstrass_ode}
+  \lean{PrimesXNY2.Elliptic.weierstrassP_differential_eq}
+  \leanok
+  $(\wp')^2 = 4\wp^3 - g_2 \wp - g_3$.
+\end{theorem}
+\begin{proof}
+  \uses{def:weierstrass_p}
+\end{proof}
+
+\section{Modular functions and complex multiplication}
+
+\begin{definition}[The $j$-function]
+  \label{def:j_function}
+  \lean{PrimesXNY2.Modular.jFunction}
+  \leanok
+  The Klein $j$-function $j(\tau)$ on the upper half-plane.
+\end{definition}
+
+\begin{definition}[Modular function]
+  \label{def:modular_function}
+  \lean{PrimesXNY2.Modular.IsModularFunction}
+  \leanok
+  A modular function for $\mathrm{SL}_2(\mathbb Z)$.
+\end{definition}
+
+\begin{theorem}[$j$ is modular]
+  \label{thm:j_modular}
+  \lean{PrimesXNY2.Modular.jFunction_modular}
+  \leanok
+  \uses{def:j_function}
+  $j(\gamma\tau) = j(\tau)$ for $\gamma \in \mathrm{SL}_2(\mathbb Z)$.
+\end{theorem}
+\begin{proof}
+  \uses{def:modular_function}
+\end{proof}
+
+\begin{definition}[CM point]
+  \label{def:cm_point}
+  \lean{PrimesXNY2.Modular.IsCMPoint}
+  \leanok
+  An imaginary quadratic $\tau$ (a complex multiplication point).
+\end{definition}
+
+\begin{theorem}[CM values are integral; Cox Thm 11.1]
+  \label{thm:cm_integral}
+  \lean{PrimesXNY2.Modular.isIntegral_jFunction_of_cm}
+  \leanok
+  If $\tau$ is a CM point then $j(\tau)$ is an algebraic integer.
+\end{theorem}
+\begin{proof}
+  \uses{def:cm_point, def:j_function}
+\end{proof}
+
+\begin{theorem}[$j$ generates the ring class field; Cox Thm 11.1]
+  \label{thm:j_generates}
+  \lean{PrimesXNY2.Modular.jFunction_generates_ringClassField}
+  \leanok
+  There is a CM point whose $j$-value is an algebraic integer generating the ring
+  class field $L = K(j(\tau))$.
+\end{theorem}
+\begin{proof}
+  \uses{thm:cm_integral, def:ring_class_field}
+\end{proof}
+
+\section{Weber functions and explicit class polynomials}
+
+\begin{definition}[Weber function]
+  \label{def:weber_function}
+  \lean{PrimesXNY2.Weber.weber}
+  \leanok
+  A Weber modular function $\mathfrak f(\tau)$.
+\end{definition}
+
+\begin{definition}[Weber class polynomial]
+  \label{def:weber_class_polynomial}
+  \lean{PrimesXNY2.Weber.weberClassPolynomial}
+  \leanok
+  \uses{def:weber_function}
+  The reduced class polynomial built from Weber values.
+\end{definition}
+
+\begin{theorem}[Weber matches Hilbert class polynomial mod $p$]
+  \label{thm:weber_root}
+  \lean{PrimesXNY2.Weber.weberClassPolynomial_root_iff}
+  \leanok
+  The Weber class polynomial has a root mod $p$ iff the Hilbert class polynomial
+  does, so it may replace $f_n$ in the criterion.
+\end{theorem}
+\begin{proof}
+  \uses{def:weber_class_polynomial, def:class_polynomial}
+\end{proof}
+
+\begin{theorem}[Shimura reciprocity; 2nd ed.]
+  \label{thm:shimura}
+  \lean{PrimesXNY2.Weber.shimuraReciprocity}
+  \leanok
+  The idele class group acts on CM values of modular functions, computing the
+  Galois action on Weber values. \emph{Deep: cite or assume.}
+\end{theorem}
+\begin{proof}
+  \uses{def:cm_point, thm:artin_reciprocity}
+\end{proof}

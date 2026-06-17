@@ -1,0 +1,23 @@
+name = "PrimesXNY2"
+version = "0.1.0"
+keywords = ["math"]
+defaultTargets = ["PrimesXNY2"]
+
+[leanOptions]
+pp.unicode.fun = true # pretty-prints `fun a ↦ b`
+relaxedAutoImplicit = false
+weak.linter.mathlibStandardSet = true
+maxSynthPendingDepth = 3
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.31.0"
+
+# Used by `leanblueprint checkdecls` to verify every \lean{...} name exists.
+[[require]]
+name = "checkdecls"
+git = "https://github.com/PatrickMassot/checkdecls.git"
+
+[[lean_lib]]
+name = "PrimesXNY2"
