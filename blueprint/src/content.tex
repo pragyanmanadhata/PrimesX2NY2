@@ -442,6 +442,149 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \uses{thm:reduction}
 \end{proof}
 
+\begin{definition}[Form evaluation]
+  \label{def:form_eval}
+  \lean{PrimesXNY2.Forms.BinaryQF.eval}
+  \leanok
+  \uses{def:binary_qf}
+  $f(x,y) = a x^2 + b x y + c y^2$ as a function of $(x,y)$.
+\end{definition}
+
+\begin{definition}[Primitive form]
+  \label{def:primitive}
+  \lean{PrimesXNY2.Forms.BinaryQF.Primitive}
+  \leanok
+  \uses{def:binary_qf}
+  A form is primitive when $\gcd(a,b,c)=1$.
+\end{definition}
+
+\begin{definition}[Positive definite]
+  \label{def:posdef}
+  \lean{PrimesXNY2.Forms.BinaryQF.PosDef}
+  \leanok
+  \uses{def:discriminant}
+  $a > 0$ and $D < 0$.
+\end{definition}
+
+\begin{definition}[Indefinite]
+  \label{def:indefinite}
+  \lean{PrimesXNY2.Forms.BinaryQF.Indefinite}
+  \leanok
+  \uses{def:discriminant}
+  $D > 0$.
+\end{definition}
+
+\begin{definition}[Action of an integer matrix]
+  \label{def:action}
+  \lean{PrimesXNY2.Forms.action}
+  \leanok
+  \uses{def:binary_qf}
+  The change of variables $(x,y) \mapsto (px+qy, rx+sy)$ by a matrix $M$.
+\end{definition}
+
+\begin{definition}[Full equivalence; Cox (2.2)]
+  \label{def:equivalent}
+  \lean{PrimesXNY2.Forms.Equivalent}
+  \leanok
+  \uses{def:action}
+  Forms related by a change of variables of determinant $\pm 1$
+  ($\mathrm{GL}_2(\mathbb Z)$).
+\end{definition}
+
+\begin{theorem}[Proper equivalence is an equivalence relation]
+  \label{thm:proper_equiv_equivalence}
+  \lean{PrimesXNY2.Forms.properlyEquivalent_equivalence}
+  \leanok
+  \uses{def:proper_equiv}
+\end{theorem}
+
+\begin{theorem}[Proper equivalence preserves the discriminant]
+  \label{thm:discr_invariant}
+  \lean{PrimesXNY2.Forms.discr_eq_of_properlyEquivalent}
+  \leanok
+  \uses{def:proper_equiv, def:discriminant}
+\end{theorem}
+
+\begin{theorem}[Cox (2.4)]
+  \label{eq:four_mul_eval}
+  \lean{PrimesXNY2.Forms.four_mul_eval}
+  \leanok
+  \uses{def:form_eval, def:discriminant}
+  $4a\,f(x,y) = (2ax+by)^2 - D y^2$.
+\end{theorem}
+
+\begin{definition}[Principal form]
+  \label{def:principal_form}
+  \lean{PrimesXNY2.Forms.principalForm}
+  \leanok
+  \uses{def:discriminant}
+  $x^2 - (D/4)y^2$ if $D \equiv 0$, else $x^2 + xy + ((1-D)/4)y^2$.
+\end{definition}
+
+\begin{theorem}[Cox Lemma 2.3]
+  \label{lem:repr_iff_equiv}
+  \lean{PrimesXNY2.Genus.properlyRepresents_iff_properlyEquivalent}
+  \leanok
+  \uses{def:represents, def:proper_equiv}
+  $f$ properly represents $m$ iff $f \sim [m,b,c]$ for some $b,c$.
+\end{theorem}
+
+\begin{theorem}[Cox Lemma 2.5]
+  \label{lem:repr_iff_isSquare_general}
+  \lean{PrimesXNY2.Genus.properlyRepresents_iff_isSquare_general}
+  \leanok
+  \uses{lem:repr_iff_equiv, def:primitive}
+  For $D \equiv 0,1 \pmod 4$ and odd $m$ prime to $D$, $m$ is properly represented
+  by a primitive form of discriminant $D$ iff $D$ is a square mod $m$.
+\end{theorem}
+
+\begin{theorem}[Cox Corollary 2.6]
+  \label{cor:c2_6}
+  \lean{PrimesXNY2.Genus.cor_2_6}
+  \leanok
+  \uses{lem:repr_iff_isSquare_general}
+  For an odd prime $p \nmid n$, $(-n/p)=1$ iff $p$ is represented by a primitive
+  form of discriminant $-4n$.
+\end{theorem}
+
+\begin{theorem}[Cox Proposition 2.15]
+  \label{prop:p2_15}
+  \lean{PrimesXNY2.Genus.prop_2_15}
+  \leanok
+  \uses{cor:c2_6, thm:reduction}
+  For an odd prime $p \nmid n$, $(-n/p)=1$ iff $p$ is represented by one of the
+  reduced forms of discriminant $-4n$.
+\end{theorem}
+
+\begin{theorem}[Cox Theorem 2.16]
+  \label{thm:t2_16}
+  \lean{PrimesXNY2.Genus.thm_2_16}
+  \leanok
+  \uses{prop:p2_15, lem:quadraticChar}
+  For negative $D \equiv 0,1 \pmod 4$ and odd prime $p \nmid D$, $(D/p)=1$
+  (i.e.\ $[p] \in \ker\chi$) iff $p$ is represented by a reduced form of disc $D$.
+\end{theorem}
+
+\begin{theorem}[Composition identity (2.30)]
+  \label{eq:comp_2_30}
+  \lean{PrimesXNY2.Forms.comp_identity_2_30}
+  \leanok
+\end{theorem}
+
+\begin{theorem}[Composition identity (2.31)]
+  \label{eq:comp_2_31}
+  \lean{PrimesXNY2.Forms.comp_identity_2_31}
+  \leanok
+\end{theorem}
+
+\begin{theorem}[Landau; Cox Theorem 2.18]
+  \label{thm:landau}
+  \lean{PrimesXNY2.Forms.class_number_one}
+  \leanok
+  \uses{def:reduced, def:primitive}
+  $h(-4n)=1$ iff $n \in \{1,2,3,4,7\}$.
+\end{theorem}
+
 \section{The form class group and Dirichlet composition}
 
 \begin{definition}[Form class group]
@@ -497,27 +640,415 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   The genus of the principal form, equivalently the subgroup of squares in $C(D)$.
 \end{definition}
 
-\begin{theorem}[Representation by residues; Cox Thm 2.16]
+\begin{theorem}[Cox Lemma 2.5, prime case]
   \label{thm:representation_residue}
   \lean{PrimesXNY2.Genus.properlyRepresents_iff_isSquare}
   \leanok
-  A prime $p \nmid D$ is properly represented by some form of discriminant $D$ iff
-  $D$ is a quadratic residue mod $p$.
-\end{theorem}
-\begin{proof}
   \uses{def:represents}
-\end{proof}
+  A prime $p \nmid D$ is properly represented by some form of discriminant $D$ iff
+  $D$ is a quadratic residue mod $p$. (Prime case of Lemma 2.5,
+  \ref{lem:repr_iff_isSquare_general}.)
+\end{theorem}
 
-\begin{theorem}[Congruence criterion]
+\begin{theorem}[Cox Lemma 2.24]
+  \label{lem:l2_24}
+  \lean{PrimesXNY2.Genus.principalForm_values_subgroup}
+  \leanok
+  \uses{def:principal_form, def:genus}
+  For negative $D \equiv 0,1 \pmod 4$, the residues in
+  $(\mathbb Z/D\mathbb Z)^\times$ represented by the principal form form a
+  subgroup $H$.
+\end{theorem}
+
+\begin{theorem}[Cox Lemma 2.25]
+  \label{lem:l2_25}
+  \lean{PrimesXNY2.Genus.properlyRepresents_coprime}
+  \leanok
+  \uses{def:form_eval}
+  Every form properly represents some value relatively prime to a given $M$.
+\end{theorem}
+
+\begin{theorem}[Cox Theorem 2.26]
+  \label{thm:t2_26}
+  \lean{PrimesXNY2.Genus.thm_2_26}
+  \leanok
+  \uses{lem:l2_24, def:genus, thm:reduction}
+  An odd prime $p \nmid D$ lies in the genus of $g$ iff $p$ is represented by a
+  reduced form of disc $D$ in the same genus.
+\end{theorem}
+
+\begin{theorem}[Cox Corollary 2.27]
   \label{thm:genus_congruence}
   \lean{PrimesXNY2.Genus.represents_principal_iff_congruence}
   \leanok
-  When each genus contains a single class, the form $x^2 + ny^2$ represents $p$ iff
-  $p$ lies in a prescribed set of residues mod $4n$.
+  \uses{def:principal_genus, lem:l2_24}
+  For $n>0$ and odd prime $p \nmid n$, $p$ is represented by a form of disc $-4n$
+  in the principal genus iff $p \equiv \beta^2$ or $\beta^2 + n \pmod{4n}$.
+  (Replaces an earlier vacuous/false statement.)
 \end{theorem}
-\begin{proof}
-  \uses{def:principal_genus, thm:representation_residue}
-\end{proof}
+
+\subsection{Exercises}
+
+\begin{theorem}[Exercise 2.1]
+  \label{exr:s2_1}
+  \lean{PrimesXNY2.PartI.S2.ex_2_1}
+  \leanok
+  Any represented value is $d^2$ times a properly represented value.
+\end{theorem}
+\begin{proof}\uses{def:represents}\end{proof}
+
+\begin{theorem}[Exercise 2.2(a)]
+  \label{exr:s2_2_a}
+  \lean{PrimesXNY2.PartI.S2.ex_2_2_a}
+  \leanok
+  Equivalence and proper equivalence are equivalence relations.
+\end{theorem}
+\begin{proof}\uses{def:equivalent, thm:proper_equiv_equivalence}\end{proof}
+
+\begin{theorem}[Exercise 2.2(b)]
+  \label{exr:s2_2_b}
+  \lean{PrimesXNY2.PartI.S2.ex_2_2_b}
+  \leanok
+  Improper equivalence is not an equivalence relation.
+\end{theorem}
+\begin{proof}\uses{def:action}\end{proof}
+
+\begin{theorem}[Exercise 2.2(c)]
+  \label{exr:s2_2_c}
+  \lean{PrimesXNY2.PartI.S2.ex_2_2_c}
+  \leanok
+  Equivalent forms represent the same numbers.
+\end{theorem}
+\begin{proof}\uses{def:equivalent}\end{proof}
+
+\begin{theorem}[Exercise 2.2(d)]
+  \label{exr:s2_2_d}
+  \lean{PrimesXNY2.PartI.S2.ex_2_2_d}
+  \leanok
+  A form equivalent to a primitive form is primitive.
+\end{theorem}
+\begin{proof}\uses{def:equivalent, def:primitive}\end{proof}
+
+\begin{theorem}[Exercise 2.3]
+  \label{exr:s2_3}
+  \lean{PrimesXNY2.PartI.S2.ex_2_3}
+  \leanok
+  $D_f = (\det M)^2 D_g$ under a change of variables.
+\end{theorem}
+\begin{proof}\uses{def:action, def:discriminant}\end{proof}
+
+\begin{theorem}[Exercise 2.4(a)]
+  \label{exr:s2_4_a}
+  \lean{PrimesXNY2.PartI.S2.ex_2_4_a}
+  \leanok
+  A form of positive discriminant represents both signs.
+\end{theorem}
+\begin{proof}\uses{eq:four_mul_eval}\end{proof}
+
+\begin{theorem}[Exercise 2.4(b)]
+  \label{exr:s2_4_b}
+  \lean{PrimesXNY2.PartI.S2.ex_2_4_b}
+  \leanok
+  A form of negative discriminant is definite (sign of $a$).
+\end{theorem}
+\begin{proof}\uses{eq:four_mul_eval}\end{proof}
+
+\begin{theorem}[Exercise 2.5]
+  \label{exr:s2_5}
+  \lean{PrimesXNY2.PartI.S2.ex_2_5}
+  \leanok
+  Corollary 2.6 for arbitrary discriminant.
+\end{theorem}
+\begin{proof}\uses{cor:c2_6}\end{proof}
+
+\begin{theorem}[Exercise 2.6]
+  \label{exr:s2_6}
+  \lean{PrimesXNY2.PartI.S2.ex_2_6}
+  \leanok
+  A reduced form properly equivalent to $126x^2+74xy+13y^2$ exists.
+\end{theorem}
+\begin{proof}\uses{thm:reduction}\end{proof}
+
+\begin{theorem}[Exercise 2.7]
+  \label{exr:s2_7}
+  \lean{PrimesXNY2.PartI.S2.ex_2_7}
+  \leanok
+  The bound (2.9).
+\end{theorem}
+\begin{proof}\uses{def:reduced}\end{proof}
+
+\begin{theorem}[Exercise 2.8(a)]
+  \label{exr:s2_8_a}
+  \lean{PrimesXNY2.PartI.S2.ex_2_8_a}
+  \leanok
+  The minima (2.11) of a reduced form.
+\end{theorem}
+\begin{proof}\uses{def:reduced}\end{proof}
+
+\begin{theorem}[Exercise 2.8(b)]
+  \label{exr:s2_8_b}
+  \lean{PrimesXNY2.PartI.S2.ex_2_8_b}
+  \leanok
+  Uniqueness part of Theorem 2.8 (exceptional cases).
+\end{theorem}
+\begin{proof}\uses{thm:reduction}\end{proof}
+
+\begin{theorem}[Exercise 2.9(a)]
+  \label{exr:s2_9_a}
+  \notready
+  Verify the table (2.14) of class numbers and reduced forms. \emph{UNVERIFIED:
+  computational verification of a table, not a single proposition; flagged.}
+\end{theorem}
+
+\begin{theorem}[Exercise 2.9(b)]
+  \label{exr:s2_9_b}
+  \notready
+  Compute the reduced forms of discriminants $-3,-15,-24,-31,-52$. \emph{UNVERIFIED:
+  a per-discriminant enumeration, not a single faithfully-stateable proposition;
+  flagged.}
+\end{theorem}
+
+\begin{theorem}[Exercise 2.10(a)]
+  \label{exr:s2_10_a}
+  \lean{PrimesXNY2.PartI.S2.ex_2_10_a}
+  \leanok
+  Reduction for indefinite forms.
+\end{theorem}
+\begin{proof}\uses{def:indefinite, thm:reduction}\end{proof}
+
+\begin{theorem}[Exercise 2.10(b)]
+  \label{exr:s2_10_b}
+  \lean{PrimesXNY2.PartI.S2.ex_2_10_b}
+  \leanok
+  Bound $4a^2 \le D$.
+\end{theorem}
+\begin{proof}\uses{exr:s2_10_a}\end{proof}
+
+\begin{theorem}[Exercise 2.10(c)]
+  \label{exr:s2_10_c}
+  \lean{PrimesXNY2.PartI.S2.ex_2_10_c}
+  \leanok
+  Finiteness of the indefinite class number.
+\end{theorem}
+\begin{proof}\uses{exr:s2_10_b}\end{proof}
+
+\begin{theorem}[Exercise 2.11]
+  \label{exr:s2_11}
+  \lean{PrimesXNY2.PartI.S2.ex_2_11}
+  \leanok
+  The result (2.17) for $x^2+7y^2$.
+\end{theorem}
+\begin{proof}\uses{thm:t2_16, thm:quadratic_reciprocity}\end{proof}
+
+\begin{theorem}[Exercise 2.12(a)]
+  \label{exr:s2_12_a}
+  \lean{PrimesXNY2.PartI.S2.ex_2_12_a}
+  \leanok
+  Non-prime-power factorization.
+\end{theorem}
+
+\begin{theorem}[Exercise 2.12(b)]
+  \label{exr:s2_12_b}
+  \lean{PrimesXNY2.PartI.S2.ex_2_12_b}
+  \leanok
+  $h(-32)=2$ and $h(-124)=3$.
+\end{theorem}
+\begin{proof}\uses{def:reduced}\end{proof}
+
+\begin{theorem}[Exercise 2.13]
+  \label{exr:s2_13}
+  \lean{PrimesXNY2.PartI.S2.ex_2_13}
+  \leanok
+  The result (2.19) for $x^2+5y^2$.
+\end{theorem}
+\begin{proof}\uses{thm:t2_16, thm:quadratic_reciprocity}\end{proof}
+
+\begin{theorem}[Exercise 2.14]
+  \label{exr:s2_14}
+  \lean{PrimesXNY2.PartI.S2.ex_2_14}
+  \leanok
+  The residues (2.20) of $x^2+5y^2$ and $2x^2+2xy+3y^2$.
+\end{theorem}
+\begin{proof}\uses{lem:l2_24}\end{proof}
+
+\begin{theorem}[Exercise 2.15]
+  \label{exr:s2_15}
+  \lean{PrimesXNY2.PartI.S2.ex_2_15}
+  \leanok
+  The result (2.23) for $x^2+14y^2$, $2x^2+7y^2$.
+\end{theorem}
+\begin{proof}\uses{thm:t2_26}\end{proof}
+
+\begin{theorem}[Exercise 2.16]
+  \label{exr:s2_16}
+  \lean{PrimesXNY2.PartI.S2.ex_2_16}
+  \leanok
+  The principal form for $D \equiv 1 \pmod 4$ is reduced of disc $D$.
+\end{theorem}
+\begin{proof}\uses{def:principal_form, def:reduced}\end{proof}
+
+\begin{theorem}[Exercise 2.17(a)]
+  \label{exr:s2_17_a}
+  \lean{PrimesXNY2.PartI.S2.ex_2_17_a}
+  \leanok
+  Even values force $D \equiv 1 \pmod 8$.
+\end{theorem}
+\begin{proof}\uses{lem:repr_iff_equiv}\end{proof}
+
+\begin{theorem}[Exercise 2.17(b)]
+  \label{exr:s2_17_b}
+  \lean{PrimesXNY2.PartI.S2.ex_2_17_b}
+  \leanok
+  Represented units lie in $\ker\chi$.
+\end{theorem}
+\begin{proof}\uses{lem:repr_iff_isSquare_general}\end{proof}
+
+\begin{theorem}[Exercise 2.17(c)]
+  \label{exr:s2_17_c}
+  \lean{PrimesXNY2.PartI.S2.ex_2_17_c}
+  \leanok
+  $H$ is the subgroup of squares (principal form values).
+\end{theorem}
+\begin{proof}\uses{def:principal_form, lem:l2_24}\end{proof}
+
+\begin{theorem}[Exercise 2.17(d)]
+  \label{exr:s2_17_d}
+  \notready
+  The values represented by $f$ form a coset of $H$. \emph{UNVERIFIED: a faithful
+  coset statement requires fixing the square subgroup and a representative;
+  flagged (same delicacy as Lemma 2.24(ii)).}
+\end{theorem}
+
+\begin{theorem}[Exercise 2.18(a)]
+  \label{exr:s2_18_a}
+  \lean{PrimesXNY2.PartI.S2.ex_2_18_a}
+  \leanok
+  Some of $f(1,0),f(0,1),f(1,1)$ is prime to $p$.
+\end{theorem}
+\begin{proof}\uses{def:primitive}\end{proof}
+
+\begin{theorem}[Exercise 2.18(b)]
+  \label{exr:s2_18_b}
+  \lean{PrimesXNY2.PartI.S2.ex_2_18_b}
+  \leanok
+  Proof of Lemma 2.25.
+\end{theorem}
+\begin{proof}\uses{lem:l2_25}\end{proof}
+
+\begin{theorem}[Exercise 2.19]
+  \label{exr:s2_19}
+  \notready
+  Work out the genus theory of Theorem 2.26 for $D=-15,-24,-31,-52$.
+  \emph{UNVERIFIED: produces four separate congruence theorems, not one
+  proposition; flagged.}
+\end{theorem}
+
+\begin{theorem}[Exercise 2.20]
+  \label{exr:s2_20}
+  \notready
+  Corollary 2.27 for negative $D \equiv 1 \pmod 4$. \emph{UNVERIFIED: Cox does not
+  give the explicit congruence for this case and I will not guess it; flagged.}
+\end{theorem}
+
+\begin{theorem}[Exercise 2.21]
+  \label{exr:s2_21}
+  \lean{PrimesXNY2.PartI.S2.ex_2_21}
+  \leanok
+  The first theorem of (2.28): $x^2+6y^2$.
+\end{theorem}
+\begin{proof}\uses{thm:genus_congruence}\end{proof}
+
+\begin{theorem}[Exercise 2.22]
+  \label{exr:s2_22}
+  \lean{PrimesXNY2.PartI.S2.ex_2_22}
+  \leanok
+  The composition identity (2.31).
+\end{theorem}
+\begin{proof}\uses{eq:comp_2_31}\end{proof}
+
+\begin{theorem}[Exercise 2.23(a)]
+  \label{exr:s2_23_a}
+  \lean{PrimesXNY2.PartI.S2.ex_2_23_a}
+  \leanok
+  $p \equiv 1 \pmod 8 \Rightarrow (-2/p)=1$.
+\end{theorem}
+
+\begin{theorem}[Exercise 2.23(b)]
+  \label{exr:s2_23_b}
+  \lean{PrimesXNY2.PartI.S2.ex_2_23_b}
+  \leanok
+  $p \equiv 3 \pmod 8$: $(2/p)=1$ and representation by a disc-$8$ form.
+\end{theorem}
+\begin{proof}\uses{cor:c2_6}\end{proof}
+
+\begin{theorem}[Exercise 2.23(c)]
+  \label{exr:s2_23_c}
+  \lean{PrimesXNY2.PartI.S2.ex_2_23_c}
+  \leanok
+  Forms of discriminant $8$ are $\pm(x^2-2y^2)$.
+\end{theorem}
+\begin{proof}\uses{thm:reduction}\end{proof}
+
+\begin{theorem}[Exercise 2.23(d)]
+  \label{exr:s2_23_d}
+  \lean{PrimesXNY2.PartI.S2.ex_2_23_d}
+  \leanok
+  $p = \pm(x^2-2y^2) \Rightarrow p \equiv \pm 1 \pmod 8$.
+\end{theorem}
+
+\begin{theorem}[Exercise 2.24]
+  \label{exr:s2_24}
+  \lean{PrimesXNY2.PartI.S2.ex_2_24}
+  \leanok
+  Legendre's theorem on $ax^2+by^2+cz^2=0$.
+\end{theorem}
+
+\begin{theorem}[Exercise 2.24(a)]
+  \label{exr:s2_24_a}
+  \lean{PrimesXNY2.PartI.S2.ex_2_24_a}
+  \leanok
+  $x^2+py^2-qz^2=0$ has a nontrivial solution.
+\end{theorem}
+\begin{proof}\uses{exr:s2_24}\end{proof}
+
+\begin{theorem}[Exercise 2.24(b)]
+  \label{exr:s2_24_b}
+  \lean{PrimesXNY2.PartI.S2.ex_2_24_b}
+  \leanok
+  The mod-$4$ obstruction (contradiction proving reciprocity).
+\end{theorem}
+
+\begin{theorem}[Exercise 2.25]
+  \label{exr:s2_25}
+  \lean{PrimesXNY2.PartI.S2.ex_2_25}
+  \leanok
+  Forms are properly equivalent iff their opposites are.
+\end{theorem}
+\begin{proof}\uses{def:proper_equiv}\end{proof}
+
+\begin{theorem}[Exercise 2.26]
+  \label{exr:s2_26}
+  \lean{PrimesXNY2.PartI.S2.ex_2_26}
+  \leanok
+  The four compositions lie in distinct classes.
+\end{theorem}
+\begin{proof}\uses{def:proper_equiv, exr:s2_6}\end{proof}
+
+\begin{theorem}[Exercise 2.27(a)]
+  \label{exr:s2_27_a}
+  \lean{PrimesXNY2.PartI.S2.ex_2_27_a}
+  \leanok
+  A prime represented by two forms of the same disc: they are equivalent.
+\end{theorem}
+\begin{proof}\uses{lem:repr_iff_equiv, def:equivalent}\end{proof}
+
+\begin{theorem}[Exercise 2.27(b)]
+  \label{exr:s2_27_b}
+  \lean{PrimesXNY2.PartI.S2.ex_2_27_b}
+  \leanok
+  A reduced form equivalent to $x^2+ny^2$ equals it.
+\end{theorem}
+\begin{proof}\uses{thm:reduction}\end{proof}
 
 \chapter{Part II — Class Field Theory}
 

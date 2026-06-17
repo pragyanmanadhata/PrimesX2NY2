@@ -75,4 +75,44 @@ equivalence classes. -/
 theorem finite_reduced_of_discr (D : ℤ) (hD : D < 0) :
     {f : BinaryQF | f.discr = D ∧ f.Reduced}.Finite := sorry
 
+/-- **Full equivalence** (`GL₂(ℤ)`; Cox §2, (2.2)). Two forms are equivalent when
+related by an integer change of variables of determinant `±1`. -/
+def Equivalent (f g : BinaryQF) : Prop :=
+  ∃ M : Matrix (Fin 2) (Fin 2) ℤ, (M.det = 1 ∨ M.det = -1) ∧ action M f = g
+
+/-- A form is **indefinite** when its discriminant is positive. (Cox §2.) -/
+def BinaryQF.Indefinite (f : BinaryQF) : Prop := 0 < f.discr
+
+/-- **(2.4).** `4a·f(x,y) = (2ax + by)² − D y²`. (Cox §2.) -/
+theorem four_mul_eval (f : BinaryQF) (x y : ℤ) :
+    4 * f.a * f.eval x y = (2 * f.a * x + f.b * y) ^ 2 - f.discr * y ^ 2 := by
+  sorry
+
+/-- The **principal form** of discriminant `D ≡ 0, 1 (mod 4)`:
+`x² − (D/4)y²` if `D ≡ 0`, and `x² + xy + ((1−D)/4)y²` if `D ≡ 1`. (Cox §2.) -/
+def principalForm (D : ℤ) : BinaryQF :=
+  if D % 4 = 0 then ⟨1, 0, -(D / 4)⟩ else ⟨1, 1, (1 - D) / 4⟩
+
+/-- **Composition identity (2.30)** for the form `2x² + 2xy + 3y²` (used to prove
+the conjectures on `x² + 5y²`). (Cox §2.) -/
+theorem comp_identity_2_30 (x y z w : ℤ) :
+    (2 * x ^ 2 + 2 * x * y + 3 * y ^ 2) * (2 * z ^ 2 + 2 * z * w + 3 * w ^ 2)
+      = (2 * x * z + x * w + y * z + 3 * y * w) ^ 2 + 5 * (x * w - y * z) ^ 2 := by
+  sorry
+
+/-- **Composition identity (2.31)** for forms `ax² + 2bxy + cy²` of discriminant
+`−4n`, where `n = ac − b²`. (Cox §2.) -/
+theorem comp_identity_2_31 (a b c x y z w : ℤ) :
+    (a * x ^ 2 + 2 * b * x * y + c * y ^ 2) * (a * z ^ 2 + 2 * b * z * w + c * w ^ 2)
+      = (a * x * z + b * x * w + b * y * z + c * y * w) ^ 2
+        + (a * c - b ^ 2) * (x * w - y * z) ^ 2 := by
+  sorry
+
+/-- **Landau's theorem** (Cox, Thm 2.18): `h(−4n) = 1` iff `n ∈ {1,2,3,4,7}`, where
+`h(−4n)` is the number of primitive reduced forms of discriminant `−4n`. -/
+theorem class_number_one (n : ℕ) (hn : 0 < n) :
+    {f : BinaryQF | f.discr = -4 * (n : ℤ) ∧ f.Reduced ∧ f.Primitive}.ncard = 1
+      ↔ n = 1 ∨ n = 2 ∨ n = 3 ∨ n = 4 ∨ n = 7 := by
+  sorry
+
 end PrimesXNY2.Forms
