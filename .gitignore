@@ -7,3 +7,6 @@
 /blueprint/lean_decls
 /blueprint/src/web.bbl
 /blueprint/src/web.paux
+
+# macOS
+.DS_Store

@@ -54,6 +54,38 @@ relevant theory. Legend:
 | `thm:representation_residue` | `Genus.properlyRepresents_iff_isSquare` | **Partial** | Residue criterion sits on quadratic reciprocity (in Mathlib). |
 | `thm:genus_congruence` | `Genus.represents_principal_iff_congruence` | **Needs formalizing** | Genus theory; partly congruences + Dirichlet (in Mathlib). |
 
+#### §3 — Composition, genera, convenient numbers
+
+| Node (blueprint label) | Lean decl | Status | Notes |
+| --- | --- | --- | --- |
+| `lem:l3_2` / `lem:l3_5` | `Forms.lemma_3_2`, `Forms.lemma_3_5` | **Needs formalizing** | CRT-style; building blocks of composition. |
+| `def:dirichlet_form` / `prop:p3_8` | `Forms.dirichletForm`, `Forms.prop_3_8` | **Needs formalizing** | Explicit composition formula (3.7) and its well-definedness. |
+| `thm:form_class_group_is_group` | `Forms.isCommGroup` | **Needs formalizing** | **Faithful rewrite**: the old `Nonempty (CommGroup …)` was vacuous (true for any nonempty type). Now states assoc/comm/identity/inverse on `compose`. Carrier `DiscrForms` tightened to *primitive, `a>0`* forms. |
+| `thm:t3_9_inverse` | `Forms.thm_3_9_inverse` | **Needs formalizing** | Inverse = opposite class. |
+| `lem:l3_10` / `def:mu` / `prop:p3_11` | `Forms.lemma_3_10`, `Forms.mu`, `Forms.prop_3_11` | **Needs formalizing** | Order-≤2 forms; the exponent `μ` and `2^{μ−1}` two-torsion count. |
+| `def:assigned_characters` / `def:genus_map` | `Genera.Psi`, `Genera.genusVector` | **Needs formalizing** | Cox (3.16)/(3.12); `δ`, `ε` defined concretely. |
+| `lem:l3_13` / `cor:c3_14_i` / `cor:c3_14_ii` | `Genera.lemma_3_13`, `Genera.cor_3_14_i`, `…_ii` | **Needs formalizing** | Genus map is a homomorphism; genera equinumerous; count a power of two. |
+| `lem:l3_17` / `thm:t3_15_i` / `thm:t3_15_ii` | `Genera.lemma_3_17`, `Genera.thm_3_15_i`, `…_ii` | **Needs formalizing** | `Ψ` surjective, kernel `H`; `2^{μ−1}` genera; principal genus `= C(D)²`. |
+| `lem:l3_20` | `Genera.lemma_3_20` | **Needs formalizing** | Complete character determines the genus. |
+| `thm:t3_21` | `Genera.thm_3_21` | **GAP (partial statement)** | Only Cox's conditions (i)⟺(ii) are formalized. Conditions (iii)–(vi) (equivalence mod `m`, over `ℤ_p`, over `ℚ`) need a `ZMod`/`PadicInt`/`ℚ` action on forms not yet built — deferred, *not* axiomatized. |
+| `thm:t3_22` | `Genera.thm_3_22` | **GAP (partial statement)** | Four of Cox's five conditions formalized; the group-isomorphism condition `C(-4n) ≅ (ℤ/2ℤ)^k` is deferred (needs a registered `CommGroup` instance on `FormClassGroup`). |
+| `def:convenient_number` / `prop:p3_24` | `Genera.ConvenientNumber`, `Genera.prop_3_24` | **Needs formalizing** | Euler's idoneal numbers; one-class-per-genus characterization. |
+| `lem:l3_25` / `cor:c3_26` | `Genera.lemma_3_25`, `Genera.cor_3_26` | **Needs formalizing (deep counting)** | Representation counts `2∏(1+(-n/p))`, `2^{r+1}`; proved in §3 via Exercise 3.20. Statements typecheck; proofs are the hard analytic-counting part. |
+
+**Deferred computational enumerations** (stated as `\notready` blueprint nodes, *not*
+un-formalizable — good early proof targets once stated as `Decidable`/`Finset`
+decls): Exercise **2.9(b)** and Exercise **2.19** (reduced forms / genera of the
+discriminants `-3,-15,-24,-31,-52`), and the §3 analogues Exercise **3.14**
+(genera of disc `-164`) and **3.25(b)**. These enumerate the finite set of reduced
+forms of a fixed discriminant; each is a concrete `Finset`/`Decidable` computation
+deferred to a later proof pass.
+
+**§3 exercise gaps** (`\notready`, no Lean decl): sub-parts that *prove* a spine
+lemma (3.3, 3.10, 3.11, 3.15, 3.20(b–f)), need the **direct-composition predicate**
+(3.2, 3.6), the **`ℚ`/`ℤ_p` form action** (3.17, 3.18, part of 3.21), the abstract
+**group structure on `C(D)`** (3.9, 3.19, 3.25(a,c)), or the **Kronecker symbol**
+(3.24). None are axiomatized.
+
 ### Part II — Class Field Theory
 
 | Node | Lean decl | Status | Notes |

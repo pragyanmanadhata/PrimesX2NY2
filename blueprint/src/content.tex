@@ -603,16 +603,94 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   The group law on $C(D)$ given by Dirichlet composition of forms.
 \end{definition}
 
+\begin{definition}[Opposite form]
+  \label{def:opposite_form}
+  \lean{PrimesXNY2.Forms.BinaryQF.opposite}
+  \leanok
+  \uses{def:binary_qf}
+  The opposite of $a x^2 + b x y + c y^2$ is $a x^2 - b x y + c y^2$.
+\end{definition}
+
+\begin{lemma}[Cox Lemma 3.2]
+  \label{lem:l3_2}
+  \lean{PrimesXNY2.Forms.lemma_3_2}
+  \leanok
+  \uses{def:discriminant}
+  For forms of discriminant $D$ with $\gcd(a,a',(b+b')/2)=1$, there is a $B$, unique
+  mod $2aa'$, with $B \equiv b\ (2a)$, $B \equiv b'\ (2a')$, $B^2 \equiv D\ (4aa')$.
+\end{lemma}
+
+\begin{lemma}[Cox Lemma 3.5]
+  \label{lem:l3_5}
+  \lean{PrimesXNY2.Forms.lemma_3_5}
+  \leanok
+  The congruences $p_i B \equiv q_i\ (m)$ (with $\gcd(p_1,\dots,p_r,m)=1$) are
+  solvable iff $p_i q_j \equiv p_j q_i\ (m)$ for all $i,j$.
+\end{lemma}
+
+\begin{definition}[Dirichlet composition formula; Cox (3.7)]
+  \label{def:dirichlet_form}
+  \lean{PrimesXNY2.Forms.dirichletForm}
+  \leanok
+  \uses{lem:l3_2}
+  The composed form $a a' x^2 + B x y + \tfrac{B^2-D}{4aa'} y^2$, with $B$ from
+  Lemma 3.2.
+\end{definition}
+
+\begin{proposition}[Cox Proposition 3.8]
+  \label{prop:p3_8}
+  \lean{PrimesXNY2.Forms.prop_3_8}
+  \leanok
+  \uses{def:dirichlet_form, def:primitive}
+  The Dirichlet composition of two primitive positive definite forms of
+  discriminant $D$ is again primitive positive definite of discriminant $D$.
+\end{proposition}
+
 \begin{theorem}[$C(D)$ is a finite abelian group; Cox Thm 3.9]
   \label{thm:form_class_group_is_group}
   \lean{PrimesXNY2.Forms.isCommGroup}
   \leanok
-  Under Dirichlet composition, $C(D)$ is a finite abelian group with identity the
-  principal class.
+  \uses{def:dirichlet_composition}
+  For $D<0$, Dirichlet composition is associative and commutative, the principal
+  class is an identity, and every class has an inverse. (Faithful replacement of
+  the earlier $\mathrm{Nonempty}(\mathrm{CommGroup}\,C(D))$, which holds for any
+  nonempty type and was therefore vacuous.)
 \end{theorem}
 \begin{proof}
-  \uses{def:dirichlet_composition, thm:reduction}
+  \uses{prop:p3_8, thm:reduction}
 \end{proof}
+
+\begin{theorem}[Inverse is the opposite class; Cox Thm 3.9]
+  \label{thm:t3_9_inverse}
+  \lean{PrimesXNY2.Forms.thm_3_9_inverse}
+  \leanok
+  \uses{def:opposite_form, def:dirichlet_composition}
+  The inverse of the class of $f$ is the class of its opposite form.
+\end{theorem}
+
+\begin{lemma}[Cox Lemma 3.10]
+  \label{lem:l3_10}
+  \lean{PrimesXNY2.Forms.lemma_3_10}
+  \leanok
+  \uses{thm:form_class_group_is_group, def:reduced}
+  A reduced form has order $\le 2$ in $C(D)$ iff $b=0$, $a=b$, or $a=c$.
+\end{lemma}
+
+\begin{definition}[The exponent $\mu$; Cox Prop 3.11]
+  \label{def:mu}
+  \lean{PrimesXNY2.Forms.mu}
+  \leanok
+  The number of assigned characters, from the count $r$ of odd primes dividing $D$
+  and the value of $D \bmod 8$.
+\end{definition}
+
+\begin{proposition}[Cox Proposition 3.11]
+  \label{prop:p3_11}
+  \lean{PrimesXNY2.Forms.prop_3_11}
+  \leanok
+  \uses{def:mu, thm:form_class_group_is_group}
+  $C(D)$ has exactly $2^{\mu-1}$ elements of order $\le 2$.
+\end{proposition}
 
 \section{Genus theory and representation}
 
@@ -1049,6 +1127,563 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   A reduced form equivalent to $x^2+ny^2$ equals it.
 \end{theorem}
 \begin{proof}\uses{thm:reduction}\end{proof}
+
+\section{Genus theory of Gauss and convenient numbers}
+
+\begin{definition}[Assigned characters $\Psi$; Cox (3.16)]
+  \label{def:assigned_characters}
+  \lean{PrimesXNY2.Genera.Psi}
+  \leanok
+  \uses{def:mu}
+  The homomorphism $\Psi:(\mathbb Z/D\mathbb Z)^\times \to \{\pm1\}^\mu$ assembling
+  the characters $\chi_i(\cdot)=(\cdot/p_i)$, $\delta$, and $\varepsilon$.
+\end{definition}
+
+\begin{definition}[Genus map $\Phi$; Cox (3.12)]
+  \label{def:genus_map}
+  \lean{PrimesXNY2.Genera.genusVector}
+  \leanok
+  \uses{def:form_class_group, def:mu}
+  The complete-character map $\Phi:C(D)\to\{\pm1\}^\mu$; its fibers are the genera.
+\end{definition}
+
+\begin{lemma}[Cox Lemma 3.13]
+  \label{lem:l3_13}
+  \lean{PrimesXNY2.Genera.lemma_3_13}
+  \leanok
+  \uses{def:genus_map, def:dirichlet_composition}
+  The genus map is a homomorphism for Dirichlet composition.
+\end{lemma}
+
+\begin{theorem}[Cox Corollary 3.14(i)]
+  \label{cor:c3_14_i}
+  \lean{PrimesXNY2.Genera.cor_3_14_i}
+  \leanok
+  \uses{lem:l3_13}
+  All genera of discriminant $D$ consist of the same number of classes.
+\end{theorem}
+
+\begin{theorem}[Cox Corollary 3.14(ii)]
+  \label{cor:c3_14_ii}
+  \lean{PrimesXNY2.Genera.cor_3_14_ii}
+  \leanok
+  \uses{lem:l3_13}
+  The number of genera is a power of two.
+\end{theorem}
+
+\begin{lemma}[Cox Lemma 3.17]
+  \label{lem:l3_17}
+  \lean{PrimesXNY2.Genera.lemma_3_17}
+  \leanok
+  \uses{def:assigned_characters, lem:l2_24}
+  $\Psi$ is surjective with kernel the values represented by the principal form, so
+  $(\mathbb Z/D\mathbb Z)^\times/H \cong \{\pm1\}^\mu$.
+\end{lemma}
+
+\begin{theorem}[Number of genera; Cox Thm 3.15(i)]
+  \label{thm:t3_15_i}
+  \lean{PrimesXNY2.Genera.thm_3_15_i}
+  \leanok
+  \uses{def:genus_map, def:mu, lem:l3_17}
+  There are exactly $2^{\mu-1}$ genera of forms of discriminant $D$.
+\end{theorem}
+
+\begin{theorem}[Principal genus is squares; Cox Thm 3.15(ii)]
+  \label{thm:t3_15_ii}
+  \lean{PrimesXNY2.Genera.thm_3_15_ii}
+  \leanok
+  \uses{def:genus_map, def:principal_genus, prop:p3_11}
+  The principal genus is exactly the subgroup of squares $C(D)^2$.
+\end{theorem}
+
+\begin{lemma}[Cox Lemma 3.20]
+  \label{lem:l3_20}
+  \lean{PrimesXNY2.Genera.lemma_3_20}
+  \leanok
+  \uses{def:genus, def:assigned_characters}
+  Two forms lie in the same genus iff they have the same complete character.
+\end{lemma}
+
+\begin{theorem}[Genus via congruences; Cox Thm 3.21]
+  \label{thm:t3_21}
+  \lean{PrimesXNY2.Genera.thm_3_21}
+  \leanok
+  \uses{def:genus}
+  For primitive positive definite forms, same genus $\iff$ same values in
+  $(\mathbb Z/m\mathbb Z)^\times$ for all nonzero $m$ (Cox's conditions (i)–(ii);
+  the $\mathbb Z_p$/$\mathbb Q$ conditions (iii)–(vi) are deferred — see ROADMAP).
+\end{theorem}
+
+\begin{theorem}[Convenient-number characterization; Cox Thm 3.22]
+  \label{thm:t3_22}
+  \lean{PrimesXNY2.Genera.thm_3_22}
+  \leanok
+  \uses{def:genus_map, def:mu, thm:landau}
+  For $n>0$: every genus of disc $-4n$ is a single class $\iff$ every reduced form
+  has $b=0,a=b,a=c$ $\iff$ equivalence $=$ proper equivalence $\iff h(-4n)=2^{\mu-1}$
+  (the group-isomorphism condition $C(-4n)\cong(\mathbb Z/2\mathbb Z)^k$ deferred).
+\end{theorem}
+
+\begin{definition}[Euler's convenient (idoneal) number]
+  \label{def:convenient_number}
+  \lean{PrimesXNY2.Genera.ConvenientNumber}
+  \leanok
+  $n$ is convenient if every odd $m$ coprime to $n$ that is properly represented by
+  $x^2+ny^2$ with a unique solution $x,y\ge0$ is prime.
+\end{definition}
+
+\begin{proposition}[Cox Proposition 3.24]
+  \label{prop:p3_24}
+  \lean{PrimesXNY2.Genera.prop_3_24}
+  \leanok
+  \uses{def:convenient_number, thm:t3_22}
+  $n$ is convenient iff every genus of disc $-4n$ consists of a single class.
+\end{proposition}
+
+\begin{lemma}[Cox Lemma 3.25]
+  \label{lem:l3_25}
+  \lean{PrimesXNY2.Genera.lemma_3_25}
+  \leanok
+  \uses{def:genus}
+  The number of proper representations of odd $m$ by reduced forms of disc $-4n$ is
+  $2\prod_{p\mid m}(1+(-n/p))$.
+\end{lemma}
+
+\begin{theorem}[Cox Corollary 3.26]
+  \label{cor:c3_26}
+  \lean{PrimesXNY2.Genera.cor_3_26}
+  \leanok
+  \uses{lem:l3_25, def:genus}
+  An odd $m$ coprime to $4n$ properly represented by a primitive form $f$ of disc
+  $-4n$ is so represented in exactly $2^{r+1}$ ways by a reduced form in the genus
+  of $f$, where $r$ is the number of prime divisors of $m$.
+\end{theorem}
+
+\subsection{Exercises}
+
+\begin{theorem}[Exercise 3.1(a)]
+  \label{exr:s3_1_a}
+  \lean{PrimesXNY2.PartI.S3.ex_3_1_a}
+  \leanok
+  \uses{def:dirichlet_composition}
+  Gauss's coefficient formulas for a composition of forms.
+\end{theorem}
+
+\begin{theorem}[Exercise 3.1(b)]
+  \label{exr:s3_1_b}
+  \lean{PrimesXNY2.PartI.S3.ex_3_1_b}
+  \leanok
+  \uses{def:discriminant}
+  $a^2(b'^2-4a'c') = (a_1b_2-a_2b_1)^2(B^2-4AC)$.
+\end{theorem}
+
+\begin{theorem}[Exercise 3.1(c)]
+  \label{exr:s3_1_c}
+  \lean{PrimesXNY2.PartI.S3.ex_3_1_c}
+  \leanok
+  \uses{def:dirichlet_composition}
+  $a' = \pm(a_1c_2-a_2c_1)$.
+\end{theorem}
+
+\begin{theorem}[Exercise 3.2]
+  \label{exr:s3_2}
+  \notready
+  \uses{eq:comp_2_30, eq:comp_2_31}
+  The compositions (2.30) and (2.31) are not direct compositions. (Needs the
+  direct-composition predicate (3.1); deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.3]
+  \label{exr:s3_3}
+  \notready
+  \uses{lem:l3_5}
+  Prove Lemma 3.5. (Proof of a spine lemma; deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.4]
+  \label{exr:s3_4}
+  \notready
+  \uses{lem:l3_5}
+  Verify the congruences (3.4) satisfy the compatibility of Lemma 3.5. (Internal to
+  the composition construction; deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.5(a)]
+  \label{exr:s3_5_a}
+  \notready
+  \uses{def:dirichlet_form, def:proper_equiv}
+  $f$ is properly equivalent to $ax^2+Bxy+a'Cy^2$. (Step in showing Dirichlet
+  composition is a direct composition; deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.5(b)]
+  \label{exr:s3_5_b}
+  \lean{PrimesXNY2.PartI.S3.ex_3_5_b}
+  \leanok
+  \uses{def:dirichlet_form}
+  The bilinear identity exhibiting Dirichlet composition as a direct composition.
+\end{theorem}
+
+\begin{theorem}[Exercise 3.5(c)]
+  \label{exr:s3_5_c}
+  \notready
+  \uses{def:dirichlet_form}
+  Direct composition is preserved under proper equivalence of a factor. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.5(d)]
+  \label{exr:s3_5_d}
+  \notready
+  \uses{def:dirichlet_form}
+  Dirichlet composition is a direct composition. (Deferred; combines (a)–(c).)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.5(e)]
+  \label{exr:s3_5_e}
+  \lean{PrimesXNY2.PartI.S3.ex_3_5_e}
+  \leanok
+  \uses{def:dirichlet_form, def:primitive}
+  The Dirichlet composition of primitive forms is primitive.
+\end{theorem}
+
+\begin{theorem}[Exercise 3.6(a)]
+  \label{exr:s3_6_a}
+  \notready
+  \uses{def:dirichlet_form, eq:comp_2_31}
+  Dirichlet's formula matches Legendre's (2.32) when $\gcd(a,a')=1$. (Needs both
+  composition formulas; deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.6(b)]
+  \label{exr:s3_6_b}
+  \notready
+  \uses{def:dirichlet_form}
+  Which of $126x^2\pm74xy+13y^2$ is the direct composition. (Needs the
+  direct-composition predicate; deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.7]
+  \label{exr:s3_7}
+  \lean{PrimesXNY2.PartI.S3.ex_3_7}
+  \leanok
+  \uses{def:proper_equiv, def:principal_form}
+  $acx^2+bxy+y^2$ is properly equivalent to the principal form.
+\end{theorem}
+
+\begin{theorem}[Exercise 3.8(a)]
+  \label{exr:s3_8_a}
+  \lean{PrimesXNY2.PartI.S3.ex_3_8_a}
+  \leanok
+  \uses{def:equivalent, def:opposite_form}
+  The Lagrangian class is the union of the proper class and its opposite.
+\end{theorem}
+
+\begin{theorem}[Exercise 3.8(b)]
+  \label{exr:s3_8_b}
+  \lean{PrimesXNY2.PartI.S3.ex_3_8_b}
+  \leanok
+  \uses{def:equivalent, thm:t3_9_inverse}
+  Equivalent conditions for the Lagrangian class to equal the proper class (Cox's
+  order-$\le2$ condition deferred).
+\end{theorem}
+
+\begin{theorem}[Exercise 3.9(a)]
+  \label{exr:s3_9_a}
+  \notready
+  \uses{def:form_class_group}
+  Legendre's ``almost'' multiplication on $G/\!\sim$. (Abstract quotient structure;
+  deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.9(b)]
+  \label{exr:s3_9_b}
+  \notready
+  \uses{def:form_class_group}
+  The structure of $G/\!\sim$ for $G$ cyclic of order $8$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.9(c)]
+  \label{exr:s3_9_c}
+  \notready
+  \uses{def:form_class_group, def:equivalent}
+  $C(D)/\!\sim$ is the set of Lagrangian classes. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.10]
+  \label{exr:s3_10}
+  \notready
+  \uses{prop:p3_11}
+  Complete the proof of Proposition 3.11 in the remaining cases. (Proof of a spine
+  proposition; deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.11(a)]
+  \label{exr:s3_11_a}
+  \notready
+  \uses{lem:l3_17}
+  The map (3.18) is surjective with kernel the squares. (Internal to Lemma 3.17;
+  deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.11(b)]
+  \label{exr:s3_11_b}
+  \notready
+  \uses{lem:l3_17}
+  Prove Lemma 3.17 when $D=-4n$. (Proof of a spine lemma; deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.12(a)]
+  \label{exr:s3_12_a}
+  \notready
+  \uses{def:genus_map}
+  The genus map $\Phi'$ for a general nonsquare discriminant. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.12(b)]
+  \label{exr:s3_12_b}
+  \lean{PrimesXNY2.PartI.S3.ex_3_12_b}
+  \leanok
+  \uses{def:genus_map, def:mu, prop:p3_11}
+  The number of genera is at most $2^{\mu-1}$.
+\end{theorem}
+
+\begin{theorem}[Exercise 3.13(a)]
+  \label{exr:s3_13_a}
+  \notready
+  \uses{lem:l3_17}
+  Lemma 3.17 holds for all nonzero discriminants. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.13(b)]
+  \label{exr:s3_13_b}
+  \notready
+  \uses{lem:repr_iff_isSquare_general}
+  $(p^*/q)=1 \Rightarrow (q/p)=1$ via genus counting. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.13(c)]
+  \label{exr:s3_13_c}
+  \notready
+  \uses{thm:quadratic_reciprocity}
+  The case $p\equiv1$ or $q\equiv1 \pmod 4$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.13(d)]
+  \label{exr:s3_13_d}
+  \notready
+  \uses{thm:quadratic_reciprocity}
+  The case $p\equiv q\equiv3 \pmod 4$, completing quadratic reciprocity. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.13(e)]
+  \label{exr:s3_13_e}
+  \lean{PrimesXNY2.PartI.S3.ex_3_13_e}
+  \leanok
+  \uses{def:legendre_symbol}
+  The second supplement $(2/p)=(-1)^{(p^2-1)/8}$.
+\end{theorem}
+
+\begin{theorem}[Exercise 3.14]
+  \label{exr:s3_14}
+  \notready
+  \uses{def:genus}
+  Divide the forms of discriminant $-164$ into genera. (Computational enumeration;
+  deferred — see ROADMAP.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.15]
+  \label{exr:s3_15}
+  \notready
+  \uses{thm:t3_21}
+  Prove the implications $(vi)\Rightarrow(iii)\Rightarrow(ii)\Rightarrow(i)$ and
+  $(vi)\Rightarrow(v)\Rightarrow(i)$ of Theorem 3.21. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.16]
+  \label{exr:s3_16}
+  \lean{PrimesXNY2.PartI.S3.ex_3_16}
+  \leanok
+  \uses{def:genus}
+  $x^2+18y^2$ and $2x^2+9y^2$ share discriminant $-72$ but lie in different genera.
+\end{theorem}
+
+\begin{theorem}[Exercise 3.17(a)]
+  \label{exr:s3_17_a}
+  \notready
+  \uses{exr:s2_1}
+  A rationally equivalent form represents $d^2m$. (Step; deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.17(b)]
+  \label{exr:s3_17_b}
+  \notready
+  \uses{lem:repr_iff_equiv}
+  Rationally equivalent forms of a field discriminant lie in the same genus.
+  (Needs $\mathbb Q$-equivalence; deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.18(a)]
+  \label{exr:s3_18_a}
+  \notready
+  \uses{thm:t3_21}
+  A principal-genus form represents an odd square $a^2$ coprime to $n$. (Step;
+  deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.18(b)]
+  \label{exr:s3_18_b}
+  \notready
+  \uses{def:dirichlet_form}
+  The associated form $ax^2+2bxy+acy^2$ is primitive of disc $-4n$. (Step; deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.18(c)]
+  \label{exr:s3_18_c}
+  \notready
+  \uses{thm:t3_15_ii, def:dirichlet_form}
+  A principal-genus form is a Dirichlet square. (Deferred; re-proves Thm 3.15(ii).)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.19]
+  \label{exr:s3_19}
+  \notready
+  \uses{thm:t3_22, def:genus_map}
+  Equivalent conditions for one class per genus, incl. $C(D)\cong\{\pm1\}^{\mu-1}$.
+  (Group-isomorphism condition; deferred — subsumes Thm 3.22.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.20(a)]
+  \label{exr:s3_20_a}
+  \lean{PrimesXNY2.PartI.S3.ex_3_20_a}
+  \leanok
+  \uses{lem:l3_25}
+  The number of solutions of $x^2\equiv-n \pmod m$ is $\prod_{p\mid m}(1+(-n/p))$.
+\end{theorem}
+
+\begin{theorem}[Exercise 3.20(b)]
+  \label{exr:s3_20_b}
+  \notready
+  \uses{lem:l3_25}
+  Forms $mx^2+2bxy+cy^2$ correspond to solutions of $x^2\equiv-n \pmod m$.
+  (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.20(c)]
+  \label{exr:s3_20_c}
+  \notready
+  \uses{lem:l3_25}
+  Construction of the form $g_{u,v}$ from a proper representation. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.20(d)]
+  \label{exr:s3_20_d}
+  \notready
+  \uses{lem:l3_25}
+  The map from representations to forms is onto. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.20(e)]
+  \label{exr:s3_20_e}
+  \notready
+  \uses{lem:l3_25, thm:reduction}
+  Fibres of the map use uniqueness of reduction. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.20(f)]
+  \label{exr:s3_20_f}
+  \notready
+  \uses{lem:l3_25}
+  The map is exactly two-to-one, proving Lemma 3.25. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.21(a)]
+  \label{exr:s3_21_a}
+  \notready
+  \uses{lem:l3_25}
+  $m=x^2+2y^2$ and $m^3=x^2+2y^2$ have the same number of proper solutions.
+  (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.21(b)]
+  \label{exr:s3_21_b}
+  \lean{PrimesXNY2.PartI.S3.ex_3_21_b}
+  \leanok
+  $m=a^2+2b^2 \Rightarrow m^3=(a^3-6ab^2)^2+2(3a^2b-2b^3)^2$.
+\end{theorem}
+
+\begin{theorem}[Exercise 3.21(c)]
+  \label{exr:s3_21_c}
+  \lean{PrimesXNY2.PartI.S3.ex_3_21_c}
+  \leanok
+  The cubing map on $\mathbb Z[\sqrt{-2}]$ is injective.
+\end{theorem}
+
+\begin{theorem}[Exercise 3.21(d)]
+  \label{exr:s3_21_d}
+  \notready
+  \uses{lem:l3_25, exr:s3_21_b}
+  All proper representations of $m^3$ arise from those of $m$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.22]
+  \label{exr:s3_22}
+  \lean{PrimesXNY2.PartI.S3.ex_3_22}
+  \leanok
+  \uses{exr:s3_21_b}
+  Fermat: the only integer solutions of $x^3=y^2+2$ are $(3,\pm5)$.
+\end{theorem}
+
+\begin{theorem}[Exercise 3.23]
+  \label{exr:s3_23}
+  \lean{PrimesXNY2.PartI.S3.ex_3_23}
+  \leanok
+  \uses{lem:l3_25, thm:genus_congruence}
+  An odd prime $p=x^2+ny^2$ ($n>1$) has a unique representation with $x,y\ge0$.
+\end{theorem}
+
+\begin{theorem}[Exercise 3.24(a)]
+  \label{exr:s3_24_a}
+  \notready
+  \uses{def:legendre_symbol}
+  Reciprocity for the extended Jacobi symbol (odd, coprime, signed). (Needs the
+  Kronecker symbol; deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.24(b)]
+  \label{exr:s3_24_b}
+  \notready
+  \uses{def:legendre_symbol}
+  Gauss's count-of-nonresidue version of (a). (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.24(c)]
+  \label{exr:s3_24_c}
+  \notready
+  \uses{def:legendre_symbol}
+  Supplementary laws for the extended symbol. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.25(a)]
+  \label{exr:s3_25_a}
+  \notready
+  \uses{thm:t3_15_i}
+  $C(-4p)\cong(\mathbb Z/2^a\mathbb Z)\times G$ with $G$ of odd order, so $2\mid h(-4p)$.
+  (Group structure; deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.25(b)]
+  \label{exr:s3_25_b}
+  \notready
+  \uses{def:genus}
+  $2x^2+2xy+\tfrac{p+1}{2}y^2$ lies in the principal genus. (Computational; deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 3.25(c)]
+  \label{exr:s3_25_c}
+  \notready
+  \uses{thm:t3_15_ii}
+  $C(-4p)$ has an element of order $4$, so $4\mid h(-4p)$. (Deferred.)
+\end{theorem}
 
 \chapter{Part II — Class Field Theory}
 

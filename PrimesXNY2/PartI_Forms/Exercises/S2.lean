@@ -283,7 +283,11 @@ theorem ex_2_26 :
   sorry
 
 /-- **Exercise 2.27(a).** An odd prime represented by two forms `f, g` of the same
-discriminant forces `f` and `g` to be equivalent. -/
+discriminant forces `f` and `g` to be equivalent.
+
+Note: Cox's exercise text states this without an oddness hypothesis, but his proof
+(examining the middle coefficient mod `p` via Lemma 2.3) uses `p` odd, so we keep
+the hypothesis `Odd p` and flag the divergence. -/
 theorem ex_2_27_a (f g : BinaryQF) (hfg : f.discr = g.discr) (p : ℕ) (hp : p.Prime)
     (hodd : Odd p) (hf : Represents f (p : ℤ)) (hg : Represents g (p : ℤ)) :
     Equivalent f g := by
