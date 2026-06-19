@@ -10,9 +10,12 @@ import PrimesXNY2.PartI_Forms.Forms
 import PrimesXNY2.PartI_Forms.FormClassGroup
 import PrimesXNY2.PartI_Forms.Genus
 import PrimesXNY2.PartI_Forms.Genera
+import PrimesXNY2.PartI_Forms.CubicReciprocity
+import PrimesXNY2.PartI_Forms.BiquadraticReciprocity
 import PrimesXNY2.PartI_Forms.Exercises.S1
 import PrimesXNY2.PartI_Forms.Exercises.S2
 import PrimesXNY2.PartI_Forms.Exercises.S3
+import PrimesXNY2.PartI_Forms.Exercises.S4
 
 -- Part II — Class Field Theory
 import PrimesXNY2.PartII_ClassFieldTheory.Orders

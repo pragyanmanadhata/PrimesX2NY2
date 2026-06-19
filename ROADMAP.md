@@ -86,6 +86,49 @@ lemma (3.3, 3.10, 3.11, 3.15, 3.20(b–f)), need the **direct-composition predic
 **group structure on `C(D)`** (3.9, 3.19, 3.25(a,c)), or the **Kronecker symbol**
 (3.24). None are axiomatized.
 
+#### §4 — Cubic and biquadratic reciprocity
+
+**EisensteinInt design decision.** Mathlib has **no Eisenstein integers**, so §4.A
+defines a lightweight `EisensteinInt` structure `{a + bω}` with explicit
+arithmetic, norm `a²−ab+b²`, and bespoke `IsUnitE`/`IsPrimeE`/`AssociatedE`/`ModEq`
+predicates (no `CommRing` instance is registered — kept deliberately light). We do
+**not** use `Zsqrtd (-3)`: that is the order `ℤ[√−3]` of conductor `2`, *not* the
+maximal order `ℤ[ω]`; using it would make every §4.A norm/prime/character statement
+wrong. (Exercise 4.6, formalized over `Zsqrtd (-3)`, is exactly the proof that
+`ℤ[√−3]` is neither a PID nor a UFD.) §4.B is **asymmetric**: it reuses Mathlib's
+`GaussianInt` (`= Zsqrtd (-1)`, the maximal order), so units/primes/`Associated`/
+`∣`/`norm` are Mathlib wire-ups; only `quarticChar` is hand-rolled.
+
+| Node (blueprint label) | Lean decl | Status | Notes |
+| --- | --- | --- | --- |
+| `def:eisenstein_int` / `def:eisenstein_norm` / `lem:eisenstein_norm_mul` | `CubicReciprocity.EisensteinInt{,.norm,.norm_mul}` | **Needs formalizing** | Hand-rolled ring; norm `a²−ab+b²`. |
+| `prop:p4_3` / `cor:c4_4` | `…prop_4_3`, `…cor_4_4` | **Needs formalizing** | Euclidean ⇒ PID/UFD (irreducible ⟺ prime). |
+| `lem:l4_5_i` / `lem:l4_5_ii` / `lem:l4_6` | `…lemma_4_5_i`, `…_ii`, `…lemma_4_6` | **Needs formalizing** | Units `{±1,±ω,±ω²}`; norm-prime ⇒ prime. |
+| `prop:p4_7_*` / `lem:l4_8` / `cor:c4_9` | `…prop_4_7_{ramified,split,inert}`, `…lemma_4_8`, `…cor_4_9` | **Needs formalizing** | Split/inert/ramified (`3=−ω²(1−ω)²`); residue field; Fermat. |
+| `def:cubic_char` / `lem:cubic_char_*` / `lem:cubic_residue_iff` | `…cubicChar`, `…cubicChar_{spec,mul}`, `…cubicChar_eq_one_iff` | **Needs formalizing** | Cubic residue character (4.10)/(4.11). |
+| `def:primary_eisenstein` | `…IsPrimary` | **Needs formalizing** | `π ≡ ±1 (mod 3)` — Cox's normalization (see FLAG LIST). |
+| `thm:cubic_reciprocity` | `…thm_4_12` | **GAP (deep)** | Cubic reciprocity; `\notready`, full sorry, **never an axiom**. |
+| `lem:cubic_supplementary` | `…supplementary_4_13` | **GAP (deep)** | Supplementary laws (4.13). `\notready`. |
+| `lem:cubic_int_residue` | `…eq_4_14` | **Needs formalizing** | Integer cubic-residue criterion. |
+| `thm:x2_27y2` | `…thm_4_15` | **GAP (deep)** | `p = x²+27y²`; `\notready`, **never an axiom**. |
+| `def:gaussian_primary` / `prop:p4_18_*` / `lem:gaussian_fermat` | `BiquadraticReciprocity.{IsPrimaryG,prop_4_18_*,eq_4_19}` | **Partial (Mathlib `GaussianInt`)** | Classification is mostly a Mathlib wire-up; primary `π≡1 mod 2+2i`. |
+| `def:quartic_char` / `lem:quartic_char_*` / `lem:quartic_residue_iff` | `…quarticChar`, `…quarticChar_{spec,mul}`, `…quarticChar_eq_one_iff` | **Needs formalizing** | Quartic residue character (4.20). |
+| `thm:biquadratic_reciprocity` | `…thm_4_21` | **GAP (deep)** | Biquadratic reciprocity; `\notready`, **never an axiom**. |
+| `lem:biquadratic_supplementary` / `thm:quartic_char_two` | `…supplementary_4_22`, `…thm_4_23_i` | **GAP (deep)** | Supplementary laws (4.22); `(2/π)₄=i^{ab/2}`. `\notready`. |
+| `thm:x2_64y2` | `…thm_4_23_ii` | **GAP (deep)** | `p = x²+64y²`; `\notready`, **never an axiom**. |
+
+**§4 deep GAP nodes** (full sorry-bodied theorems, `\notready`, **no axioms**):
+cubic reciprocity (4.12), cubic supplementary (4.13), `x²+27y²` (4.15), biquadratic
+reciprocity (4.21), biquadratic supplementary (4.22), `(2/π)₄` (4.23(i)), `x²+64y²`
+(4.23(ii)), and Exercise 4.15(d) (`x²+243y²`). Each is downstream of the reciprocity
+laws Cox proves via cited machinery beyond Chapter 1.
+
+**§4 exercise gaps** (`\notready`, no Lean decl): sub-parts that *prove* a §4 spine
+result (4.5, 4.7, 4.8, 4.11, 4.13, 4.16, 4.18(a,c), 4.22, 4.23), need the
+**Gaussian periods / cubic Gauss sums** (4.28, 4.29), the **ℂ-embedding** (4.1),
+**multivariate polynomial ideals** (4.3), or the **character internals** (4.9(b),
+4.12, 4.19, 4.20, 4.24(a,c–f), 4.25, 4.26, 4.27). None are axiomatized.
+
 ### Part II — Class Field Theory
 
 | Node | Lean decl | Status | Notes |

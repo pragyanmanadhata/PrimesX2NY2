@@ -1685,6 +1685,743 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   $C(-4p)$ has an element of order $4$, so $4\mid h(-4p)$. (Deferred.)
 \end{theorem}
 
+\section{Cubic and biquadratic reciprocity}
+
+\subsection{Eisenstein integers and cubic reciprocity}
+
+\begin{definition}[Eisenstein integers]
+  \label{def:eisenstein_int}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt}
+  \leanok
+  The ring $\mathbb Z[\omega]$, $\omega = e^{2\pi i/3}$, as a lightweight structure
+  $\{a + b\omega\}$ (Mathlib has no Eisenstein integers; see ROADMAP).
+\end{definition}
+
+\begin{definition}[Eisenstein norm]
+  \label{def:eisenstein_norm}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.norm}
+  \leanok
+  \uses{def:eisenstein_int}
+  $N(a + b\omega) = a^2 - ab + b^2$.
+\end{definition}
+
+\begin{lemma}[Norm is multiplicative]
+  \label{lem:eisenstein_norm_mul}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.norm_mul}
+  \leanok
+  \uses{def:eisenstein_norm}
+  $N(\alpha\beta) = N(\alpha)N(\beta)$.
+\end{lemma}
+
+\begin{proposition}[Cox Proposition 4.3]
+  \label{prop:p4_3}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.prop_4_3}
+  \leanok
+  \uses{def:eisenstein_norm}
+  $\mathbb Z[\omega]$ is a Euclidean ring.
+\end{proposition}
+
+\begin{theorem}[Cox Corollary 4.4]
+  \label{cor:c4_4}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.cor_4_4}
+  \leanok
+  \uses{prop:p4_3}
+  $\mathbb Z[\omega]$ is a PID and a UFD; irreducibles coincide with primes.
+\end{theorem}
+
+\begin{lemma}[Cox Lemma 4.5(i)]
+  \label{lem:l4_5_i}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.lemma_4_5_i}
+  \leanok
+  \uses{def:eisenstein_norm}
+  $x$ is a unit iff $N(x) = 1$.
+\end{lemma}
+
+\begin{lemma}[Cox Lemma 4.5(ii)]
+  \label{lem:l4_5_ii}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.lemma_4_5_ii}
+  \leanok
+  \uses{lem:l4_5_i}
+  The units of $\mathbb Z[\omega]$ are $\{\pm1, \pm\omega, \pm\omega^2\}$.
+\end{lemma}
+
+\begin{lemma}[Cox Lemma 4.6]
+  \label{lem:l4_6}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.lemma_4_6}
+  \leanok
+  \uses{def:eisenstein_norm}
+  If $N(\alpha)$ is a rational prime then $\alpha$ is prime in $\mathbb Z[\omega]$.
+\end{lemma}
+
+\begin{proposition}[Cox Proposition 4.7(i); ramified]
+  \label{prop:p4_7_ramified}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.prop_4_7_ramified}
+  \leanok
+  \uses{lem:l4_6}
+  $1-\omega$ is prime and $3 = -\omega^2(1-\omega)^2$.
+\end{proposition}
+
+\begin{proposition}[Cox Proposition 4.7(ii); split]
+  \label{prop:p4_7_split}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.prop_4_7_split}
+  \leanok
+  \uses{lem:l4_6}
+  For $p \equiv 1 \pmod 3$, $p = \pi\bar\pi$ with $\pi,\bar\pi$ nonassociate primes.
+\end{proposition}
+
+\begin{proposition}[Cox Proposition 4.7(iii); inert]
+  \label{prop:p4_7_inert}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.prop_4_7_inert}
+  \leanok
+  \uses{lem:l4_6}
+  For $p \equiv 2 \pmod 3$, $p$ remains prime in $\mathbb Z[\omega]$.
+\end{proposition}
+
+\begin{lemma}[Cox Lemma 4.8]
+  \label{lem:l4_8}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.lemma_4_8}
+  \leanok
+  \uses{def:eisenstein_norm}
+  For a prime $\pi$ over $p$, $N(\pi) = p$ or $p^2$ (residue field $\mathbb
+  Z[\omega]/\pi$ has $N(\pi)$ elements).
+\end{lemma}
+
+\begin{theorem}[Cox Corollary 4.9; Eisenstein Fermat]
+  \label{cor:c4_9}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.cor_4_9}
+  \leanok
+  \uses{lem:l4_8}
+  If $\pi \nmid \alpha$ then $\alpha^{N(\pi)-1} \equiv 1 \pmod \pi$.
+\end{theorem}
+
+\begin{definition}[Cubic residue character; Cox (4.10)]
+  \label{def:cubic_char}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.cubicChar}
+  \leanok
+  \uses{cor:c4_9}
+  $(\alpha/\pi)_3 \in \{1,\omega,\omega^2\}$ with $\alpha^{(N(\pi)-1)/3} \equiv
+  (\alpha/\pi)_3 \pmod \pi$.
+\end{definition}
+
+\begin{lemma}[Cubic character: defining property]
+  \label{lem:cubic_char_spec}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.cubicChar_spec}
+  \leanok
+  \uses{def:cubic_char}
+  The defining congruence and the value in $\{1,\omega,\omega^2\}$.
+\end{lemma}
+
+\begin{lemma}[Cubic character is multiplicative]
+  \label{lem:cubic_char_mul}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.cubicChar_mul}
+  \leanok
+  \uses{def:cubic_char}
+  $(\alpha\beta/\pi)_3 = (\alpha/\pi)_3(\beta/\pi)_3$.
+\end{lemma}
+
+\begin{lemma}[Cubic residue criterion; Cox (4.11)]
+  \label{lem:cubic_residue_iff}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.cubicChar_eq_one_iff}
+  \leanok
+  \uses{def:cubic_char}
+  $(\alpha/\pi)_3 = 1$ iff $x^3 \equiv \alpha \pmod \pi$ is solvable.
+\end{lemma}
+
+\begin{definition}[Primary prime; Eisenstein]
+  \label{def:primary_eisenstein}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.IsPrimary}
+  \leanok
+  \uses{def:eisenstein_int}
+  $\pi \equiv \pm 1 \pmod 3$ (Cox's normalization).
+\end{definition}
+
+\begin{theorem}[Cubic Reciprocity; Cox Thm 4.12]
+  \label{thm:cubic_reciprocity}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.thm_4_12}
+  \leanok
+  \notready
+  \uses{def:cubic_char, def:primary_eisenstein}
+  For primary primes $\pi,\theta$ of unequal norm, $(\pi/\theta)_3 = (\theta/\pi)_3$.
+  (Deep; GAP, never an axiom.)
+\end{theorem}
+
+\begin{lemma}[Cubic supplementary laws; Cox (4.13)]
+  \label{lem:cubic_supplementary}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.supplementary_4_13}
+  \leanok
+  \notready
+  \uses{def:cubic_char, def:primary_eisenstein}
+  $(\omega/\pi)_3 = \omega^{m+n}$, $((1-\omega)/\pi)_3 = \omega^{2m}$ for
+  $\pi = -1 + 3m + 3n\omega$. (Deep; GAP.)
+\end{lemma}
+
+\begin{lemma}[Cubic residues of integers; Cox (4.14)]
+  \label{lem:cubic_int_residue}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.eq_4_14}
+  \leanok
+  \uses{def:cubic_char}
+  $x^3 \equiv a \pmod p$ is solvable in $\mathbb Z$ iff $(a/\pi)_3 = 1$.
+\end{lemma}
+
+\begin{theorem}[$p = x^2 + 27y^2$; Cox Thm 4.15]
+  \label{thm:x2_27y2}
+  \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.thm_4_15}
+  \leanok
+  \notready
+  \uses{thm:cubic_reciprocity, lem:cubic_int_residue}
+  $p = x^2 + 27y^2$ iff $p \equiv 1 \pmod 3$ and $2$ is a cubic residue mod $p$.
+  (Deep; GAP, never an axiom.)
+\end{theorem}
+
+\subsection{Gaussian integers and biquadratic reciprocity}
+
+\begin{definition}[Primary prime; Gaussian]
+  \label{def:gaussian_primary}
+  \lean{PrimesXNY2.BiquadraticReciprocity.IsPrimaryG}
+  \leanok
+  $\pi \equiv 1 \pmod{2 + 2i}$ in $\mathbb Z[i]$.
+\end{definition}
+
+\begin{proposition}[Cox Proposition 4.18(i); ramified]
+  \label{prop:p4_18_ramified}
+  \lean{PrimesXNY2.BiquadraticReciprocity.prop_4_18_ramified}
+  \leanok
+  $1+i$ is prime and $2 = i^3(1+i)^2$.
+\end{proposition}
+
+\begin{proposition}[Cox Proposition 4.18(ii); split]
+  \label{prop:p4_18_split}
+  \lean{PrimesXNY2.BiquadraticReciprocity.prop_4_18_split}
+  \leanok
+  For $p \equiv 1 \pmod 4$, $p = \pi\bar\pi$ with $\pi,\bar\pi$ nonassociate primes.
+\end{proposition}
+
+\begin{proposition}[Cox Proposition 4.18(iii); inert]
+  \label{prop:p4_18_inert}
+  \lean{PrimesXNY2.BiquadraticReciprocity.prop_4_18_inert}
+  \leanok
+  For $p \equiv 3 \pmod 4$, $p$ remains prime in $\mathbb Z[i]$.
+\end{proposition}
+
+\begin{lemma}[Cox (4.19); Gaussian Fermat]
+  \label{lem:gaussian_fermat}
+  \lean{PrimesXNY2.BiquadraticReciprocity.eq_4_19}
+  \leanok
+  If $\pi \nmid \alpha$ then $\alpha^{N(\pi)-1} \equiv 1 \pmod \pi$.
+\end{lemma}
+
+\begin{definition}[Quartic residue character; Cox (4.20)]
+  \label{def:quartic_char}
+  \lean{PrimesXNY2.BiquadraticReciprocity.quarticChar}
+  \leanok
+  \uses{lem:gaussian_fermat}
+  $(\alpha/\pi)_4 \in \{1,i,-1,-i\}$ with $\alpha^{(N(\pi)-1)/4} \equiv
+  (\alpha/\pi)_4 \pmod \pi$.
+\end{definition}
+
+\begin{lemma}[Quartic character: defining property]
+  \label{lem:quartic_char_spec}
+  \lean{PrimesXNY2.BiquadraticReciprocity.quarticChar_spec}
+  \leanok
+  \uses{def:quartic_char}
+  The defining congruence and the value in $\{1,i,-1,-i\}$.
+\end{lemma}
+
+\begin{lemma}[Quartic character is multiplicative]
+  \label{lem:quartic_char_mul}
+  \lean{PrimesXNY2.BiquadraticReciprocity.quarticChar_mul}
+  \leanok
+  \uses{def:quartic_char}
+  $(\alpha\beta/\pi)_4 = (\alpha/\pi)_4(\beta/\pi)_4$.
+\end{lemma}
+
+\begin{lemma}[Quartic residue criterion]
+  \label{lem:quartic_residue_iff}
+  \lean{PrimesXNY2.BiquadraticReciprocity.quarticChar_eq_one_iff}
+  \leanok
+  \uses{def:quartic_char}
+  $(\alpha/\pi)_4 = 1$ iff $x^4 \equiv \alpha \pmod \pi$ is solvable.
+\end{lemma}
+
+\begin{theorem}[Biquadratic Reciprocity; Cox Thm 4.21]
+  \label{thm:biquadratic_reciprocity}
+  \lean{PrimesXNY2.BiquadraticReciprocity.thm_4_21}
+  \leanok
+  \notready
+  \uses{def:quartic_char, def:gaussian_primary}
+  For distinct primary primes, $(\pi/\theta)_4 = (\theta/\pi)_4
+  (-1)^{(N(\pi)-1)(N(\theta)-1)/16}$. (Deep; GAP, never an axiom.)
+\end{theorem}
+
+\begin{lemma}[Biquadratic supplementary laws; Cox (4.22)]
+  \label{lem:biquadratic_supplementary}
+  \lean{PrimesXNY2.BiquadraticReciprocity.supplementary_4_22}
+  \leanok
+  \notready
+  \uses{def:quartic_char, def:gaussian_primary}
+  $(i/\pi)_4 = i^{-(a-1)/2}$, $((1+i)/\pi)_4 = i^{(a-b-1-b^2)/4}$. (Deep; GAP.)
+\end{lemma}
+
+\begin{theorem}[Quartic character of $2$; Cox Thm 4.23(i)]
+  \label{thm:quartic_char_two}
+  \lean{PrimesXNY2.BiquadraticReciprocity.thm_4_23_i}
+  \leanok
+  \notready
+  \uses{lem:biquadratic_supplementary}
+  For primary $\pi = a+bi$, $(2/\pi)_4 = i^{ab/2}$. (Deep; GAP.)
+\end{theorem}
+
+\begin{theorem}[$p = x^2 + 64y^2$; Cox Thm 4.23(ii)]
+  \label{thm:x2_64y2}
+  \lean{PrimesXNY2.BiquadraticReciprocity.thm_4_23_ii}
+  \leanok
+  \notready
+  \uses{thm:biquadratic_reciprocity, thm:quartic_char_two}
+  $p = x^2 + 64y^2$ iff $p \equiv 1 \pmod 4$ and $2$ is a biquadratic residue mod
+  $p$. (Deep; GAP, never an axiom.)
+\end{theorem}
+
+\subsection{Exercises}
+
+\begin{theorem}[Exercise 4.1]
+  \label{exr:s4_1}
+  \notready
+  \uses{def:eisenstein_int}
+  $\mathbb Z[\omega]$ and $\mathbb Z[i]$ are subrings of $\mathbb C$ closed under
+  conjugation. (Needs the $\mathbb C$-embedding; deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.2(i)]
+  \label{exr:s4_2_a}
+  \lean{PrimesXNY2.PartI.S4.ex_4_2_a}
+  \leanok
+  \uses{def:eisenstein_norm}
+  $N(a+b\omega) = a^2 - ab + b^2$.
+\end{theorem}
+
+\begin{theorem}[Exercise 4.2(ii)]
+  \label{exr:s4_2_b}
+  \lean{PrimesXNY2.PartI.S4.ex_4_2_b}
+  \leanok
+  \uses{lem:eisenstein_norm_mul}
+  The norm is multiplicative.
+\end{theorem}
+
+\begin{theorem}[Exercise 4.3]
+  \label{exr:s4_3}
+  \notready
+  The ideal $(x,y)$ shows $\mathbb C[x,y]$ is a UFD but not a PID. (Needs
+  multivariate polynomial ideals; deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.4]
+  \label{exr:s4_4}
+  \lean{PrimesXNY2.PartI.S4.ex_4_4}
+  \leanok
+  In a PID, irreducible $\iff$ prime $\iff$ $(\alpha)$ prime ideal $\iff$
+  $(\alpha)$ maximal.
+\end{theorem}
+
+\begin{theorem}[Exercise 4.5]
+  \label{exr:s4_5}
+  \notready
+  \uses{lem:l4_5_i, lem:l4_5_ii}
+  Prove Lemma 4.5. (Proof of a spine lemma; deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.6(a)]
+  \label{exr:s4_6_a}
+  \lean{PrimesXNY2.PartI.S4.ex_4_6_a}
+  \leanok
+  The units of $\mathbb Z[\sqrt{-3}]$ are $\pm1$.
+\end{theorem}
+
+\begin{theorem}[Exercise 4.6(b)]
+  \label{exr:s4_6_b}
+  \lean{PrimesXNY2.PartI.S4.ex_4_6_b}
+  \leanok
+  $2$ is irreducible but not prime in $\mathbb Z[\sqrt{-3}]$ (not a UFD).
+\end{theorem}
+
+\begin{theorem}[Exercise 4.6(c)]
+  \label{exr:s4_6_c}
+  \lean{PrimesXNY2.PartI.S4.ex_4_6_c}
+  \leanok
+  The ideal $(2, 1+\sqrt{-3})$ is not principal (not a PID).
+\end{theorem}
+
+\begin{theorem}[Exercise 4.7(a)]
+  \label{exr:s4_7_a}
+  \notready
+  \uses{prop:p4_7_split}
+  Prove the split case of Proposition 4.7. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.7(b)]
+  \label{exr:s4_7_b}
+  \notready
+  \uses{prop:p4_7_inert}
+  Prove the inert case of Proposition 4.7. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.8]
+  \label{exr:s4_8}
+  \notready
+  \uses{lem:l4_8}
+  Complete the proof of Lemma 4.8. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.9(a)]
+  \label{exr:s4_9_a}
+  \lean{PrimesXNY2.PartI.S4.ex_4_9_a}
+  \leanok
+  \uses{def:eisenstein_norm}
+  $3 \mid N(\pi) - 1$ for $\pi$ not associate to $1-\omega$.
+\end{theorem}
+
+\begin{theorem}[Exercise 4.9(b)]
+  \label{exr:s4_9_b}
+  \notready
+  \uses{def:cubic_char}
+  $1,\omega,\omega^2$ are distinct modulo $\pi$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.10(a)]
+  \label{exr:s4_10_a}
+  \lean{PrimesXNY2.PartI.S4.ex_4_10_a}
+  \leanok
+  \uses{def:cubic_char}
+  The cubic character is multiplicative.
+\end{theorem}
+
+\begin{theorem}[Exercise 4.10(b)]
+  \label{exr:s4_10_b}
+  \lean{PrimesXNY2.PartI.S4.ex_4_10_b}
+  \leanok
+  \uses{def:cubic_char}
+  The cubic character depends only on the residue mod $\pi$.
+\end{theorem}
+
+\begin{theorem}[Exercise 4.11]
+  \label{exr:s4_11}
+  \notready
+  \uses{lem:cubic_residue_iff}
+  Verify (4.11) when $(\mathbb Z[\omega]/\pi)^\times$ is cyclic. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.12]
+  \label{exr:s4_12}
+  \notready
+  \uses{def:primary_eisenstein}
+  Exactly two of the six associates of $\pi$ are primary. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.13]
+  \label{exr:s4_13}
+  \notready
+  \uses{lem:cubic_supplementary}
+  Prove the first supplementary law (4.13). (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.14]
+  \label{exr:s4_14}
+  \lean{PrimesXNY2.PartI.S4.ex_4_14}
+  \leanok
+  For $p \equiv 2 \pmod 3$, every $a$ is a cube mod $p$.
+\end{theorem}
+
+\begin{theorem}[Exercise 4.15(a)]
+  \label{exr:s4_15_a}
+  \notready
+  \uses{thm:x2_27y2}
+  $4p = a^2 + 27b^2$ gives a primary prime $\pi$ with $p = \pi\bar\pi$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.15(b)]
+  \label{exr:s4_15_b}
+  \notready
+  \uses{lem:cubic_supplementary}
+  Rewrite the supplementary laws (4.13) in terms of $a$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.15(c)]
+  \label{exr:s4_15_c}
+  \notready
+  \uses{lem:cubic_supplementary}
+  $(3/\pi)_3 = \omega^{2b}$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.15(d)]
+  \label{exr:s4_15_d}
+  \lean{PrimesXNY2.PartI.S4.ex_4_15_d}
+  \leanok
+  \notready
+  \uses{thm:cubic_reciprocity, lem:cubic_int_residue}
+  $4p = x^2 + 243y^2$ iff $p \equiv 1 \pmod 3$ and $3$ is a cubic residue mod $p$.
+  (Deep; GAP.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.16(a)]
+  \label{exr:s4_16_a}
+  \notready
+  Prove $\mathbb Z[i]$ is Euclidean. (Deferred; Mathlib provides this.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.16(b)]
+  \label{exr:s4_16_b}
+  \notready
+  Prove the $\mathbb Z[i]$ analogs of Lemmas 4.5 and 4.6. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.16(c)]
+  \label{exr:s4_16_c}
+  \notready
+  \uses{prop:p4_18_split}
+  Prove Proposition 4.18. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.16(d)]
+  \label{exr:s4_16_d}
+  \notready
+  Prove the $\mathbb Z[i]$ analog of Lemma 4.8. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.16(e)]
+  \label{exr:s4_16_e}
+  \notready
+  \uses{lem:gaussian_fermat}
+  Prove (4.19). (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.17]
+  \label{exr:s4_17}
+  \lean{PrimesXNY2.PartI.S4.ex_4_17}
+  \leanok
+  $4 \mid N(\pi) - 1$ for $\pi$ not associate to $1+i$.
+\end{theorem}
+
+\begin{theorem}[Exercise 4.18(a)]
+  \label{exr:s4_18_a}
+  \notready
+  \uses{def:quartic_char}
+  The quartic character is well-defined (4.20). (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.18(b)]
+  \label{exr:s4_18_b}
+  \lean{PrimesXNY2.PartI.S4.ex_4_18_b}
+  \leanok
+  \uses{def:quartic_char}
+  The quartic character is multiplicative.
+\end{theorem}
+
+\begin{theorem}[Exercise 4.18(c)]
+  \label{exr:s4_18_c}
+  \notready
+  \uses{lem:quartic_residue_iff}
+  $(\alpha/\pi)_4 = 1$ iff $x^4 \equiv \alpha \pmod \pi$ solvable. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.19(a)]
+  \label{exr:s4_19_a}
+  \notready
+  \uses{def:quartic_char}
+  $(a/\pi)_4 = \pm1$ and $= \pm1$ iff $(a/p) = 1$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.19(b)]
+  \label{exr:s4_19_b}
+  \notready
+  \uses{def:quartic_char}
+  Verify the congruence (4.20). (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.20(a)]
+  \label{exr:s4_20_a}
+  \notready
+  \uses{def:quartic_char}
+  For $p \equiv 3 \pmod 4$, $a$ is a fourth power mod $p$ in $\mathbb Z[i]$.
+  (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.20(b)]
+  \label{exr:s4_20_b}
+  \notready
+  $a$ is a biquadratic residue mod $p$ iff $(a/p) = 1$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.21]
+  \label{exr:s4_21}
+  \notready
+  \uses{def:gaussian_primary}
+  $\pi$ has a unique primary associate. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.22]
+  \label{exr:s4_22}
+  \notready
+  \uses{lem:biquadratic_supplementary}
+  Prove the first supplementary law (4.22). (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.23]
+  \label{exr:s4_23}
+  \notready
+  \uses{thm:quartic_char_two}
+  Prove Theorem 4.23(i) from (4.22). (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.24(a)]
+  \label{exr:s4_24_a}
+  \notready
+  \uses{thm:quadratic_reciprocity}
+  $(a/p) = 1$ via Jacobi reciprocity. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.24(b)]
+  \label{exr:s4_24_b}
+  \lean{PrimesXNY2.PartI.S4.ex_4_24_b}
+  \leanok
+  $2(a^2+b^2) = (a+b)^2 + (a-b)^2$.
+\end{theorem}
+
+\begin{theorem}[Exercise 4.24(c)]
+  \label{exr:s4_24_c}
+  \notready
+  \uses{lem:biquadratic_supplementary}
+  $((a+b)/p) = (i/\pi)_4 i^{ab/2}$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.24(d)]
+  \label{exr:s4_24_d}
+  \notready
+  \uses{def:quartic_char}
+  $(a+b)^{(p-1)/2} \equiv (2ab)^{(p-1)/4}$ and $((a+b)/\pi)_4 = (2ab/\pi)_4$.
+  (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.24(e)]
+  \label{exr:s4_24_e}
+  \notready
+  \uses{def:quartic_char}
+  $(2ab/\pi)_4 = (2i/\pi)_4$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.24(f)]
+  \label{exr:s4_24_f}
+  \notready
+  \uses{thm:quartic_char_two}
+  Combine to obtain $(2/\pi)_4 = i^{ab/2}$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.25(a)]
+  \label{exr:s4_25_a}
+  \notready
+  \uses{def:gaussian_primary}
+  A primary $\pi$ is $\equiv 1$ or $3 + 2i \pmod 4$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.25(b)]
+  \label{exr:s4_25_b}
+  \notready
+  \uses{thm:biquadratic_reciprocity}
+  Gauss's form of biquadratic reciprocity. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.26]
+  \label{exr:s4_26}
+  \notready
+  \uses{def:quartic_char}
+  If $2$ is a biquadratic residue mod $p$ then $p \equiv \pm1 \pmod 8$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.27(a)]
+  \label{exr:s4_27_a}
+  \notready
+  \uses{def:quartic_char}
+  $(-1/\pi)_4 = 1$ when $p \equiv 1 \pmod 4$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.27(b)]
+  \label{exr:s4_27_b}
+  \notready
+  \uses{thm:quadratic_reciprocity}
+  $(a/p) = (-1)^{(a^2-1)/8}$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.27(c)]
+  \label{exr:s4_27_c}
+  \notready
+  \uses{thm:quadratic_reciprocity}
+  $(b/p) = 1$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.27(d)]
+  \label{exr:s4_27_d}
+  \notready
+  \uses{thm:quartic_char_two}
+  $(2/\pi)_4 = (-1)^{(a^2-1)/8}$, Gauss's claim. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.28]
+  \label{exr:s4_28}
+  \notready
+  Gaussian period multiplication $(f,\lambda)(f,\mu) = \sum_j (f,\lambda+\mu_j)$.
+  (Needs Gaussian periods; deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.29(a)]
+  \label{exr:s4_29_a}
+  \notready
+  \uses{exr:s4_28}
+  The count $N = 9(00) + 6$ of solutions of $x^3 - y^3 \equiv 1$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.29(b)]
+  \label{exr:s4_29_b}
+  \notready
+  \uses{exr:s4_28}
+  Period products via Exercise 4.28. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.29(c)]
+  \label{exr:s4_29_c}
+  \notready
+  The nine $(ij)$ reduce to three quantities $\alpha,\beta,\gamma$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.29(d)]
+  \label{exr:s4_29_d}
+  \notready
+  Definitions of $\alpha,\beta,\gamma$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.29(e)]
+  \label{exr:s4_29_e}
+  \notready
+  $\alpha^2+\beta^2+\gamma^2-\alpha = \alpha\beta+\beta\gamma+\gamma\alpha$.
+  (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.29(f)]
+  \label{exr:s4_29_f}
+  \notready
+  $(6\alpha-3\beta-3\gamma-2)^2 + 27(\beta-\gamma)^2 = 12(\alpha+\beta+\gamma)-4$.
+  (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.29(g)]
+  \label{exr:s4_29_g}
+  \notready
+  $4p = a^2 + 27b^2$ with $a = 6\alpha-3\beta-3\gamma-2$. (Deferred.)
+\end{theorem}
+
+\begin{theorem}[Exercise 4.29(h)]
+  \label{exr:s4_29_h}
+  \notready
+  $a = N - p + 2$, proving (4.24). (Deferred.)
+\end{theorem}
+
 \chapter{Part II — Class Field Theory}
 
 This part states the structural bridge between forms and ideals, then the deep
