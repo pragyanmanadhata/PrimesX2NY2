@@ -99,6 +99,15 @@ wrong. (Exercise 4.6, formalized over `Zsqrtd (-3)`, is exactly the proof that
 `GaussianInt` (`= Zsqrtd (-1)`, the maximal order), so units/primes/`Associated`/
 `∣`/`norm` are Mathlib wire-ups; only `quarticChar` is hand-rolled.
 
+**`IsPrimary` normalization (consistency note, reconciliation pass).** `IsPrimary`
+follows Cox's definition `π ≡ ±1 (mod 3)` (two of the six associates are primary),
+**not** Ireland–Rosen's `π ≡ −1 (mod 3)`. This is harmless for the cubic character:
+`χ_π(−1) = (−1/π)₃ = 1` (a cube root of unity squaring to `1` must equal `1`), so
+the character is sign-independent and `thm_4_12` / `eq_4_14` are well-posed under the
+`±1` ambiguity. Note only: Cox's supplementary-law parametrization `(4.13)`
+(`supplementary_4_13`) uses the `≡ −1` representative `π = −1 + 3m + 3nω`, which is
+the `−1` branch of `IsPrimary` — the two are consistent, not in conflict.
+
 | Node (blueprint label) | Lean decl | Status | Notes |
 | --- | --- | --- | --- |
 | `def:eisenstein_int` / `def:eisenstein_norm` / `lem:eisenstein_norm_mul` | `CubicReciprocity.EisensteinInt{,.norm,.norm_mul}` | **Needs formalizing** | Hand-rolled ring; norm `a²−ab+b²`. |

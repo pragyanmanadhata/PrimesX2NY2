@@ -1726,7 +1726,8 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.cor_4_4}
   \leanok
   \uses{prop:p4_3}
-  $\mathbb Z[\omega]$ is a PID and a UFD; irreducibles coincide with primes.
+  $\mathbb Z[\omega]$ is a PID and a UFD. Formalized as the hallmark consequence
+  irreducible $\iff$ prime; the full PID/UFD typeclass is deferred.
 \end{theorem}
 
 \begin{lemma}[Cox Lemma 4.5(i)]
@@ -1782,8 +1783,9 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \lean{PrimesXNY2.CubicReciprocity.EisensteinInt.lemma_4_8}
   \leanok
   \uses{def:eisenstein_norm}
-  For a prime $\pi$ over $p$, $N(\pi) = p$ or $p^2$ (residue field $\mathbb
-  Z[\omega]/\pi$ has $N(\pi)$ elements).
+  For a prime $\pi$ over $p$, $N(\pi) = p$ or $p^2$. Formalized as this norm
+  dichotomy; the residue-field cardinality $|\mathbb Z[\omega]/\pi| = N(\pi)$ is
+  deferred.
 \end{lemma}
 
 \begin{theorem}[Cox Corollary 4.9; Eisenstein Fermat]
