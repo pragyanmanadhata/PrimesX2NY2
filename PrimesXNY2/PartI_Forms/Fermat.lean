@@ -42,13 +42,13 @@ theorem prime_sq_add_three_sq (p : ℕ) (hp : p.Prime) (hp3 : 3 < p) :
 squares as a sum of two squares. -/
 theorem mul_sq_add_sq (x y z w : ℤ) :
     (x ^ 2 + y ^ 2) * (z ^ 2 + w ^ 2) = (x * z - y * w) ^ 2 + (x * w + y * z) ^ 2 := by
-  sorry
+  ring
 
 /-- **(1.6)** The analogous identity for the form `x² + n y²`. -/
 theorem mul_sq_add_nsq (n x y z w : ℤ) :
     (x ^ 2 + n * y ^ 2) * (z ^ 2 + n * w ^ 2)
       = (x * z - n * y * w) ^ 2 + n * (x * w + y * z) ^ 2 := by
-  sorry
+  ring
 
 /-- **Descent Step** (Cox §1, case `n = 1`). If an odd prime `p` divides `x²+y²`
 with `gcd(x,y)=1`, then `p` is itself a sum of two squares. -/

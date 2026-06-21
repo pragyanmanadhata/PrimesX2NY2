@@ -86,7 +86,8 @@ def BinaryQF.Indefinite (f : BinaryQF) : Prop := 0 < f.discr
 /-- **(2.4).** `4a·f(x,y) = (2ax + by)² − D y²`. (Cox §2.) -/
 theorem four_mul_eval (f : BinaryQF) (x y : ℤ) :
     4 * f.a * f.eval x y = (2 * f.a * x + f.b * y) ^ 2 - f.discr * y ^ 2 := by
-  sorry
+  simp only [BinaryQF.eval, BinaryQF.discr]
+  ring
 
 /-- The **principal form** of discriminant `D ≡ 0, 1 (mod 4)`:
 `x² − (D/4)y²` if `D ≡ 0`, and `x² + xy + ((1−D)/4)y²` if `D ≡ 1`. (Cox §2.) -/
@@ -98,7 +99,7 @@ the conjectures on `x² + 5y²`). (Cox §2.) -/
 theorem comp_identity_2_30 (x y z w : ℤ) :
     (2 * x ^ 2 + 2 * x * y + 3 * y ^ 2) * (2 * z ^ 2 + 2 * z * w + 3 * w ^ 2)
       = (2 * x * z + x * w + y * z + 3 * y * w) ^ 2 + 5 * (x * w - y * z) ^ 2 := by
-  sorry
+  ring
 
 /-- **Composition identity (2.31)** for forms `ax² + 2bxy + cy²` of discriminant
 `−4n`, where `n = ac − b²`. (Cox §2.) -/
@@ -106,7 +107,7 @@ theorem comp_identity_2_31 (a b c x y z w : ℤ) :
     (a * x ^ 2 + 2 * b * x * y + c * y ^ 2) * (a * z ^ 2 + 2 * b * z * w + c * w ^ 2)
       = (a * x * z + b * x * w + b * y * z + c * y * w) ^ 2
         + (a * c - b ^ 2) * (x * w - y * z) ^ 2 := by
-  sorry
+  ring
 
 /-- **Landau's theorem** (Cox, Thm 2.18): `h(−4n) = 1` iff `n ∈ {1,2,3,4,7}`, where
 `h(−4n)` is the number of primitive reduced forms of discriminant `−4n`. -/

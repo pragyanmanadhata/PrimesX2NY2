@@ -66,7 +66,8 @@ theorem ex_3_5_b (a a' B C : ℤ) : ∀ x y z w : ℤ,
       = a * a' * (x * z - C * y * w) ^ 2
         + B * (x * z - C * y * w) * (a * x * w + a' * y * z + B * y * w)
         + C * (a * x * w + a' * y * z + B * y * w) ^ 2 := by
-  sorry
+  intro x y z w
+  ring
 
 /-- **Exercise 3.5(e).** The Dirichlet composition of two primitive forms is
 primitive. -/
@@ -109,7 +110,9 @@ theorem ex_3_12_b (D : ℤ) (hD : D < 0) (hD4 : D % 4 = 0 ∨ D % 4 = 1) :
 `(2/p) = (−1)^{(p²−1)/8}`, i.e. `+1` iff `p ≡ ±1 (mod 8)`. -/
 theorem ex_3_13_e (p : ℕ) [Fact p.Prime] (hodd : Odd p) :
     legendreSym p 2 = if p % 8 = 1 ∨ p % 8 = 7 then (1 : ℤ) else -1 := by
-  sorry
+  have h2 : p ≠ 2 := by rintro rfl; simp [Nat.odd_iff] at hodd
+  have hp2 : p % 2 = 1 := Nat.odd_iff.mp hodd
+  rw [legendreSym.at_two h2, ZMod.χ₈_nat_eq_if_mod_eight, if_neg (by omega : ¬ p % 2 = 0)]
 
 /-- **Exercise 3.16.** `x² + 18y²` and `2x² + 9y²` have the same discriminant `−72`
 but lie in different genera (so genus is not a rational-equivalence invariant). -/
@@ -130,7 +133,7 @@ theorem ex_3_20_a (n m : ℕ) [NeZero m] (hn : 0 < n) (hm : Odd m) (hco : Nat.Co
 theorem ex_3_21_b (a b : ℤ) :
     (a ^ 2 + 2 * b ^ 2) ^ 3
       = (a ^ 3 - 6 * a * b ^ 2) ^ 2 + 2 * (3 * a ^ 2 * b - 2 * b ^ 3) ^ 2 := by
-  sorry
+  ring
 
 /-- **Exercise 3.21(c).** The cubing map `(a,b) ↦ (a³ − 6ab², 3a²b − 2b³)` on
 `ℤ[√−2]` is injective. -/

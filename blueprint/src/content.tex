@@ -2,8 +2,10 @@
 %
 % Each node carries \label, \lean (the matching Lean declaration), \uses (its
 % dependencies in the DAG), and \leanok on every statement whose Lean signature
-% typechecks. Proof environments deliberately carry no \leanok: every Lean proof
-% is currently `sorry` (this is a scaffold).
+% typechecks. A node whose Lean proof is complete (no `sorry`, verified by
+% `#print axioms`) additionally carries `\begin{proof}\leanok\end{proof}`, which
+% recolors it "proved" in the dependency graph. Nodes still backed by a `sorry`
+% proof carry no proof `\leanok` (Pass B is discharging these incrementally).
 %
 % See ROADMAP.md for the Mathlib audit of each node.
 
@@ -27,6 +29,7 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \leanok
   $(x^2+y^2)(z^2+w^2) = (xz - yw)^2 + (xw + yz)^2$.
 \end{theorem}
+\begin{proof}\leanok\end{proof}
 
 \begin{theorem}[Identity for $x^2+ny^2$; Cox (1.6)]
   \label{eq:mul_sq_add_nsq}
@@ -34,6 +37,7 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \leanok
   $(x^2+ny^2)(z^2+nw^2) = (xz - nyw)^2 + n(xw + yz)^2$.
 \end{theorem}
+\begin{proof}\leanok\end{proof}
 
 \begin{theorem}[Cox Lemma 1.4]
   \label{lem:descent_lemma}
@@ -512,6 +516,7 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \uses{def:form_eval, def:discriminant}
   $4a\,f(x,y) = (2ax+by)^2 - D y^2$.
 \end{theorem}
+\begin{proof}\leanok\end{proof}
 
 \begin{definition}[Principal form]
   \label{def:principal_form}
@@ -570,12 +575,14 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \lean{PrimesXNY2.Forms.comp_identity_2_30}
   \leanok
 \end{theorem}
+\begin{proof}\leanok\end{proof}
 
 \begin{theorem}[Composition identity (2.31)]
   \label{eq:comp_2_31}
   \lean{PrimesXNY2.Forms.comp_identity_2_31}
   \leanok
 \end{theorem}
+\begin{proof}\leanok\end{proof}
 
 \begin{theorem}[Landau; Cox Theorem 2.18]
   \label{thm:landau}
@@ -1323,6 +1330,7 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \uses{def:dirichlet_form}
   The bilinear identity exhibiting Dirichlet composition as a direct composition.
 \end{theorem}
+\begin{proof}\leanok\end{proof}
 
 \begin{theorem}[Exercise 3.5(c)]
   \label{exr:s3_5_c}
@@ -1482,6 +1490,7 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \uses{def:legendre_symbol}
   The second supplement $(2/p)=(-1)^{(p^2-1)/8}$.
 \end{theorem}
+\begin{proof}\leanok\end{proof}
 
 \begin{theorem}[Exercise 3.14]
   \label{exr:s3_14}
@@ -1610,6 +1619,7 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \leanok
   $m=a^2+2b^2 \Rightarrow m^3=(a^3-6ab^2)^2+2(3a^2b-2b^3)^2$.
 \end{theorem}
+\begin{proof}\leanok\end{proof}
 
 \begin{theorem}[Exercise 3.21(c)]
   \label{exr:s3_21_c}
@@ -1712,6 +1722,7 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \uses{def:eisenstein_norm}
   $N(\alpha\beta) = N(\alpha)N(\beta)$.
 \end{lemma}
+\begin{proof}\leanok\end{proof}
 
 \begin{proposition}[Cox Proposition 4.3]
   \label{prop:p4_3}
@@ -2000,6 +2011,7 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \uses{def:eisenstein_norm}
   $N(a+b\omega) = a^2 - ab + b^2$.
 \end{theorem}
+\begin{proof}\leanok\end{proof}
 
 \begin{theorem}[Exercise 4.2(ii)]
   \label{exr:s4_2_b}
@@ -2008,6 +2020,7 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \uses{lem:eisenstein_norm_mul}
   The norm is multiplicative.
 \end{theorem}
+\begin{proof}\leanok\end{proof}
 
 \begin{theorem}[Exercise 4.3]
   \label{exr:s4_3}
@@ -2023,6 +2036,7 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   In a PID, irreducible $\iff$ prime $\iff$ $(\alpha)$ prime ideal $\iff$
   $(\alpha)$ maximal.
 \end{theorem}
+\begin{proof}\leanok\end{proof}
 
 \begin{theorem}[Exercise 4.5]
   \label{exr:s4_5}
@@ -2286,6 +2300,7 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \leanok
   $2(a^2+b^2) = (a+b)^2 + (a-b)^2$.
 \end{theorem}
+\begin{proof}\leanok\end{proof}
 
 \begin{theorem}[Exercise 4.24(c)]
   \label{exr:s4_24_c}

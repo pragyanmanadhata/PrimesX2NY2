@@ -28,19 +28,26 @@ open PrimesXNY2.CubicReciprocity PrimesXNY2.BiquadraticReciprocity
 /-- **Exercise 4.2(i).** `N(a + bω) = a² − ab + b²`. -/
 theorem ex_4_2_a (a b : ℤ) :
     EisensteinInt.norm (⟨a, b⟩ : EisensteinInt) = a ^ 2 - a * b + b ^ 2 := by
-  sorry
+  rfl
 
 /-- **Exercise 4.2(ii).** The norm is multiplicative. -/
 theorem ex_4_2_b (x y : EisensteinInt) :
     EisensteinInt.norm (x * y) = EisensteinInt.norm x * EisensteinInt.norm y := by
-  sorry
+  exact EisensteinInt.norm_mul x y
 
 /-- **Exercise 4.4.** In a PID, for `α ≠ 0` the notions irreducible, prime, prime
 ideal `(α)`, and maximal ideal `(α)` coincide. -/
 theorem ex_4_4 {R : Type*} [CommRing R] [IsDomain R] [IsPrincipalIdealRing R]
     (α : R) (hα : α ≠ 0) :
     [Irreducible α, Prime α, (Ideal.span {α}).IsPrime, (Ideal.span {α}).IsMaximal].TFAE := by
-  sorry
+  tfae_have 1 ↔ 2 := UniqueFactorizationMonoid.irreducible_iff_prime
+  tfae_have 2 ↔ 3 := (Ideal.span_singleton_prime hα).symm
+  tfae_have 3 → 4 := by
+    intro h
+    haveI := h
+    exact IsPrime.to_maximal_ideal (mt Ideal.span_singleton_eq_bot.mp hα)
+  tfae_have 4 → 3 := fun h => h.isPrime
+  tfae_finish
 
 /-- **Exercise 4.6(a).** The only units of `ℤ[√−3]` are `±1`. -/
 theorem ex_4_6_a (x : Zsqrtd (-3)) : IsUnit x ↔ (x = 1 ∨ x = -1) := by
@@ -102,6 +109,6 @@ theorem ex_4_18_b (π α β : GaussianInt) :
 + (a−b)²` in Dirichlet's proof). -/
 theorem ex_4_24_b (a b : ℤ) :
     2 * (a ^ 2 + b ^ 2) = (a + b) ^ 2 + (a - b) ^ 2 := by
-  sorry
+  ring
 
 end PrimesXNY2.PartI.S4

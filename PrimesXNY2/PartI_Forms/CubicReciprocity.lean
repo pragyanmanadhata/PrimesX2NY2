@@ -91,7 +91,10 @@ def IsCubicResidue (a : ℤ) (p : ℕ) : Prop := ∃ x : ZMod p, x ^ 3 = (a : ZM
 
 /-- **Norm is multiplicative.** (Cox §4.A.) -/
 theorem norm_mul (x y : EisensteinInt) : norm (x * y) = norm x * norm y := by
-  sorry
+  have ha : (x * y).a = x.a * y.a - x.b * y.b := rfl
+  have hb : (x * y).b = x.a * y.b + x.b * y.a - x.b * y.b := rfl
+  simp only [norm, ha, hb]
+  ring
 
 /-- **Proposition 4.3.** `ℤ[ω]` is a Euclidean ring: division with smaller-norm
 remainder. -/
