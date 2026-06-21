@@ -24,7 +24,26 @@ namespace PrimesXNY2.Fermat
 squares iff `p ≡ 1 (mod 4)`. -/
 theorem prime_sq_add_sq (p : ℕ) (hp : p.Prime) (hodd : Odd p) :
     (∃ x y : ℤ, (p : ℤ) = x ^ 2 + y ^ 2) ↔ p % 4 = 1 := by
-  sorry
+  haveI := Fact.mk hp
+  constructor
+  · rintro ⟨x, y, hxy⟩
+    have key : ∀ a b : ZMod 4, a ^ 2 + b ^ 2 ≠ 3 := by decide
+    have hp24 : p % 4 = 1 ∨ p % 4 = 3 := by have := Nat.odd_iff.mp hodd; omega
+    rcases hp24 with h | h
+    · exact h
+    · exfalso
+      have hcast : (p : ZMod 4) = (x : ZMod 4) ^ 2 + (y : ZMod 4) ^ 2 := by
+        have h0 : ((p : ℤ) : ZMod 4) = ((x ^ 2 + y ^ 2 : ℤ) : ZMod 4) := by rw [hxy]
+        push_cast at h0
+        exact h0
+      have hp3z : (p : ZMod 4) = 3 := by
+        have hp43 : p = 4 * (p / 4) + 3 := by omega
+        rw [hp43]; push_cast; rw [show (4 : ZMod 4) = 0 from by decide]; ring
+      rw [hp3z] at hcast
+      exact key _ _ hcast.symm
+  · intro h
+    obtain ⟨a, b, hab⟩ := Nat.Prime.sq_add_sq (show p % 4 ≠ 3 by omega)
+    exact ⟨a, b, by exact_mod_cast hab.symm⟩
 
 /-- Primes represented by `x² + 2y²` (Cox, §1). For an odd prime `p`, solvable
 iff `p ≡ 1, 3 (mod 8)`. -/
@@ -84,18 +103,35 @@ theorem euler_reciprocity (p q : ℕ) (hp : p.Prime) (hq : q.Prime)
           ((p : ℤ) ≡ β ^ 2 [ZMOD (4 * q)] ∨ (p : ℤ) ≡ -β ^ 2 [ZMOD (4 * q)]) := by
   sorry
 
-/-- **Proposition 1.10** (Law of Quadratic Reciprocity). For distinct odd primes
-`p, q`, `(p/q)(q/p) = (−1)^((p−1)/2·(q−1)/2)`. -/
+/-- **Proposition 1.10** (Law of Quadratic Reciprocity). For *distinct* odd primes
+`p, q`, `(p/q)(q/p) = (−1)^((p−1)/2·(q−1)/2)`. (The hypothesis `p ≠ q` is part of
+Cox's statement — "distinct odd primes"; without it the claim is false at `p = q`,
+where the left side is `0`.) -/
 theorem quadratic_reciprocity (p q : ℕ) [Fact p.Prime] [Fact q.Prime]
-    (hp : p ≠ 2) (hq : q ≠ 2) :
+    (hp : p ≠ 2) (hq : q ≠ 2) (hpq : p ≠ q) :
     legendreSym p (q : ℤ) * legendreSym q (p : ℤ) = (-1) ^ (p / 2 * (q / 2)) := by
-  sorry
+  rw [mul_comm (legendreSym p (q : ℤ)) (legendreSym q (p : ℤ))]
+  exact legendreSym.quadratic_reciprocity hp hq hpq
 
-/-- The two supplementary laws: `(−1/p) = (−1)^((p−1)/2)` and
-`(2/p) = (−1)^((p²−1)/8)`. -/
-theorem legendreSym_supplementary (p : ℕ) [Fact p.Prime] (hp : p ≠ 2) :
-    legendreSym p (-1) = (-1) ^ ((p - 1) / 2) ∧
-      legendreSym p 2 = (-1) ^ ((p ^ 2 - 1) / 8) := by
+/-- **First supplement** to quadratic reciprocity: `(−1/p) = (−1)^((p−1)/2)`.
+(This is the first line of Cox's (1.11); Cox pairs it with multiplicativity
+`(ab/p) = (a/p)(b/p)`, not with the second supplement below.) -/
+theorem legendreSym_first_supplement (p : ℕ) [Fact p.Prime] (hp : p ≠ 2) :
+    legendreSym p (-1) = (-1) ^ ((p - 1) / 2) := by
+  have hp2 : p % 2 = 1 := ((Fact.out : p.Prime).eq_two_or_odd).resolve_left hp
+  rw [legendreSym.at_neg_one hp, ZMod.χ₄_eq_neg_one_pow hp2]
+  congr 1
+  omega
+
+/-- **Second supplement** to quadratic reciprocity: `(2/p) = (−1)^((p²−1)/8)`.
+(A standard supplement used in §1; *not* part of Cox's numbered (1.11).)
+
+UNVERIFIED proof: Mathlib provides `legendreSym.at_two : (2/p) = χ₈ p` (a value by
+`p mod 8`), but no closed form `(−1)^((p²−1)/8)`. Bridging needs a nonlinear
+`Nat`-division parity argument on `(p²−1)/8` — a tracked C-bucket target, not a
+leaf. -/
+theorem legendreSym_second_supplement (p : ℕ) [Fact p.Prime] (hp : p ≠ 2) :
+    legendreSym p 2 = (-1) ^ ((p ^ 2 - 1) / 8) := by
   sorry
 
 /-- **Lemma 1.14.** For nonzero `D ≡ 0,1 (mod 4)` there is a homomorphism

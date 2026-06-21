@@ -69,11 +69,13 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   An odd prime $p$ is a sum of two squares, $p = x^2 + y^2$, if and only if
   $p \equiv 1 \pmod 4$.
 \end{theorem}
-\begin{proof}
+\begin{proof}\leanok
   \uses{thm:descent, thm:legendre_supplementary}
   Reciprocity shows $-1$ is a quadratic residue mod $p$ exactly when
   $p \equiv 1 \pmod 4$; descent (\ref{thm:descent}) then produces the
-  representation.
+  representation. (The Lean proof wires the backward direction to Mathlib's
+  \texttt{Nat.Prime.sq\_add\_sq} and proves the forward $\bmod 4$ obstruction
+  directly.)
 \end{proof}
 
 \begin{theorem}[$x^2 + 2y^2$]
@@ -134,19 +136,32 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   For distinct odd primes $p,q$,
   $(p/q)(q/p) = (-1)^{\frac{p-1}{2}\cdot\frac{q-1}{2}}$.
 \end{theorem}
-\begin{proof}
+\begin{proof}\leanok
   \uses{conj:euler_reciprocity, def:legendre_symbol}
 \end{proof}
 
-\begin{theorem}[Supplementary laws]
+\begin{theorem}[First supplement to quadratic reciprocity]
   \label{thm:legendre_supplementary}
-  \lean{PrimesXNY2.Fermat.legendreSym_supplementary}
+  \lean{PrimesXNY2.Fermat.legendreSym_first_supplement}
   \leanok
-  $(-1/p) = (-1)^{(p-1)/2}$ and $(2/p) = (-1)^{(p^2-1)/8}$.
+  $(-1/p) = (-1)^{(p-1)/2}$. (This is the first line of Cox's (1.11), which pairs it
+  with multiplicativity $(ab/p)=(a/p)(b/p)$, not with the second supplement below.)
 \end{theorem}
-\begin{proof}
+\begin{proof}\leanok
   \uses{def:legendre_symbol}
 \end{proof}
+
+\begin{theorem}[Second supplement to quadratic reciprocity]
+  \label{thm:legendre_second_supplement}
+  \lean{PrimesXNY2.Fermat.legendreSym_second_supplement}
+  \leanok
+  \notready
+  \uses{def:legendre_symbol}
+  $(2/p) = (-1)^{(p^2-1)/8}$. (A standard supplement used in §1; \emph{not} part of
+  Cox's numbered (1.11). Mathlib provides only $\chi_8\,p$ by $p \bmod 8$; the
+  closed form $(-1)^{(p^2-1)/8}$ needs a nonlinear $\mathbb N$-division parity
+  bridge --- a tracked C-bucket target, not deep-GAP.)
+\end{theorem}
 
 \begin{theorem}[Cox Lemma 1.14]
   \label{lem:quadraticChar}
@@ -1275,6 +1290,7 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \uses{def:dirichlet_composition}
   Gauss's coefficient formulas for a composition of forms.
 \end{theorem}
+\begin{proof}\leanok\end{proof}
 
 \begin{theorem}[Exercise 3.1(b)]
   \label{exr:s3_1_b}
@@ -2051,6 +2067,7 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \leanok
   The units of $\mathbb Z[\sqrt{-3}]$ are $\pm1$.
 \end{theorem}
+\begin{proof}\leanok\end{proof}
 
 \begin{theorem}[Exercise 4.6(b)]
   \label{exr:s4_6_b}

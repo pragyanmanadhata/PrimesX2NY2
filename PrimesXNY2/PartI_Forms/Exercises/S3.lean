@@ -35,7 +35,10 @@ theorem ex_3_1_a (a b c a' b' c' A B C a₁ b₁ c₁ d₁ a₂ b₂ c₂ d₂ :
     a * a' = A * a₁ ^ 2 + B * a₁ * a₂ + C * a₂ ^ 2
       ∧ a * c' = A * b₁ ^ 2 + B * b₁ * b₂ + C * b₂ ^ 2
       ∧ a * b' = 2 * A * a₁ * b₁ + B * (a₁ * b₂ + a₂ * b₁) + 2 * C * a₂ * b₂ := by
-  sorry
+  refine ⟨?_, ?_, ?_⟩
+  · linear_combination h 1 0 1 0
+  · linear_combination h 1 0 0 1
+  · linear_combination h 1 0 1 1 - h 1 0 1 0 - h 1 0 0 1
 
 /-- **Exercise 3.1(b).** `a²(b'² − 4a'c') = (a₁b₂ − a₂b₁)²(B² − 4AC)`. -/
 theorem ex_3_1_b (a b c a' b' c' A B C a₁ b₁ c₁ d₁ a₂ b₂ c₂ d₂ : ℤ)

@@ -51,7 +51,26 @@ theorem ex_4_4 {R : Type*} [CommRing R] [IsDomain R] [IsPrincipalIdealRing R]
 
 /-- **Exercise 4.6(a).** The only units of `ℤ[√−3]` are `±1`. -/
 theorem ex_4_6_a (x : Zsqrtd (-3)) : IsUnit x ↔ (x = 1 ∨ x = -1) := by
-  sorry
+  rw [← Zsqrtd.norm_eq_one_iff]
+  constructor
+  · intro hn
+    obtain ⟨re, im⟩ := x
+    have hval : (⟨re, im⟩ : Zsqrtd (-3)).norm = re * re + 3 * (im * im) := by
+      simp only [Zsqrtd.norm_def]; ring
+    rw [hval] at hn
+    have hge : (0 : ℤ) ≤ re * re + 3 * (im * im) := by
+      nlinarith [mul_self_nonneg re, mul_self_nonneg im]
+    have h1 : re * re + 3 * (im * im) = 1 := by omega
+    have him0 : im * im = 0 := by
+      have hle : 3 * (im * im) ≤ 1 := by nlinarith [mul_self_nonneg re]
+      have hnn : 0 ≤ im * im := mul_self_nonneg im
+      omega
+    have him : im = 0 := mul_self_eq_zero.mp him0
+    have hre : re * re = 1 := by rw [him] at h1; linarith [h1]
+    rcases mul_self_eq_one_iff.mp hre with hr | hr
+    · left; rw [Zsqrtd.ext_iff]; exact ⟨by simpa using hr, by simpa using him⟩
+    · right; rw [Zsqrtd.ext_iff]; exact ⟨by simpa using hr, by simpa using him⟩
+  · rintro (rfl | rfl) <;> decide
 
 /-- **Exercise 4.6(b).** `2` is irreducible but not prime in `ℤ[√−3]` (so `ℤ[√−3]`
 is not a UFD). -/
