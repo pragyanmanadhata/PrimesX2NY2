@@ -49,7 +49,12 @@ theorem ex_3_1_b (a b c a' b' c' A B C a₁ b₁ c₁ d₁ a₂ b₂ c₂ d₂ :
               * (a₂ * x * z + b₂ * x * w + c₂ * y * z + d₂ * y * w)
           + C * (a₂ * x * z + b₂ * x * w + c₂ * y * z + d₂ * y * w) ^ 2) :
     a ^ 2 * (b' ^ 2 - 4 * a' * c') = (a₁ * b₂ - a₂ * b₁) ^ 2 * (B ^ 2 - 4 * A * C) := by
-  sorry
+  have e1 : a * a' = A * a₁ ^ 2 + B * a₁ * a₂ + C * a₂ ^ 2 := by linear_combination h 1 0 1 0
+  have e2 : a * c' = A * b₁ ^ 2 + B * b₁ * b₂ + C * b₂ ^ 2 := by linear_combination h 1 0 0 1
+  have e3 : a * b' = 2 * A * a₁ * b₁ + B * (a₁ * b₂ + a₂ * b₁) + 2 * C * a₂ * b₂ := by
+    linear_combination h 1 0 1 1 - h 1 0 1 0 - h 1 0 0 1
+  have key : a ^ 2 * (b' ^ 2 - 4 * a' * c') = (a * b') ^ 2 - 4 * (a * a') * (a * c') := by ring
+  rw [key, e1, e2, e3]; ring
 
 /-- **Exercise 3.1(c).** `a' = ±(a₁c₂ − a₂c₁)`. -/
 theorem ex_3_1_c (a b c a' b' c' A B C a₁ b₁ c₁ d₁ a₂ b₂ c₂ d₂ : ℤ)

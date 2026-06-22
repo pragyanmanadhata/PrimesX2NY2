@@ -214,12 +214,15 @@ theorem ex_2_22 (a b c x y z w : ℤ) :
     (a * x ^ 2 + 2 * b * x * y + c * y ^ 2) * (a * z ^ 2 + 2 * b * z * w + c * w ^ 2)
       = (a * x * z + b * x * w + b * y * z + c * y * w) ^ 2
         + (a * c - b ^ 2) * (x * w - y * z) ^ 2 := by
-  sorry
+  ring
 
 /-- **Exercise 2.23(a).** `p ≡ 1 (mod 8)` implies `(−2/p) = 1`. -/
 theorem ex_2_23_a (p : ℕ) (hp : p.Prime) (h : p % 8 = 1) :
     IsSquare ((-2 : ℤ) : ZMod p) := by
-  sorry
+  haveI := Fact.mk hp
+  have h2 : p ≠ 2 := by omega
+  have hsq : IsSquare (-2 : ZMod p) := (ZMod.exists_sq_eq_neg_two_iff h2).mpr (Or.inl h)
+  simpa using hsq
 
 /-- **Exercise 2.23(b).** For `p ≡ 3 (mod 8)` with `(−2/p) = −1`, `(2/p) = 1` and
 `p` is represented by a form of discriminant `8`. -/
