@@ -30,8 +30,8 @@ theorem ex_2_1 (f : BinaryQF) (m : ℤ) (h : Represents f m) :
 
 /-- **Exercise 2.2(a).** Equivalence and proper equivalence are equivalence
 relations. -/
-theorem ex_2_2_a : Equivalence Equivalent ∧ Equivalence ProperlyEquivalent := by
-  sorry
+theorem ex_2_2_a : Equivalence Equivalent ∧ Equivalence ProperlyEquivalent :=
+  ⟨equivalent_equivalence, properlyEquivalent_equivalence⟩
 
 /-- **Exercise 2.2(b).** Improper equivalence (`det = −1`) is not an equivalence
 relation. -/
@@ -52,8 +52,8 @@ theorem ex_2_2_d (f g : BinaryQF) (h : Equivalent f g) (hf : f.Primitive) :
 
 /-- **Exercise 2.3.** Under `f = g(px+qy, rx+sy)`, `D_f = (ps−qr)² D_g`. -/
 theorem ex_2_3 (M : Matrix (Fin 2) (Fin 2) ℤ) (g : BinaryQF) :
-    (action M g).discr = M.det ^ 2 * g.discr := by
-  sorry
+    (action M g).discr = M.det ^ 2 * g.discr :=
+  discr_action M g
 
 /-- **Exercise 2.4(a).** A form of positive discriminant represents both positive
 and negative integers. -/

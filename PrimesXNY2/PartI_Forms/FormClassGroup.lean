@@ -32,7 +32,9 @@ def DiscrForms (D : ℤ) : Type := {f : BinaryQF // f.discr = D ∧ f.Primitive 
 /-- Proper equivalence as a `Setoid` on the forms of discriminant `D`. (Cox, §3.) -/
 def properSetoid (D : ℤ) : Setoid (DiscrForms D) where
   r f g := ProperlyEquivalent f.1 g.1
-  iseqv := sorry
+  iseqv := ⟨fun f => properlyEquivalent_equivalence.refl f.1,
+    fun h => properlyEquivalent_equivalence.symm h,
+    fun h₁ h₂ => properlyEquivalent_equivalence.trans h₁ h₂⟩
 
 /-- The **form class group** `C(D)` as a type: proper equivalence classes of
 primitive positive definite forms of discriminant `D`. The group law is Dirichlet

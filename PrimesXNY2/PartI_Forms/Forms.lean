@@ -45,7 +45,42 @@ def BinaryQF.PosDef (f : BinaryQF) : Prop := 0 < f.a ∧ f.discr < 0
 /-- The (right) action of an integer matrix `M = (p q; r s)` on a form by the
 change of variables `(x, y) ↦ (p x + q y, r x + s y)`. Restricting to
 `det M = 1` gives the action of `SL₂(ℤ)`. (Cox, §2.) -/
-def action (M : Matrix (Fin 2) (Fin 2) ℤ) (f : BinaryQF) : BinaryQF := sorry
+def action (M : Matrix (Fin 2) (Fin 2) ℤ) (f : BinaryQF) : BinaryQF :=
+  ⟨f.a * M 0 0 ^ 2 + f.b * M 0 0 * M 1 0 + f.c * M 1 0 ^ 2,
+   2 * f.a * M 0 0 * M 0 1 + f.b * (M 0 0 * M 1 1 + M 0 1 * M 1 0) + 2 * f.c * M 1 0 * M 1 1,
+   f.a * M 0 1 ^ 2 + f.b * M 0 1 * M 1 1 + f.c * M 1 1 ^ 2⟩
+
+/-- The identity matrix acts trivially. -/
+theorem action_one (f : BinaryQF) : action 1 f = f := by
+  obtain ⟨a, b, c⟩ := f
+  have e00 : (1 : Matrix (Fin 2) (Fin 2) ℤ) 0 0 = 1 := by simp
+  have e01 : (1 : Matrix (Fin 2) (Fin 2) ℤ) 0 1 = 0 := by simp
+  have e10 : (1 : Matrix (Fin 2) (Fin 2) ℤ) 1 0 = 0 := by simp
+  have e11 : (1 : Matrix (Fin 2) (Fin 2) ℤ) 1 1 = 1 := by simp
+  simp only [action, e00, e01, e10, e11, BinaryQF.mk.injEq]
+  refine ⟨?_, ?_, ?_⟩ <;> ring
+
+/-- `-I` (determinant `1` as well, via `(-1)² = 1`) acts trivially. -/
+theorem action_neg_one (f : BinaryQF) : action (-1) f = f := by
+  obtain ⟨a, b, c⟩ := f
+  have e00 : (-1 : Matrix (Fin 2) (Fin 2) ℤ) 0 0 = -1 := by simp
+  have e01 : (-1 : Matrix (Fin 2) (Fin 2) ℤ) 0 1 = 0 := by simp
+  have e10 : (-1 : Matrix (Fin 2) (Fin 2) ℤ) 1 0 = 0 := by simp
+  have e11 : (-1 : Matrix (Fin 2) (Fin 2) ℤ) 1 1 = -1 := by simp
+  simp only [action, e00, e01, e10, e11, BinaryQF.mk.injEq]
+  refine ⟨?_, ?_, ?_⟩ <;> ring
+
+/-- The action is contravariant in the matrix: `N · (M · f) = (M*N) · f`. (Both sides
+substitute `(x,y) ↦ M(N(x,y))`.) -/
+theorem action_mul (M N : Matrix (Fin 2) (Fin 2) ℤ) (f : BinaryQF) :
+    action N (action M f) = action (M * N) f := by
+  simp only [action, Matrix.mul_apply, Fin.sum_univ_two, BinaryQF.mk.injEq]
+  refine ⟨?_, ?_, ?_⟩ <;> ring
+
+/-- The action scales the discriminant by `(det M)²`. -/
+theorem discr_action (M : Matrix (Fin 2) (Fin 2) ℤ) (f : BinaryQF) :
+    (action M f).discr = M.det ^ 2 * f.discr := by
+  simp only [BinaryQF.discr, action, Matrix.det_fin_two]; ring
 
 /-- Two forms are **properly equivalent** when related by a determinant-one
 integer change of variables, i.e. by an element of `SL₂(ℤ)`. (Cox, §2.) -/
@@ -53,11 +88,19 @@ def ProperlyEquivalent (f g : BinaryQF) : Prop :=
   ∃ M : Matrix (Fin 2) (Fin 2) ℤ, M.det = 1 ∧ action M f = g
 
 /-- Proper equivalence is an equivalence relation. (Cox, §2.) -/
-theorem properlyEquivalent_equivalence : Equivalence ProperlyEquivalent := sorry
+theorem properlyEquivalent_equivalence : Equivalence ProperlyEquivalent := by
+  refine ⟨fun f => ⟨1, Matrix.det_one, action_one f⟩, ?_, ?_⟩
+  · rintro f g ⟨M, hM, rfl⟩
+    exact ⟨M.adjugate, by rw [Matrix.det_adjugate, hM]; simp,
+      by rw [action_mul, Matrix.mul_adjugate, hM, one_smul, action_one]⟩
+  · rintro f g h ⟨M, hM, rfl⟩ ⟨N, hN, rfl⟩
+    exact ⟨M * N, by rw [Matrix.det_mul, hM, hN]; ring, (action_mul M N f).symm⟩
 
 /-- Proper equivalence preserves the discriminant. (Cox, §2.) -/
 theorem discr_eq_of_properlyEquivalent {f g : BinaryQF} (h : ProperlyEquivalent f g) :
-    f.discr = g.discr := sorry
+    f.discr = g.discr := by
+  obtain ⟨M, hM, rfl⟩ := h
+  rw [discr_action, hM]; ring
 
 /-- A positive definite form `(a, b, c)` is **reduced** when `|b| ≤ a ≤ c`, with
 `b ≥ 0` whenever `|b| = a` or `a = c`. (Cox, §2.3.) -/
@@ -79,6 +122,20 @@ theorem finite_reduced_of_discr (D : ℤ) (hD : D < 0) :
 related by an integer change of variables of determinant `±1`. -/
 def Equivalent (f g : BinaryQF) : Prop :=
   ∃ M : Matrix (Fin 2) (Fin 2) ℤ, (M.det = 1 ∨ M.det = -1) ∧ action M f = g
+
+/-- Full (`GL₂(ℤ)`) equivalence is an equivalence relation. (Cox §2.) -/
+theorem equivalent_equivalence : Equivalence Equivalent := by
+  refine ⟨fun f => ⟨1, Or.inl Matrix.det_one, action_one f⟩, ?_, ?_⟩
+  · rintro f g ⟨M, hM, rfl⟩
+    refine ⟨M.adjugate, ?_, ?_⟩
+    · rw [Matrix.det_adjugate]; rcases hM with h | h <;> rw [h] <;> simp
+    · rw [action_mul, Matrix.mul_adjugate]
+      rcases hM with h | h <;> rw [h]
+      · rw [one_smul, action_one]
+      · rw [neg_one_smul, action_neg_one]
+  · rintro f g h ⟨M, hM, rfl⟩ ⟨N, hN, rfl⟩
+    refine ⟨M * N, ?_, (action_mul M N f).symm⟩
+    rw [Matrix.det_mul]; rcases hM with h | h <;> rcases hN with k | k <;> rw [h, k] <;> omega
 
 /-- A form is **indefinite** when its discriminant is positive. (Cox §2.) -/
 def BinaryQF.Indefinite (f : BinaryQF) : Prop := 0 < f.discr
