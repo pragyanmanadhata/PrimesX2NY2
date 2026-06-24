@@ -4,12 +4,12 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Pragyan Manadhata
 -/
 import Mathlib
-import PrimesXNY2.PartII_ClassFieldTheory.Orders
-import PrimesXNY2.PartII_ClassFieldTheory.MainTheorem
-import PrimesXNY2.PartIII_ComplexMultiplication.ModularFunctions
+import PrimesX2NY2.PartII_ClassFieldTheory.Orders
+import PrimesX2NY2.PartII_ClassFieldTheory.MainTheorem
+import PrimesX2NY2.PartIII_ComplexMultiplication.ModularFunctions
 
 /-!
-# Part III, Chapter 11 — Weber functions, class polynomials, Shimura reciprocity
+# Part III, Chapter 11 - Weber functions, class polynomials, Shimura reciprocity
 
 Cox, *Primes of the Form x² + ny²*, §12 (2nd ed.).
 
@@ -20,9 +20,9 @@ the Galois action on their CM values.
 **Scaffold only:** every proof is `sorry`.
 -/
 
-namespace PrimesXNY2.Weber
+namespace PrimesX2NY2.Weber
 
-open PrimesXNY2.Order PrimesXNY2.MainTheorem PrimesXNY2.Modular
+open PrimesX2NY2.Order PrimesX2NY2.MainTheorem PrimesX2NY2.Modular
 
 /-- A **Weber function** `𝔣(τ)` on the upper half-plane (one of `𝔣, 𝔣₁, 𝔣₂`),
 used to produce generators of ring class fields of smaller height than `j`.
@@ -52,8 +52,8 @@ theorem isIntegral_weber_of_cm (τ : ℂ) (hτ : IsCMPoint τ) :
 /-- **Shimura reciprocity** (Cox, §12, 2nd-ed. addition). The idèle/idele class
 group acts on CM values of modular functions, giving an explicit description of
 the Galois action `C(𝒪) → Gal(L/K)` on Weber values. Stated as the existence of
-such a compatible action on the ideal class group. **Deep — cite/assume.** -/
+such a compatible action on the ideal class group. **Deep - cite/assume.** -/
 theorem shimuraReciprocity (O : QuadOrder) :
     Nonempty (O.idealClassGroup ≃ O.idealClassGroup) := sorry
 
-end PrimesXNY2.Weber
+end PrimesX2NY2.Weber

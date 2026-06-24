@@ -1,7 +1,7 @@
-name = "PrimesXNY2"
+name = "PrimesX2NY2"
 version = "0.1.0"
 keywords = ["math"]
-defaultTargets = ["PrimesXNY2"]
+defaultTargets = ["PrimesX2NY2"]
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
@@ -20,4 +20,4 @@ name = "checkdecls"
 git = "https://github.com/PatrickMassot/checkdecls.git"
 
 [[lean_lib]]
-name = "PrimesXNY2"
+name = "PrimesX2NY2"

@@ -6,7 +6,7 @@ Authors: Pragyan Manadhata
 import Mathlib
 
 /-!
-# Part I, Chapter 4.A — Eisenstein integers and cubic reciprocity
+# Part I, Chapter 4.A - Eisenstein integers and cubic reciprocity
 
 Cox, *Primes of the Form x² + ny²*, §4.A.
 
@@ -19,7 +19,7 @@ order `ℤ[√−3]` of conductor `2`, *not* the maximal order `ℤ[ω] = ℤ[(�
 **Scaffold only:** every proof is `sorry`.
 -/
 
-namespace PrimesXNY2.CubicReciprocity
+namespace PrimesX2NY2.CubicReciprocity
 
 /-- An **Eisenstein integer** `a + bω`, `ω = e^{2πi/3}`. -/
 structure EisensteinInt where
@@ -77,7 +77,7 @@ def IsPrimeE (π : EisensteinInt) : Prop :=
 def ModEq (π α β : EisensteinInt) : Prop := π ∣ (α - β)
 
 /-- A prime `π` is **primary** if `π ≡ ±1 (mod 3)`. (This is Cox's normalization;
-Ireland–Rosen use `π ≡ −1 (mod 3)`, which since `(−1/π)₃ = 1` does not affect cubic
+Ireland-Rosen use `π ≡ −1 (mod 3)`, which since `(−1/π)₃ = 1` does not affect cubic
 reciprocity. See the report's FLAG LIST.) -/
 def IsPrimary (π : EisensteinInt) : Prop :=
   ModEq (ofInt 3) π 1 ∨ ModEq (ofInt 3) π (-1)
@@ -170,14 +170,14 @@ theorem cubicChar_eq_one_iff (π α : EisensteinInt) (hπ : IsPrimeE π) (hα : 
   sorry
 
 /-- **Theorem 4.12** (Cubic Reciprocity). For primary primes `π, θ` of unequal norm,
-`(π/θ)₃ = (θ/π)₃`. **Deep / GAP** — `notready`, never an axiom. -/
+`(π/θ)₃ = (θ/π)₃`. **Deep / GAP** - `notready`, never an axiom. -/
 theorem thm_4_12 (π θ : EisensteinInt) (hπ : IsPrimeE π) (hθ : IsPrimeE θ)
     (hpπ : IsPrimary π) (hpθ : IsPrimary θ) (hne : norm π ≠ norm θ) :
     cubicChar θ π = cubicChar π θ := by
   sorry
 
 /-- **(4.13)** Supplementary laws. For `π = −1 + 3m + 3nω` primary,
-`(ω/π)₃ = ω^{m+n}` and `((1−ω)/π)₃ = ω^{2m}`. **Deep / GAP** — `notready`. -/
+`(ω/π)₃ = ω^{m+n}` and `((1−ω)/π)₃ = ω^{2m}`. **Deep / GAP** - `notready`. -/
 theorem supplementary_4_13 (m n : ℤ) :
     cubicChar ⟨-1 + 3 * m, 3 * n⟩ omega = power omega (((m + n) % 3).toNat)
       ∧ cubicChar ⟨-1 + 3 * m, 3 * n⟩ (1 - omega) = power omega ((2 * m % 3).toNat) := by
@@ -191,11 +191,11 @@ theorem eq_4_14 (p : ℕ) (hp : p.Prime) (h1 : p % 3 = 1) (a : ℤ) (hpa : ¬ (p
   sorry
 
 /-- **Theorem 4.15** (Euler's conjecture). `p = x² + 27y²` iff `p ≡ 1 (mod 3)` and
-`2` is a cubic residue mod `p`. **Deep / GAP** — `notready`, never an axiom. -/
+`2` is a cubic residue mod `p`. **Deep / GAP** - `notready`, never an axiom. -/
 theorem thm_4_15 (p : ℕ) (hp : p.Prime) :
     (∃ x y : ℤ, (p : ℤ) = x ^ 2 + 27 * y ^ 2) ↔ (p % 3 = 1 ∧ IsCubicResidue 2 p) := by
   sorry
 
 end EisensteinInt
 
-end PrimesXNY2.CubicReciprocity
+end PrimesX2NY2.CubicReciprocity

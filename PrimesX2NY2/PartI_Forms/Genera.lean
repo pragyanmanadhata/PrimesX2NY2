@@ -4,12 +4,12 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Pragyan Manadhata
 -/
 import Mathlib
-import PrimesXNY2.PartI_Forms.Genus
+import PrimesX2NY2.PartI_Forms.Genus
 
 /-!
-# Part I, Chapter 3 — Genus theory of Gauss and convenient numbers
+# Part I, Chapter 3 - Genus theory of Gauss and convenient numbers
 
-Cox, *Primes of the Form x² + ny²*, §3.B–C.
+Cox, *Primes of the Form x² + ny²*, §3.B-C.
 
 Assigned characters package the genus of a form into a sign vector in `{±1}^μ`.
 The number of genera is `2^{μ−1}`, the principal genus is the subgroup of squares
@@ -19,9 +19,9 @@ genus of discriminant `−4n` consists of a single class.
 **Scaffold only:** every proof is `sorry`.
 -/
 
-namespace PrimesXNY2.Genera
+namespace PrimesX2NY2.Genera
 
-open PrimesXNY2.Forms PrimesXNY2.Genus
+open PrimesX2NY2.Forms PrimesX2NY2.Genus
 
 /-- The character `δ(a) = (−1)^{(a−1)/2}` on odd integers (Cox §3.B): `+1` if
 `a ≡ 1 (mod 4)`, `−1` if `a ≡ 3 (mod 4)`. -/
@@ -105,8 +105,8 @@ primitive positive definite forms of discriminant `D < 0` are in the same genus
 `(ℤ/mℤ)ˣ` for every nonzero `m`.
 
 (Cox's full statement gives six equivalent conditions; the remaining
-characterizations (iii)–(vi), via congruence/ `ℤ_p` / `ℚ`-equivalence, are deferred
-— see ROADMAP.) -/
+characterizations (iii)-(vi), via congruence/ `ℤ_p` / `ℚ`-equivalence, are deferred
+- see ROADMAP.) -/
 theorem thm_3_21 (D : ℤ) (hD : D < 0) (f g : BinaryQF) (hf : f.discr = D)
     (hg : g.discr = D) (hfp : f.Primitive) (hgp : g.Primitive)
     (hfa : 0 < f.a) (hga : 0 < g.a) :
@@ -114,7 +114,7 @@ theorem thm_3_21 (D : ℤ) (hD : D < 0) (f g : BinaryQF) (hf : f.discr = D)
   sorry
 
 /-- **Theorem 3.22** (Cox §3.C). For `n > 0` the following are equivalent (the
-fifth Cox condition, `C(−4n) ≅ (ℤ/2ℤ)^k`, is deferred — see ROADMAP):
+fifth Cox condition, `C(−4n) ≅ (ℤ/2ℤ)^k`, is deferred - see ROADMAP):
 * the genus map is injective (every genus is a single class);
 * every reduced form of discriminant `−4n` has `b = 0`, `a = b`, or `a = c`;
 * equivalence and proper equivalence coincide on forms of discriminant `−4n`;
@@ -149,7 +149,7 @@ theorem prop_3_24 (n : ℕ) (hn : 0 < n) :
 representations of `m` by reduced forms of discriminant `−4n` is
 `2 ∏_{p ∣ m} (1 + (−n/p))`.
 
-(Deep: Cox proves this via the counting/genus argument of Exercise 3.20 — marked
+(Deep: Cox proves this via the counting/genus argument of Exercise 3.20 - marked
 `notready`.) -/
 theorem lemma_3_25 (n m : ℕ) (hn : 1 < n) (hm : Odd m) (hco : Nat.Coprime m n) :
     ({p : BinaryQF × (ℤ × ℤ) |
@@ -163,7 +163,7 @@ properly represented by a primitive form `f` of discriminant `−4n`, and `r` is
 number of prime divisors of `m`, then `m` is properly represented in exactly
 `2^{r+1}` ways by a reduced form in the genus of `f`.
 
-(Deep: follows from Lemma 3.25 — marked `notready`.) -/
+(Deep: follows from Lemma 3.25 - marked `notready`.) -/
 theorem cor_3_26 (n m : ℕ) (hn : 1 < n) (hm : Odd m) (hco : Nat.Coprime m (4 * n))
     (f : BinaryQF) (hf : f.discr = -4 * (n : ℤ)) (hfp : f.Primitive) (hfa : 0 < f.a)
     (hrep : ∃ x y : ℤ, IsCoprime x y ∧ f.eval x y = (m : ℤ)) :
@@ -174,4 +174,4 @@ theorem cor_3_26 (n m : ℕ) (hn : 1 < n) (hm : Odd m) (hco : Nat.Coprime m (4 *
       = 2 ^ (m.primeFactors.card + 1) := by
   sorry
 
-end PrimesXNY2.Genera
+end PrimesX2NY2.Genera

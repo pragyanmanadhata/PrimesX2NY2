@@ -4,23 +4,23 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Pragyan Manadhata
 -/
 import Mathlib
-import PrimesXNY2.PartI_Forms.Genus
+import PrimesX2NY2.PartI_Forms.Genus
 
 /-!
-# Part I, §2 — Exercises
+# Part I, §2 - Exercises
 
-Faithful `sorry`-bodied statements of the exercises of Cox §2 (Exercises 2.1–2.27),
+Faithful `sorry`-bodied statements of the exercises of Cox §2 (Exercises 2.1-2.27),
 one node per sub-part, cited by number only.
 
 Flagged in the blueprint as `\notready` (no Lean signature): 2.9(a), 2.9(b),
-2.17(d), 2.19, 2.20 — see the §2 FLAG LIST in the report.
+2.17(d), 2.19, 2.20 - see the §2 FLAG LIST in the report.
 
 **Scaffold only:** every proof is `sorry`.
 -/
 
-namespace PrimesXNY2.PartI.S2
+namespace PrimesX2NY2.PartI.S2
 
-open PrimesXNY2.Forms PrimesXNY2.Genus
+open PrimesX2NY2.Forms PrimesX2NY2.Genus
 
 /-- **Exercise 2.1.** If `f` represents `m`, then `m = d²m'` with `f` properly
 representing `m'`. -/
@@ -301,4 +301,4 @@ theorem ex_2_27_b (n : ℤ) (g : BinaryQF) (hg : g.Reduced) (h : Equivalent ⟨1
     g = ⟨1, 0, n⟩ := by
   sorry
 
-end PrimesXNY2.PartI.S2
+end PrimesX2NY2.PartI.S2

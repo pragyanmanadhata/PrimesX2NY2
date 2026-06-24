@@ -4,10 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Pragyan Manadhata
 -/
 import Mathlib
-import PrimesXNY2.PartI_Forms.Forms
+import PrimesX2NY2.PartI_Forms.Forms
 
 /-!
-# Part I, Chapter 3 — The form class group and Dirichlet composition
+# Part I, Chapter 3 - The form class group and Dirichlet composition
 
 Cox, *Primes of the Form x² + ny²*, §3.A.
 
@@ -18,7 +18,7 @@ composition.
 **Scaffold only:** every proof is `sorry`.
 -/
 
-namespace PrimesXNY2.Forms
+namespace PrimesX2NY2.Forms
 
 /-- The **opposite** of `f = a x² + b x y + c y²` is `a x² − b x y + c y²`. Its class
 is the inverse of the class of `f` in `C(D)`. (Cox §3, Thm 3.9.) -/
@@ -143,4 +143,4 @@ theorem prop_3_11 (D : ℤ) (hD : D < 0) (hD4 : D % 4 = 0 ∨ D % 4 = 1) :
 /-- The form class group of a negative discriminant is finite. (Cox, §3.) -/
 theorem finite (D : ℤ) (hD : D < 0) : Nonempty (Fintype (FormClassGroup D)) := sorry
 
-end PrimesXNY2.Forms
+end PrimesX2NY2.Forms

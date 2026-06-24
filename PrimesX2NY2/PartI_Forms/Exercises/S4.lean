@@ -4,26 +4,26 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Pragyan Manadhata
 -/
 import Mathlib
-import PrimesXNY2.PartI_Forms.CubicReciprocity
-import PrimesXNY2.PartI_Forms.BiquadraticReciprocity
+import PrimesX2NY2.PartI_Forms.CubicReciprocity
+import PrimesX2NY2.PartI_Forms.BiquadraticReciprocity
 
 /-!
-# Part I, §4 — Exercises (Cox, *Primes of the Form x² + ny²*, §4.D)
+# Part I, §4 - Exercises (Cox, *Primes of the Form x² + ny²*, §4.D)
 
-Faithful statements for the concrete, self-contained parts of Exercises 4.1–4.29.
+Faithful statements for the concrete, self-contained parts of Exercises 4.1-4.29.
 Sub-parts that *prove* a spine result, complete a proof, or require machinery not
 yet built (Gaussian periods/sums, the quotient residue fields, the full character
-constructions) are recorded as `\notready` blueprint nodes only — see ROADMAP.
+constructions) are recorded as `\notready` blueprint nodes only - see ROADMAP.
 
 Exercise 4.6 (that `ℤ[√−3]` is neither a PID nor a UFD) is formalized over
-Mathlib's `Zsqrtd (-3)` — precisely the ring we must *not* use for `ℤ[ω]`.
+Mathlib's `Zsqrtd (-3)` - precisely the ring we must *not* use for `ℤ[ω]`.
 
 **Scaffold only:** every proof is `sorry`.
 -/
 
-namespace PrimesXNY2.PartI.S4
+namespace PrimesX2NY2.PartI.S4
 
-open PrimesXNY2.CubicReciprocity PrimesXNY2.BiquadraticReciprocity
+open PrimesX2NY2.CubicReciprocity PrimesX2NY2.BiquadraticReciprocity
 
 /-- **Exercise 4.2(i).** `N(a + bω) = a² − ab + b²`. -/
 theorem ex_4_2_a (a b : ℤ) :
@@ -107,7 +107,7 @@ theorem ex_4_14 (p : ℕ) (hp : p.Prime) (h2 : p % 3 = 2) (a : ℤ) :
   sorry
 
 /-- **Exercise 4.15(d).** `4p = x² + 243y²` iff `p ≡ 1 (mod 3)` and `3` is a cubic
-residue mod `p` (Euler). **Deep / GAP** — `notready`. -/
+residue mod `p` (Euler). **Deep / GAP** - `notready`. -/
 theorem ex_4_15_d (p : ℕ) (hp : p.Prime) :
     (∃ x y : ℤ, 4 * (p : ℤ) = x ^ 2 + 243 * y ^ 2)
       ↔ (p % 3 = 1 ∧ EisensteinInt.IsCubicResidue 3 p) := by
@@ -130,4 +130,4 @@ theorem ex_4_24_b (a b : ℤ) :
     2 * (a ^ 2 + b ^ 2) = (a + b) ^ 2 + (a - b) ^ 2 := by
   ring
 
-end PrimesXNY2.PartI.S4
+end PrimesX2NY2.PartI.S4

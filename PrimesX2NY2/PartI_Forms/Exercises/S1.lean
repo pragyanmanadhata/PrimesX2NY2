@@ -6,20 +6,20 @@ Authors: Pragyan Manadhata
 import Mathlib
 
 /-!
-# Part I, §1 — Exercises
+# Part I, §1 - Exercises
 
-Faithful `sorry`-bodied statements of the exercises of Cox §1 (Exercises 1.1–1.16).
+Faithful `sorry`-bodied statements of the exercises of Cox §1 (Exercises 1.1-1.16).
 Cited by number only; statements are paraphrased.
 
 A handful of sub-parts (1.12(b), 1.12(c), 1.16) are recorded in the blueprint as
-`\notready` flagged nodes rather than Lean signatures — see the FLAG LIST in the
-project report — because a faithful self-contained statement requires fixing a
+`\notready` flagged nodes rather than Lean signatures - see the FLAG LIST in the
+project report - because a faithful self-contained statement requires fixing a
 specific homomorphism / subgroup that the exercise only pins down implicitly.
 
 **Scaffold only:** every proof is `sorry`.
 -/
 
-namespace PrimesXNY2.PartI.S1
+namespace PrimesX2NY2.PartI.S1
 
 /-- Forward difference operator `Δg(x) = g(x+1) − g(x)`, used in Exercise 1.2. -/
 def diff (g : ℤ → ℤ) : ℤ → ℤ := fun x => g (x + 1) - g x
@@ -182,4 +182,4 @@ theorem ex_1_15 :
         (IsSquare ((-21 : ℤ) : ZMod p) ↔ (p : ZMod 84) ∈ S) := by
   sorry
 
-end PrimesXNY2.PartI.S1
+end PrimesX2NY2.PartI.S1

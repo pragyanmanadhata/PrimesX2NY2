@@ -4,11 +4,11 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Pragyan Manadhata
 -/
 import Mathlib
-import PrimesXNY2.PartI_Forms.FormClassGroup
-import PrimesXNY2.PartII_ClassFieldTheory.Orders
+import PrimesX2NY2.PartI_Forms.FormClassGroup
+import PrimesX2NY2.PartII_ClassFieldTheory.Orders
 
 /-!
-# Part II, Chapter 6 — The bridge: forms ≅ ideals
+# Part II, Chapter 6 - The bridge: forms ≅ ideals
 
 Cox, *Primes of the Form x² + ny²*, **Theorem 7.7**.
 
@@ -20,9 +20,9 @@ ideal multiplication.
 **Scaffold only:** every proof is `sorry`.
 -/
 
-namespace PrimesXNY2.Bridge
+namespace PrimesX2NY2.Bridge
 
-open PrimesXNY2.Forms PrimesXNY2.Order
+open PrimesX2NY2.Forms PrimesX2NY2.Order
 
 /-- The order whose discriminant equals a given negative discriminant `D`
 (conductor and field discriminant extracted from `D`). Placeholder. (Cox, §7.) -/
@@ -42,4 +42,4 @@ theorem bridge_respects_composition (O : QuadOrder) :
       (mul : O.idealClassGroup → O.idealClassGroup → O.idealClassGroup),
       ∀ x y, e (compose O.discr x y) = mul (e x) (e y) := sorry
 
-end PrimesXNY2.Bridge
+end PrimesX2NY2.Bridge

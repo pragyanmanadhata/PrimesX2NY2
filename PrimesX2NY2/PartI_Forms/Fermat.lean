@@ -6,7 +6,7 @@ Authors: Pragyan Manadhata
 import Mathlib
 
 /-!
-# Part I, §1 — Fermat, Euler, and Quadratic Reciprocity
+# Part I, §1 - Fermat, Euler, and Quadratic Reciprocity
 
 Cox, *Primes of the Form x² + ny²*, §1.
 
@@ -18,7 +18,7 @@ Reciprocity Step by congruences.
 **Scaffold only:** every proof is `sorry`.
 -/
 
-namespace PrimesXNY2.Fermat
+namespace PrimesX2NY2.Fermat
 
 /-- **Theorem 1.2** (Fermat, two squares). An odd prime `p` is a sum of two
 squares iff `p ≡ 1 (mod 4)`. -/
@@ -57,7 +57,7 @@ theorem prime_sq_add_three_sq (p : ℕ) (hp : p.Prime) (hp3 : 3 < p) :
     (∃ x y : ℤ, (p : ℤ) = x ^ 2 + 3 * y ^ 2) ↔ p % 3 = 1 := by
   sorry
 
-/-- **(1.3)** Brahmagupta–Fibonacci identity expressing a product of sums of two
+/-- **(1.3)** Brahmagupta-Fibonacci identity expressing a product of sums of two
 squares as a sum of two squares. -/
 theorem mul_sq_add_sq (x y z w : ℤ) :
     (x ^ 2 + y ^ 2) * (z ^ 2 + w ^ 2) = (x * z - y * w) ^ 2 + (x * w + y * z) ^ 2 := by
@@ -105,7 +105,7 @@ theorem euler_reciprocity (p q : ℕ) (hp : p.Prime) (hq : q.Prime)
 
 /-- **Proposition 1.10** (Law of Quadratic Reciprocity). For *distinct* odd primes
 `p, q`, `(p/q)(q/p) = (−1)^((p−1)/2·(q−1)/2)`. (The hypothesis `p ≠ q` is part of
-Cox's statement — "distinct odd primes"; without it the claim is false at `p = q`,
+Cox's statement - "distinct odd primes"; without it the claim is false at `p = q`,
 where the left side is `0`.) -/
 theorem quadratic_reciprocity (p q : ℕ) [Fact p.Prime] [Fact q.Prime]
     (hp : p ≠ 2) (hq : q ≠ 2) (hpq : p ≠ q) :
@@ -128,7 +128,7 @@ theorem legendreSym_first_supplement (p : ℕ) [Fact p.Prime] (hp : p ≠ 2) :
 
 UNVERIFIED proof: Mathlib provides `legendreSym.at_two : (2/p) = χ₈ p` (a value by
 `p mod 8`), but no closed form `(−1)^((p²−1)/8)`. Bridging needs a nonlinear
-`Nat`-division parity argument on `(p²−1)/8` — a tracked C-bucket target, not a
+`Nat`-division parity argument on `(p²−1)/8` - a tracked C-bucket target, not a
 leaf. -/
 theorem legendreSym_second_supplement (p : ℕ) [Fact p.Prime] (hp : p ≠ 2) :
     legendreSym p 2 = (-1) ^ ((p ^ 2 - 1) / 8) := by
@@ -153,4 +153,4 @@ theorem reciprocity_step (n : ℕ) (hn : 0 < n) :
           ↔ (p : ZMod (4 * n)) ∈ S) := by
   sorry
 
-end PrimesXNY2.Fermat
+end PrimesX2NY2.Fermat

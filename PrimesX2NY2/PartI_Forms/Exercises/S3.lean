@@ -4,24 +4,24 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Pragyan Manadhata
 -/
 import Mathlib
-import PrimesXNY2.PartI_Forms.Genera
+import PrimesX2NY2.PartI_Forms.Genera
 
 /-!
-# Part I, §3 — Exercises (Cox, *Primes of the Form x² + ny²*, §3.E)
+# Part I, §3 - Exercises (Cox, *Primes of the Form x² + ny²*, §3.E)
 
-Faithful statements for the concrete, self-contained parts of Exercises 3.1–3.25.
+Faithful statements for the concrete, self-contained parts of Exercises 3.1-3.25.
 Sub-parts that merely ask to *prove* a spine lemma, *complete a proof*, *enumerate*
 forms of a given discriminant, or that need machinery not yet built (the
 direct-composition predicate, `ℚ`/`ℤ_p`-equivalence, the abstract group structure
 on `C(D)`, or the Kronecker symbol) are recorded as `\notready` blueprint nodes
-only — see ROADMAP.
+only - see ROADMAP.
 
 **Scaffold only:** every proof is `sorry`.
 -/
 
-namespace PrimesXNY2.PartI.S3
+namespace PrimesX2NY2.PartI.S3
 
-open PrimesXNY2.Forms PrimesXNY2.Genus PrimesXNY2.Genera
+open PrimesX2NY2.Forms PrimesX2NY2.Genus PrimesX2NY2.Genera
 
 /-- **Exercise 3.1(a).** Gauss's coefficient formulas for a composition
 `f(x,y) g(z,w) = F(a₁xz+b₁xw+c₁yz+d₁yw, a₂xz+b₂xw+c₂yz+d₂yw)`. -/
@@ -101,7 +101,7 @@ theorem ex_3_8_a (f : BinaryQF) :
 
 /-- **Exercise 3.8(b).** Equivalence of: the Lagrangian class equals the proper
 class; `f` is properly equivalent to its opposite; `f` is (properly and) improperly
-equivalent to itself. (Cox's fourth condition — class order `≤ 2` — is deferred.) -/
+equivalent to itself. (Cox's fourth condition - class order `≤ 2` - is deferred.) -/
 theorem ex_3_8_b (f : BinaryQF) :
     [ {g : BinaryQF | Equivalent f g} = {g : BinaryQF | ProperlyEquivalent f g},
       ProperlyEquivalent f f.opposite,
@@ -162,4 +162,4 @@ theorem ex_3_23 (n p : ℕ) (hn : 1 < n) (hp : p.Prime) (hodd : Odd p)
     ∃! q : ℕ × ℕ, (q.1 : ℤ) ^ 2 + (n : ℤ) * (q.2 : ℤ) ^ 2 = (p : ℤ) := by
   sorry
 
-end PrimesXNY2.PartI.S3
+end PrimesX2NY2.PartI.S3

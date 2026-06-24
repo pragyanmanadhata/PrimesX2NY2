@@ -6,7 +6,7 @@ Authors: Pragyan Manadhata
 import Mathlib
 
 /-!
-# Part I, Chapter 4.B — Gaussian integers and biquadratic reciprocity
+# Part I, Chapter 4.B - Gaussian integers and biquadratic reciprocity
 
 Cox, *Primes of the Form x² + ny²*, §4.B.
 
@@ -18,7 +18,7 @@ directly. Only the quartic residue character is hand-rolled.
 **Scaffold only:** every proof is `sorry`.
 -/
 
-namespace PrimesXNY2.BiquadraticReciprocity
+namespace PrimesX2NY2.BiquadraticReciprocity
 
 /-- The Gaussian integer `i`. -/
 def gaussI : GaussianInt := ⟨0, 1⟩
@@ -78,7 +78,7 @@ theorem quarticChar_eq_one_iff (π α : GaussianInt) (hπ : Prime π) (hα : ¬ 
   sorry
 
 /-- **Theorem 4.21** (Biquadratic Reciprocity). For distinct primary primes `π, θ`,
-`(π/θ)₄ = (θ/π)₄ · (−1)^{(N(π)−1)(N(θ)−1)/16}`. **Deep / GAP** — `notready`, never an
+`(π/θ)₄ = (θ/π)₄ · (−1)^{(N(π)−1)(N(θ)−1)/16}`. **Deep / GAP** - `notready`, never an
 axiom. -/
 theorem thm_4_21 (π θ : GaussianInt) (hπ : Prime π) (hθ : Prime θ)
     (hpπ : IsPrimaryG π) (hpθ : IsPrimaryG θ) (hne : ¬ Associated π θ) :
@@ -88,7 +88,7 @@ theorem thm_4_21 (π θ : GaussianInt) (hπ : Prime π) (hθ : Prime θ)
   sorry
 
 /-- **(4.22)** Supplementary laws. For primary `π = a + bi`,
-`(i/π)₄ = i^{−(a−1)/2}` and `((1+i)/π)₄ = i^{(a−b−1−b²)/4}`. **Deep / GAP** —
+`(i/π)₄ = i^{−(a−1)/2}` and `((1+i)/π)₄ = i^{(a−b−1−b²)/4}`. **Deep / GAP** -
 `notready`. -/
 theorem supplementary_4_22 (a b : ℤ) (hpr : IsPrimaryG ⟨a, b⟩) :
     quarticChar ⟨a, b⟩ gaussI = gaussI ^ (((-(a - 1)) / 2 % 4).toNat)
@@ -96,17 +96,17 @@ theorem supplementary_4_22 (a b : ℤ) (hpr : IsPrimaryG ⟨a, b⟩) :
   sorry
 
 /-- **Theorem 4.23(i).** For primary `π = a + bi`, `(2/π)₄ = i^{ab/2}`. **Deep /
-GAP** — `notready`. -/
+GAP** - `notready`. -/
 theorem thm_4_23_i (a b : ℤ) (hpr : IsPrimaryG ⟨a, b⟩) :
     quarticChar ⟨a, b⟩ (2 : GaussianInt) = gaussI ^ ((a * b / 2 % 4).toNat) := by
   sorry
 
 /-- **Theorem 4.23(ii)** (Euler's conjecture). `p = x² + 64y²` iff `p ≡ 1 (mod 4)`
-and `2` is a biquadratic residue mod `p`. **Deep / GAP** — `notready`, never an
+and `2` is a biquadratic residue mod `p`. **Deep / GAP** - `notready`, never an
 axiom. -/
 theorem thm_4_23_ii (p : ℕ) (hp : p.Prime) :
     (∃ x y : ℤ, (p : ℤ) = x ^ 2 + 64 * y ^ 2)
       ↔ (p % 4 = 1 ∧ IsBiquadraticResidue 2 p) := by
   sorry
 
-end PrimesXNY2.BiquadraticReciprocity
+end PrimesX2NY2.BiquadraticReciprocity

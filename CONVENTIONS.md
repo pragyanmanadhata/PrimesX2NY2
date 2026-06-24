@@ -12,12 +12,12 @@ This project follows Mathlib conventions. Summary of what that means here.
   the camelCased pieces, e.g. `prime_sq_add_sq`, `exists_unique_reduced`,
   `properlyRepresents_iff_isSquare`, `isIntegral_jFunction_of_cm`.
 - **Namespaces** mirror the mathematical object, not the file. The base objects
-  live in chapter namespaces: `PrimesXNY2.Fermat`, `PrimesXNY2.Forms`,
-  `PrimesXNY2.Genus`, `PrimesXNY2.Order`, `PrimesXNY2.Bridge`,
-  `PrimesXNY2.RingClassField`, `PrimesXNY2.MainTheorem`, `PrimesXNY2.Elliptic`,
-  `PrimesXNY2.Modular`, `PrimesXNY2.Weber`. A structure `Foo` is declared in its
+  live in chapter namespaces: `PrimesX2NY2.Fermat`, `PrimesX2NY2.Forms`,
+  `PrimesX2NY2.Genus`, `PrimesX2NY2.Order`, `PrimesX2NY2.Bridge`,
+  `PrimesX2NY2.RingClassField`, `PrimesX2NY2.MainTheorem`, `PrimesX2NY2.Elliptic`,
+  `PrimesX2NY2.Modular`, `PrimesX2NY2.Weber`. A structure `Foo` is declared in its
   chapter namespace and its API lives in the nested `Foo.` namespace (so e.g.
-  `PrimesXNY2.Forms.BinaryQF` and `PrimesXNY2.Forms.BinaryQF.discr`). We avoid
+  `PrimesX2NY2.Forms.BinaryQF` and `PrimesX2NY2.Forms.BinaryQF.discr`). We avoid
   doubled names such as `Forms.Forms`.
 
 ## Layout
@@ -37,7 +37,7 @@ This project follows Mathlib conventions. Summary of what that means here.
 - We deliberately do **not** set `warningAsError`, so the project builds while the
   `sorry`s remain. Do not remove a `sorry` without supplying a real proof.
 - Statements are meant to be *mathematically faithful* even while unproved: we
-  avoid stating anything literally false (e.g. placeholder `℘'` is a named
+  avoid stating anything literally false (e.g. the provisional `℘'` is a named
   `sorry` def rather than a free variable in the differential equation).
 - As proofs are filled in, **narrow the imports**: files currently `import Mathlib`
   for convenience; replace with the specific modules actually used.

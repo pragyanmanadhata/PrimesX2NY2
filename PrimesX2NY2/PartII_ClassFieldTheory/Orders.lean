@@ -6,7 +6,7 @@ Authors: Pragyan Manadhata
 import Mathlib
 
 /-!
-# Part II, Chapter 5 — Orders in imaginary quadratic fields
+# Part II, Chapter 5 - Orders in imaginary quadratic fields
 
 Cox, *Primes of the Form x² + ny²*, §7.
 
@@ -17,7 +17,7 @@ ideal class group `C(𝒪)` is finite.
 **Scaffold only:** every proof is `sorry`.
 -/
 
-namespace PrimesXNY2.Order
+namespace PrimesX2NY2.Order
 
 /-- An **order** in an imaginary quadratic field, recorded for the scaffold by the
 fundamental discriminant `d_K` of the field `K` and the conductor `f` (so the
@@ -33,13 +33,13 @@ structure QuadOrder where
 /-- The **discriminant of the order**, `D = f² · d_K`. (Cox, §7.) -/
 def QuadOrder.discr (O : QuadOrder) : ℤ := (O.conductor : ℤ) ^ 2 * O.fieldDisc
 
-/-- A **proper (invertible) fractional `𝒪`-ideal**. Carrier placeholder; the full
+/-- A **proper (invertible) fractional `𝒪`-ideal**. Temporary carrier; the full
 definition uses fractional ideals of `K` whose ring of multipliers is exactly
 `𝒪`. (Cox, §7.) -/
 def QuadOrder.ProperIdeal (O : QuadOrder) : Type := sorry
 
 /-- The **ideal class group** `C(𝒪)` of the order: proper fractional ideals modulo
-principal ideals. Carrier placeholder; the group law is ideal multiplication.
+principal ideals. Temporary carrier; the group law is ideal multiplication.
 (Cox, §7.) -/
 def QuadOrder.idealClassGroup (O : QuadOrder) : Type := sorry
 
@@ -52,4 +52,4 @@ theorem QuadOrder.idealClassGroup_isCommGroup (O : QuadOrder) :
 theorem QuadOrder.idealClassGroup_finite (O : QuadOrder) :
     Nonempty (Fintype O.idealClassGroup) := sorry
 
-end PrimesXNY2.Order
+end PrimesX2NY2.Order

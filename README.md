@@ -5,10 +5,10 @@ project following **David A. Cox, _Primes of the Form x² + ny²: Fermat, Class 
 Theory, and Complex Multiplication_ (2nd ed., Wiley, 2013)**, organised as a
 [leanblueprint](https://github.com/PatrickMassot/leanblueprint).
 
-> **Status: scaffold.** Every statement is present with a Mathlib-style signature
-> and a `sorry` body. `lake build` and `leanblueprint all` both succeed. No proofs
-> have been attempted yet. See [ROADMAP.md](ROADMAP.md) for the Mathlib audit and
-> [CONVENTIONS.md](CONVENTIONS.md) for style.
+> **Status: scaffold.** The main statements and many exercises have Mathlib-style
+> signatures with `sorry` bodies. `lake build` succeeds, and the blueprint is wired
+> into CI. Proof work has not started yet. See [ROADMAP.md](ROADMAP.md) for the
+> Mathlib audit and [CONVENTIONS.md](CONVENTIONS.md) for style.
 
 ## Pinned versions
 
@@ -26,14 +26,14 @@ The exact dependency graph is locked in [lake-manifest.json](lake-manifest.json)
 ## Repository layout
 
 ```
-PrimesXNY2/                         Lean source (one directory per Part)
+PrimesX2NY2/                         Lean source (one directory per Part)
   PartI_Forms/                      Fermat, binary forms, form class group, genus
     Fermat.lean  Forms.lean  FormClassGroup.lean  Genus.lean
   PartII_ClassFieldTheory/          orders, the bridge, class fields, main theorem
     Orders.lean  Bridge.lean  RingClassField.lean  MainTheorem.lean
   PartIII_ComplexMultiplication/    elliptic functions, modular functions, Weber
     EllipticFunctions.lean  ModularFunctions.lean  WeberFunctions.lean
-PrimesXNY2.lean                     root module: imports every chapter
+PrimesX2NY2.lean                     root module: imports every chapter
 blueprint/src/                      LaTeX blueprint (one chapter per Part)
   content.tex                       the dependency DAG (nodes carry \lean, \uses, \leanok)
 CONVENTIONS.md  README.md  ROADMAP.md
@@ -71,13 +71,8 @@ The dependency graph and the green/blue status colours are generated from the
 ## Continuous integration
 
 `.github/workflows/blueprint.yml` builds the project, compiles the blueprint
-(PDF + web), and deploys the blueprint to **GitHub Pages**. To enable it: under
-the repository **Settings → Pages**, set **Source** to **GitHub Actions** (and
-under **Settings → Actions → General**, allow Actions to create/approve PRs).
-
-> Before first use, replace the placeholder `USERNAME` (GitHub user) in
-> `blueprint/src/web.tex` and in the links here. The Pages site will then be served
-> at `https://<USERNAME>.github.io/PrimesXNY2/`.
+(PDF + web), and deploys the blueprint to **GitHub Pages**. To enable it, set the
+repository's Pages source to **GitHub Actions**.
 
 ## License
 

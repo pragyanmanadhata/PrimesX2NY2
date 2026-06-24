@@ -4,10 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Pragyan Manadhata
 -/
 import Mathlib
-import PrimesXNY2.PartI_Forms.FormClassGroup
+import PrimesX2NY2.PartI_Forms.FormClassGroup
 
 /-!
-# Part I, Chapter 4 — Genus theory and representation
+# Part I, Chapter 4 - Genus theory and representation
 
 Cox, *Primes of the Form x² + ny²*, §3 (genus theory).
 
@@ -17,12 +17,12 @@ of squares, and genus characters decide which primes a form represents.
 **Scaffold only:** every proof is `sorry`.
 -/
 
-namespace PrimesXNY2.Genus
+namespace PrimesX2NY2.Genus
 
-open PrimesXNY2.Forms
+open PrimesX2NY2.Forms
 
 /-- A form `f` **represents** an integer `m` if `m = f(x, y)` for some integers
-`x, y`. (Cox, §1–2.) -/
+`x, y`. (Cox, §1-2.) -/
 def Represents (f : BinaryQF) (m : ℤ) : Prop := ∃ x y : ℤ, f.eval x y = m
 
 /-- A form `f` **properly represents** `m` if `m = f(x, y)` with `gcd(x, y) = 1`.
@@ -127,4 +127,4 @@ theorem represents_principal_iff_congruence (n : ℕ) (hn : 0 < n) (p : ℕ)
           ((p : ℤ) ≡ β ^ 2 + (n : ℤ) [ZMOD (4 * n)]) := by
   sorry
 
-end PrimesXNY2.Genus
+end PrimesX2NY2.Genus

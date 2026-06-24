@@ -4,12 +4,12 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Pragyan Manadhata
 -/
 import Mathlib
-import PrimesXNY2.PartII_ClassFieldTheory.Orders
-import PrimesXNY2.PartII_ClassFieldTheory.RingClassField
-import PrimesXNY2.PartIII_ComplexMultiplication.EllipticFunctions
+import PrimesX2NY2.PartII_ClassFieldTheory.Orders
+import PrimesX2NY2.PartII_ClassFieldTheory.RingClassField
+import PrimesX2NY2.PartIII_ComplexMultiplication.EllipticFunctions
 
 /-!
-# Part III, Chapter 10 — Modular functions and complex multiplication
+# Part III, Chapter 10 - Modular functions and complex multiplication
 
 Cox, *Primes of the Form x² + ny²*, §11.
 
@@ -20,9 +20,9 @@ generating ring class fields.
 **Scaffold only:** every proof is `sorry`.
 -/
 
-namespace PrimesXNY2.Modular
+namespace PrimesX2NY2.Modular
 
-open PrimesXNY2.Order PrimesXNY2.RingClassField PrimesXNY2.Elliptic
+open PrimesX2NY2.Order PrimesX2NY2.RingClassField PrimesX2NY2.Elliptic
 
 /-- The Klein **`j`-function** on the upper half-plane, `j(τ)`. (Cox, §11.)
 Placeholder. -/
@@ -62,4 +62,4 @@ a CM generator (the field-generation part is the deep content of §11). -/
 theorem jFunction_generates_ringClassField (O : QuadOrder) :
     ∃ τ : ℂ, IsCMPoint τ ∧ IsIntegral ℤ (jFunction τ) := sorry
 
-end PrimesXNY2.Modular
+end PrimesX2NY2.Modular

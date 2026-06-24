@@ -6,7 +6,7 @@ Authors: Pragyan Manadhata
 import Mathlib
 
 /-!
-# Part III, Chapter 9 — Elliptic functions, ℘, and the j-invariant
+# Part III, Chapter 9 - Elliptic functions, ℘, and the j-invariant
 
 Cox, *Primes of the Form x² + ny²*, §10.
 
@@ -16,7 +16,7 @@ Eisenstein series `g₂, g₃`, and the `j`-invariant of a lattice.
 **Scaffold only:** every proof is `sorry`.
 -/
 
-namespace PrimesXNY2.Elliptic
+namespace PrimesX2NY2.Elliptic
 
 /-- A **lattice** `L = ℤω₁ + ℤω₂ ⊆ ℂ`, recorded by an ordered basis with
 `ω₂/ω₁ ∉ ℝ` (so the basis is non-degenerate). (Cox, §10.) -/
@@ -54,8 +54,8 @@ theorem weierstrassP_differential_eq (L : Lattice) (z : ℂ) :
   sorry
 
 /-- The **`j`-invariant** of a lattice, `j(L) = 1728 · g₂³ / (g₂³ − 27 g₃²)`.
-(Cox, §10–11.) -/
+(Cox, §10-11.) -/
 noncomputable def jInvariant (L : Lattice) : ℂ :=
   1728 * g₂ L ^ 3 / (g₂ L ^ 3 - 27 * g₃ L ^ 2)
 
-end PrimesXNY2.Elliptic
+end PrimesX2NY2.Elliptic

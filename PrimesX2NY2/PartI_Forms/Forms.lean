@@ -6,7 +6,7 @@ Authors: Pragyan Manadhata
 import Mathlib
 
 /-!
-# Part I, Chapter 2 — Binary quadratic forms, proper equivalence, reduction
+# Part I, Chapter 2 - Binary quadratic forms, proper equivalence, reduction
 
 Cox, *Primes of the Form x² + ny²*, §2.
 
@@ -16,7 +16,7 @@ the reduction theory of positive definite forms.
 **Scaffold only:** every proof is `sorry`.
 -/
 
-namespace PrimesXNY2.Forms
+namespace PrimesX2NY2.Forms
 
 /-- An integral **binary quadratic form** `f(x, y) = a x² + b x y + c y²`,
 recorded by its coefficient triple `(a, b, c)`. (Cox, §2.) -/
@@ -173,4 +173,4 @@ theorem class_number_one (n : ℕ) (hn : 0 < n) :
       ↔ n = 1 ∨ n = 2 ∨ n = 3 ∨ n = 4 ∨ n = 7 := by
   sorry
 
-end PrimesXNY2.Forms
+end PrimesX2NY2.Forms
