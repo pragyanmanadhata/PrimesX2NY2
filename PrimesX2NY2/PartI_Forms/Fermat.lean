@@ -126,13 +126,23 @@ theorem legendreSym_first_supplement (p : ℕ) [Fact p.Prime] (hp : p ≠ 2) :
 /-- **Second supplement** to quadratic reciprocity: `(2/p) = (−1)^((p²−1)/8)`.
 (A standard supplement used in §1; *not* part of Cox's numbered (1.11).)
 
-UNVERIFIED proof: Mathlib provides `legendreSym.at_two : (2/p) = χ₈ p` (a value by
-`p mod 8`), but no closed form `(−1)^((p²−1)/8)`. Bridging needs a nonlinear
-`Nat`-division parity argument on `(p²−1)/8` - a tracked C-bucket target, not a
-leaf. -/
+Proof: rewrite `(2/p) = χ₈ p` via `legendreSym.at_two`, then bridge to the closed
+form `(−1)^((p²−1)/8)` by a `Nat`-division parity argument on `(p²−1)/8`,
+reducing to the residue of `p` modulo 16. -/
 theorem legendreSym_second_supplement (p : ℕ) [Fact p.Prime] (hp : p ≠ 2) :
     legendreSym p 2 = (-1) ^ ((p ^ 2 - 1) / 8) := by
-  sorry
+  rw [ legendreSym.at_two hp ];
+  rw [ ZMod.χ₈_nat_eq_if_mod_eight ];
+  rcases Nat.even_or_odd' p with ⟨ k, rfl | rfl ⟩ <;> norm_num at *;
+  · exact absurd ( Nat.Prime.eq_two_or_odd ( Fact.out : Nat.Prime ( 2 * k ) ) ) ( by omega );
+  · rcases Nat.even_or_odd' k with ⟨ k, rfl | rfl ⟩ <;> ring_nf <;> norm_num [ Nat.add_mod, Nat.mul_mod ];
+    · norm_num [ add_assoc, Nat.add_div ];
+      rcases Nat.even_or_odd' k with ⟨ k, rfl | rfl ⟩ <;> ring_nf <;> norm_num [ Nat.add_mod, Nat.mul_mod ];
+      · norm_num [ show k ^ 2 * 64 / 8 = k ^ 2 * 8 by rw [ Nat.div_eq_of_eq_mul_left ] <;> linarith ];
+      · norm_num [ Nat.add_div, Nat.mul_div_assoc, Nat.mul_mod, Nat.add_mod, Nat.pow_mod ];
+        norm_num [ pow_add, pow_mul' ];
+    · norm_num [ show 9 + k * 24 + k ^ 2 * 16 - 1 = 8 * ( 1 + k * 3 + k ^ 2 * 2 ) by rw [ Nat.sub_eq_of_eq_add ] ; ring ];
+      rcases Nat.even_or_odd' k with ⟨ k, rfl | rfl ⟩ <;> ring_nf <;> norm_num [ Nat.add_mod, Nat.mul_mod ]
 
 /-- **Lemma 1.14.** For nonzero `D ≡ 0,1 (mod 4)` there is a homomorphism
 `χ : (ℤ/Dℤ)ˣ → {±1}` whose value on the class of an odd `m` prime to `D` is the

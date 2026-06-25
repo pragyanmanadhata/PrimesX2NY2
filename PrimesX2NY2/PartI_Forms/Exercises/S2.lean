@@ -86,7 +86,11 @@ theorem ex_2_6 : ∃ f : BinaryQF, f.Reduced ∧ ProperlyEquivalent ⟨126, 74, 
 `(a − |b| + c)·min(x², y²) ≤ f(x,y)`. -/
 theorem ex_2_7 (f : BinaryQF) (h1 : |f.b| ≤ f.a) (h2 : f.a ≤ f.c) (x y : ℤ) :
     (f.a - |f.b| + f.c) * min (x ^ 2) (y ^ 2) ≤ f.eval x y := by
-  sorry
+  cases abs_cases f.b <;> simp_all +decide [ BinaryQF.eval ];
+  · cases le_total ( x ^ 2 ) ( y ^ 2 ) <;> simp_all +decide [ abs_of_nonneg ];
+    · nlinarith [ sq_nonneg ( x + y ), sq_nonneg ( x - y ), mul_le_mul_of_nonneg_left ‹x ^ 2 ≤ y ^ 2› ( show 0 ≤ f.c by linarith ) ];
+    · nlinarith [ sq_nonneg ( x + y ), sq_nonneg ( x - y ) ];
+  · cases le_total ( x ^ 2 ) ( y ^ 2 ) <;> simp +decide [ * ]; all_goals rw [ abs_of_nonpos ] <;> nlinarith [ sq_nonneg ( x + y ), sq_nonneg ( x - y ) ]
 
 /-- **Exercise 2.8(a).** Proof of (2.11): for a reduced form with `|b| < a < c`,
 `f` takes the value `a` (resp. `c`) primitively only at `±(1,0)` (resp.
