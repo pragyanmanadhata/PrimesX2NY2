@@ -65,7 +65,32 @@ compatibility conditions `pᵢ qⱼ ≡ pⱼ qᵢ (mod m)` hold for all `i, j`. 
 theorem lemma_3_5 (r : ℕ) (p q : Fin r → ℤ) (m : ℤ)
     (hcop : ∃ (t : Fin r → ℤ) (s : ℤ), s * m + ∑ i, t i * p i = 1) :
     (∃ B : ℤ, ∀ i, p i * B ≡ q i [ZMOD m]) ↔ (∀ i j, p i * q j ≡ p j * q i [ZMOD m]) := by
-  sorry
+  constructor
+  · rintro ⟨B, hB⟩ i j
+    have h1 : p i * q j ≡ p i * (p j * B) [ZMOD m] := (hB j).symm.mul_left (p i)
+    have h2 : p j * (p i * B) ≡ p j * q i [ZMOD m] := (hB i).mul_left (p j)
+    have h3 : p i * (p j * B) = p j * (p i * B) := by ring
+    exact (h3 ▸ h1).trans h2
+  · intro hc
+    obtain ⟨t, s, hts⟩ := hcop
+    refine ⟨∑ i, t i * q i, fun j => ?_⟩
+    rw [Int.modEq_iff_dvd]
+    have hsum : ∑ i, t i * (p j * q i - p i * q j)
+              = p j * (∑ i, t i * q i) - q j * (∑ i, t i * p i) := by
+      rw [Finset.mul_sum, Finset.mul_sum, ← Finset.sum_sub_distrib]
+      exact Finset.sum_congr rfl (fun i _ => by ring)
+    have hp : ∑ i, t i * p i = 1 - s * m := by linarith [hts]
+    have key : q j - p j * (∑ i, t i * q i)
+             = q j * (s * m) - ∑ i, t i * (p j * q i - p i * q j) := by
+      rw [hsum, hp]; ring
+    rw [key]
+    apply dvd_sub
+    · exact (dvd_mul_left m s).mul_left (q j)
+    · apply Finset.dvd_sum
+      intro i _
+      have hdvd : m ∣ (p j * q i - p i * q j) := by
+        have := hc i j; rwa [Int.modEq_iff_dvd] at this
+      exact hdvd.mul_left (t i)
 
 /-- The **Dirichlet composition** of two forms `f`, `g` of discriminant `D` with
 `gcd(a, a', (b+b')/2) = 1`: the form `a a' x² + B x y + ((B²−D)/4 a a') y²`, where

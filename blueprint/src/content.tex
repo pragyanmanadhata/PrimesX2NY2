@@ -651,6 +651,12 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   The congruences $p_i B \equiv q_i\ (m)$ (with $\gcd(p_1,\dots,p_r,m)=1$) are
   solvable iff $p_i q_j \equiv p_j q_i\ (m)$ for all $i,j$.
 \end{lemma}
+\begin{proof}\leanok
+  Forward: a solution $B$ gives $p_i q_j \equiv p_i p_j B \equiv p_j p_i B \equiv
+  p_j q_i$. Backward: from $\sum_i t_i p_i \equiv 1\ (m)$ set $B = \sum_i t_i q_i$;
+  then $p_j B - q_j = \sum_i t_i (p_j q_i - p_i q_j) - q_j(\sum_i t_i p_i - 1)$ is a
+  sum of multiples of $m$.
+\end{proof}
 
 \begin{definition}[Dirichlet composition formula; Cox (3.7)]
   \label{def:dirichlet_form}
