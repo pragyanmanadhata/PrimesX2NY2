@@ -77,7 +77,7 @@ theorem thm_3_15_i (D : ℤ) (hD : D < 0) (hD4 : D % 4 = 0 ∨ D % 4 = 1) :
 principal class) is exactly the subgroup of squares `C(D)²`; every form in the
 principal genus arises by duplication. -/
 theorem thm_3_15_ii (D : ℤ) (hD : D < 0) (hD4 : D % 4 = 0 ∨ D % 4 = 1) :
-    {x : FormClassGroup D | genusVector D x = genusVector D (principalClass D)}
+    {x : FormClassGroup D | genusVector D x = genusVector D (principalClass D hD4)}
       = {x : FormClassGroup D | ∃ y : FormClassGroup D, compose D y y = x} := by
   sorry
 

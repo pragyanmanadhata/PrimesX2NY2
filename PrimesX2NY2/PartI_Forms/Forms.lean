@@ -151,6 +151,35 @@ theorem four_mul_eval (f : BinaryQF) (x y : ℤ) :
 def principalForm (D : ℤ) : BinaryQF :=
   if D % 4 = 0 then ⟨1, 0, -(D / 4)⟩ else ⟨1, 1, (1 - D) / 4⟩
 
+/-- Every discriminant is `≡ 0` or `1 (mod 4)` (since `b² ≡ 0,1` and `4ac ≡ 0`). -/
+theorem discr_mod_four (f : BinaryQF) : f.discr % 4 = 0 ∨ f.discr % 4 = 1 := by
+  obtain ⟨a, b, c⟩ := f
+  simp only [BinaryQF.discr]
+  rcases Int.even_or_odd b with ⟨k, hk⟩ | ⟨k, hk⟩ <;> subst hk
+  · left
+    have h : (k + k) ^ 2 - 4 * a * c = 4 * (k ^ 2 - a * c) := by ring
+    omega
+  · right
+    have h : (2 * k + 1) ^ 2 - 4 * a * c = 4 * (k ^ 2 + k - a * c) + 1 := by ring
+    omega
+
+/-- The principal form has discriminant `D` (for valid discriminants `D ≡ 0,1`). -/
+theorem principalForm_discr (D : ℤ) (hD : D % 4 = 0 ∨ D % 4 = 1) :
+    (principalForm D).discr = D := by
+  simp only [principalForm]
+  rcases hD with h | h
+  · rw [if_pos h]; simp only [BinaryQF.discr]; omega
+  · rw [if_neg (by omega : ¬ D % 4 = 0)]; simp only [BinaryQF.discr]; omega
+
+/-- The principal form is primitive (its leading coefficient is `1`). -/
+theorem principalForm_primitive (D : ℤ) : (principalForm D).Primitive := by
+  simp only [principalForm, BinaryQF.Primitive]
+  split <;> simp
+
+/-- The principal form has positive leading coefficient `a = 1`. -/
+theorem principalForm_pos (D : ℤ) : 0 < (principalForm D).a := by
+  simp only [principalForm]; split <;> norm_num
+
 /-- **Composition identity (2.30)** for the form `2x² + 2xy + 3y²` (used to prove
 the conjectures on `x² + 5y²`). (Cox §2.) -/
 theorem comp_identity_2_30 (x y z w : ℤ) :
