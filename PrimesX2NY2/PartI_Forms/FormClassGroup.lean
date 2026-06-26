@@ -46,19 +46,6 @@ def classOf (D : ℤ) (f : BinaryQF) (h : f.discr = D ∧ f.Primitive ∧ 0 < f.
     FormClassGroup D :=
   Quotient.mk (properSetoid D) ⟨f, h⟩
 
-/-- **Lemma 3.2** (Cox §3). For forms `f = a x²+ b x y + c y²` and
-`g = a' x²+ b' x y + c' y²` of discriminant `D` with `gcd(a, a', (b+b')/2) = 1`,
-there is a `B`, unique modulo `2 a a'`, with `B ≡ b (2a)`, `B ≡ b' (2a')`, and
-`B² ≡ D (4 a a')`. -/
-theorem lemma_3_2 (a b c a' b' c' D : ℤ)
-    (hf : b ^ 2 - 4 * a * c = D) (hg : b' ^ 2 - 4 * a' * c' = D)
-    (hcop : Int.gcd (Int.gcd a a') ((b + b') / 2) = 1) :
-    ∃ B : ℤ, (B ≡ b [ZMOD (2 * a)]) ∧ (B ≡ b' [ZMOD (2 * a')])
-        ∧ (B ^ 2 ≡ D [ZMOD (4 * a * a')])
-        ∧ ∀ B' : ℤ, (B' ≡ b [ZMOD (2 * a)]) ∧ (B' ≡ b' [ZMOD (2 * a')])
-            ∧ (B' ^ 2 ≡ D [ZMOD (4 * a * a')]) → B' ≡ B [ZMOD (2 * a * a')] := by
-  sorry
-
 /-- **Lemma 3.5** (Cox §3). For `p₁,…,pᵣ, q₁,…,qᵣ, m` with `gcd(p₁,…,pᵣ, m) = 1`,
 the congruences `pᵢ B ≡ qᵢ (mod m)` have a (unique) solution `B` iff the
 compatibility conditions `pᵢ qⱼ ≡ pⱼ qᵢ (mod m)` hold for all `i, j`. -/
@@ -91,6 +78,197 @@ theorem lemma_3_5 (r : ℕ) (p q : Fin r → ℤ) (m : ℤ)
       have hdvd : m ∣ (p j * q i - p i * q j) := by
         have := hc i j; rwa [Int.modEq_iff_dvd] at this
       exact hdvd.mul_left (t i)
+
+/-- Auxiliary parity fact: if `4 ∣ b² − b'²` then `b, b'` have the same parity
+(so `(b+b')/2` is an integer). Used by Lemma 3.2 via the equal-discriminant
+hypothesis. -/
+theorem two_dvd_sub_of_four_dvd_sq_sub_sq (b b' : ℤ) (h : (4:ℤ) ∣ (b^2 - b'^2)) : (2:ℤ) ∣ (b - b') := by
+  have h2 : (2:ℤ) ∣ (b - b') * (b + b') := by
+    have e : b^2 - b'^2 = (b - b') * (b + b') := by ring
+    exact e ▸ (dvd_trans (by norm_num) h)
+  rcases Int.prime_two.dvd_or_dvd h2 with h3 | h3
+  · exact h3
+  · obtain ⟨k, hk⟩ := h3; exact ⟨k - b', by linarith⟩
+
+/-- **Uniqueness** for the simultaneous congruences of Lemma 3.5: under the same
+Bézout/coprimality hypothesis the solution of `pᵢ B ≡ qᵢ (mod m)` is unique modulo
+`m`. (The uniqueness half of Cox's Lemma 3.5; consumed by Lemma 3.2.) -/
+theorem simultaneous_congruence_unique (r : ℕ) (p q : Fin r → ℤ) (m : ℤ)
+    (hcop : ∃ (t : Fin r → ℤ) (s : ℤ), s * m + ∑ i, t i * p i = 1)
+    (B B' : ℤ) (hB : ∀ i, p i * B ≡ q i [ZMOD m]) (hB' : ∀ i, p i * B' ≡ q i [ZMOD m]) :
+    B ≡ B' [ZMOD m] := by
+  obtain ⟨t, s, hts⟩ := hcop
+  rw [Int.modEq_iff_dvd]
+  have hps : ∑ i, t i * (p i * (B' - B)) = (∑ i, t i * p i) * (B' - B) := by
+    rw [Finset.sum_mul]; exact Finset.sum_congr rfl (fun i _ => by ring)
+  have hp : ∑ i, t i * p i = 1 - s * m := by linarith [hts]
+  have key : B' - B = (B' - B) * (s * m) + ∑ i, t i * (p i * (B' - B)) := by rw [hps, hp]; ring
+  rw [key]; apply dvd_add
+  · exact (dvd_mul_left m s).mul_left (B' - B)
+  · apply Finset.dvd_sum; intro i _
+    have hi : p i * B ≡ p i * B' [ZMOD m] := (hB i).trans (hB' i).symm
+    have he : p i * (B' - B) = p i * B' - p i * B := by ring
+    have hdvd : m ∣ p i * (B' - B) := by rw [he]; exact Int.modEq_iff_dvd.mp hi
+    exact hdvd.mul_left (t i)
+
+/-- **Lemma 3.2** (Cox §3). For forms `f = a x²+ b x y + c y²` and
+`g = a' x²+ b' x y + c' y²` of discriminant `D` with `gcd(a, a', (b+b')/2) = 1`,
+there is a `B`, unique modulo `2 a a'`, with `B ≡ b (2a)`, `B ≡ b' (2a')`, and
+`B² ≡ D (4 a a')`. -/
+theorem lemma_3_2 (a b c a' b' c' D : ℤ)
+    (hf : b ^ 2 - 4 * a * c = D) (hg : b' ^ 2 - 4 * a' * c' = D)
+    (hcop : Int.gcd (Int.gcd a a') ((b + b') / 2) = 1) :
+    ∃ B : ℤ, (B ≡ b [ZMOD (2 * a)]) ∧ (B ≡ b' [ZMOD (2 * a')])
+        ∧ (B ^ 2 ≡ D [ZMOD (4 * a * a')])
+        ∧ ∀ B' : ℤ, (B' ≡ b [ZMOD (2 * a)]) ∧ (B' ≡ b' [ZMOD (2 * a')])
+            ∧ (B' ^ 2 ≡ D [ZMOD (4 * a * a')]) → B' ≡ B [ZMOD (2 * a * a')] := by
+  have hdiff : (4:ℤ) ∣ (b^2 - b'^2) := ⟨a*c - a'*c', by linear_combination hf - hg⟩
+  have hsub : (2:ℤ) ∣ (b - b') := two_dvd_sub_of_four_dvd_sq_sub_sq b b' hdiff
+  have hadd : (2:ℤ) ∣ (b + b') := by obtain ⟨u,hu⟩ := hsub; exact ⟨u + b', by linarith⟩
+  set β := (b + b') / 2 with hβdef
+  set γ := (b*b' + D) / 2 with hγdef
+  have hβ : 2 * β = b + b' := Int.mul_ediv_cancel' hadd
+  have hγ2 : (2:ℤ) ∣ (b*b' + D) := by
+    obtain ⟨k, hk⟩ := hadd; exact ⟨b*k - 2*a*c, by rw [← hf]; linear_combination b * hk⟩
+  have hγ : 2 * γ = b*b' + D := Int.mul_ediv_cancel' hγ2
+  by_cases ha : a = 0
+  · subst ha
+    refine ⟨b, Int.ModEq.refl b, ?_, ?_, ?_⟩
+    · have hcop' : Int.gcd a' β = 1 := by
+        simpa [Int.gcd, Int.natAbs_natCast, Int.natAbs_abs] using hcop
+      have hcoB : IsCoprime (a' : ℤ) β := Int.isCoprime_iff_gcd_eq_one.mpr hcop'
+      obtain ⟨u, hu⟩ := hsub
+      have e2 : b ^ 2 - b' ^ 2 = -4 * (a' * c') := by linear_combination hf - hg
+      have e3 : (2 * u) * (2 * β) = b ^ 2 - b' ^ 2 := by rw [← hu, hβ]; ring
+      have h4 : (4 : ℤ) * (u * β) = 4 * (a' * (-c')) := by linear_combination e3.trans e2
+      have key : u * β = a' * (-c') := mul_left_cancel₀ (by norm_num : (4 : ℤ) ≠ 0) h4
+      have hdu : a' ∣ u := hcoB.dvd_of_dvd_mul_right ⟨-c', key⟩
+      rw [Int.modEq_iff_dvd]
+      obtain ⟨k, hk⟩ := hdu
+      exact ⟨-k, by rw [hk] at hu; linear_combination -hu⟩
+    · have hb2 : b ^ 2 = D := by linear_combination hf
+      rw [hb2]
+    · intro B' hB'
+      have hBb : B' = b := by
+        have := Int.modEq_iff_dvd.mp hB'.1
+        simpa [zero_dvd_iff, sub_eq_zero, eq_comm] using this
+      rw [hBb]
+  by_cases ha' : a' = 0
+  · subst ha'
+    refine ⟨b', ?_, Int.ModEq.refl b', ?_, ?_⟩
+    · have hcop' : Int.gcd a β = 1 := by
+        simpa [Int.gcd, Int.natAbs_natCast, Int.natAbs_abs] using hcop
+      have hcoB : IsCoprime (a : ℤ) β := Int.isCoprime_iff_gcd_eq_one.mpr hcop'
+      obtain ⟨u, hu⟩ := hsub
+      have e2 : b ^ 2 - b' ^ 2 = 4 * (a * c) := by linear_combination hf - hg
+      have e3 : (2 * u) * (2 * β) = b ^ 2 - b' ^ 2 := by rw [← hu, hβ]; ring
+      have h4 : (4 : ℤ) * (u * β) = 4 * (a * c) := by linear_combination e3.trans e2
+      have key : u * β = a * c := mul_left_cancel₀ (by norm_num : (4 : ℤ) ≠ 0) h4
+      have hdu : a ∣ u := hcoB.dvd_of_dvd_mul_right ⟨c, key⟩
+      rw [Int.modEq_iff_dvd]
+      obtain ⟨k, hk⟩ := hdu
+      exact ⟨k, by rw [hk] at hu; linear_combination hu⟩
+    · have hb2 : b' ^ 2 = D := by linear_combination hg
+      rw [hb2]
+    · intro B' hB'
+      have hBb : B' = b' := by
+        have := Int.modEq_iff_dvd.mp hB'.2.1
+        simpa [zero_dvd_iff, sub_eq_zero, eq_comm] using this
+      rw [hBb]
+  set m : ℤ := 2 * a * a' with hm
+  set p : Fin 3 → ℤ := ![a', a, β] with hp
+  set q : Fin 3 → ℤ := ![a'*b, a*b', γ] with hq
+  have hco : IsCoprime ((Int.gcd a a' : ℤ)) β := Int.isCoprime_iff_gcd_eq_one.mpr hcop
+  obtain ⟨u, v, huv⟩ := hco
+  have hgab : ((Int.gcd a a' : ℤ)) = a * Int.gcdA a a' + a' * Int.gcdB a a' := Int.gcd_eq_gcd_ab a a'
+  have hbez : ∃ (t : Fin 3 → ℤ) (s : ℤ), s * m + ∑ i, t i * p i = 1 := by
+    refine ⟨![u * Int.gcdB a a', u * Int.gcdA a a', v], 0, ?_⟩
+    rw [Fin.sum_univ_three]
+    simp only [hp, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
+      Matrix.cons_val_two, Matrix.tail_cons]
+    linear_combination huv - u * hgab
+  have hβγb : β * b - γ = 2 * a * c := by
+    have key : 2 * (β * b - γ) = 2 * (2 * a * c) := by linear_combination b * hβ - hγ + hf
+    exact mul_left_cancel₀ (by norm_num : (2:ℤ) ≠ 0) key
+  have hβγb' : β * b' - γ = 2 * a' * c' := by
+    have key : 2 * (β * b' - γ) = 2 * (2 * a' * c') := by linear_combination b' * hβ - hγ + hg
+    exact mul_left_cancel₀ (by norm_num : (2:ℤ) ≠ 0) key
+  have h01 : a' * (a*b') ≡ a * (a'*b) [ZMOD m] := by
+    rw [Int.modEq_iff_dvd]; obtain ⟨w,hw⟩ := hsub
+    exact ⟨w, by rw [hm]; linear_combination (a*a') * hw⟩
+  have h02 : a' * γ ≡ β * (a'*b) [ZMOD m] := by
+    rw [Int.modEq_iff_dvd]; exact ⟨c, by rw [hm]; linear_combination a' * hβγb⟩
+  have h12 : a * γ ≡ β * (a*b') [ZMOD m] := by
+    rw [Int.modEq_iff_dvd]; exact ⟨c', by rw [hm]; linear_combination a * hβγb'⟩
+  have hcompat : ∀ i j, p i * q j ≡ p j * q i [ZMOD m] := by
+    intro i j
+    fin_cases i <;> fin_cases j <;>
+      simp only [hp, hq, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
+        Matrix.cons_val_two, Matrix.tail_cons] <;>
+      first
+        | exact Int.ModEq.refl _
+        | exact h01 | exact h01.symm
+        | exact h02 | exact h02.symm
+        | exact h12 | exact h12.symm
+  obtain ⟨B, hBlin⟩ := (lemma_3_5 3 p q m hbez).mpr hcompat
+  have e0 : a' * B ≡ a' * b [ZMOD m] := by have := hBlin 0; simpa [hp, hq] using this
+  have e1 : a * B ≡ a * b' [ZMOD m] := by have := hBlin 1; simpa [hp, hq] using this
+  have e2 : β * B ≡ γ [ZMOD m] := by have := hBlin 2; simpa [hp, hq] using this
+  have hb : B ≡ b [ZMOD (2*a)] := by
+    rw [Int.modEq_iff_dvd] at e0 ⊢
+    rw [show m = a' * (2*a) from by rw [hm]; ring] at e0
+    rw [show a' * b - a' * B = a' * (b - B) from by ring] at e0
+    exact (mul_dvd_mul_iff_left ha').mp e0
+  have hb' : B ≡ b' [ZMOD (2*a')] := by
+    rw [Int.modEq_iff_dvd] at e1 ⊢
+    rw [show m = a * (2*a') from by rw [hm]; ring] at e1
+    rw [show a * b' - a * B = a * (b' - B) from by ring] at e1
+    exact (mul_dvd_mul_iff_left ha).mp e1
+  have hquad : B^2 ≡ D [ZMOD (4*a*a')] := by
+    rw [Int.modEq_iff_dvd] at hb hb' e2 ⊢
+    obtain ⟨s1, hs1⟩ := hb
+    obtain ⟨s2, hs2⟩ := hb'
+    have hprod : (4*a*a') ∣ (B - b) * (B - b') := ⟨s1 * s2, by
+      rw [show B - b = -(2*a*s1) from by linarith, show B - b' = -(2*a'*s2) from by linarith]; ring⟩
+    obtain ⟨s3, hs3⟩ := e2
+    have hlin : (4*a*a') ∣ ((b+b')*B - (b*b' + D)) := ⟨-s3, by
+      rw [show (b+b')*B - (b*b'+D) = 2*(β*B - γ) from by rw [← hβ, ← hγ]; ring,
+          show β*B - γ = -(m*s3) from by linarith, hm]; ring⟩
+    rw [show D - B^2 = -((B-b)*(B-b')) - ((b+b')*B - (b*b'+D)) from by ring]
+    exact dvd_sub (dvd_neg.mpr hprod) hlin
+  refine ⟨B, hb, hb', hquad, ?_⟩
+  intro B' ⟨hB'b, hB'b', hB'q⟩
+  have f0 : a' * B' ≡ a' * b [ZMOD m] := by
+    rw [Int.modEq_iff_dvd] at hB'b ⊢
+    rw [show m = a' * (2*a) from by rw [hm]; ring]
+    obtain ⟨w,hw⟩ := hB'b; exact ⟨w, by linear_combination a' * hw⟩
+  have f1 : a * B' ≡ a * b' [ZMOD m] := by
+    rw [Int.modEq_iff_dvd] at hB'b' ⊢
+    rw [show m = a * (2*a') from by rw [hm]; ring]
+    obtain ⟨w,hw⟩ := hB'b'; exact ⟨w, by linear_combination a * hw⟩
+  have f2 : β * B' ≡ γ [ZMOD m] := by
+    rw [Int.modEq_iff_dvd, hm]
+    rw [Int.modEq_iff_dvd] at hB'b hB'b' hB'q
+    obtain ⟨s1, hs1⟩ := hB'b
+    obtain ⟨s2, hs2⟩ := hB'b'
+    obtain ⟨s4, hs4⟩ := hB'q
+    have hprod : (4*a*a') ∣ (B' - b) * (B' - b') := ⟨s1 * s2, by
+      rw [show B' - b = -(2*a*s1) from by linarith, show B' - b' = -(2*a'*s2) from by linarith]; ring⟩
+    have hdvd4 : (4*a*a') ∣ ((b+b')*B' - (b*b'+D)) := by
+      rw [show (b+b')*B' - (b*b'+D) = -(D - B'^2) - (B'-b)*(B'-b') from by ring]
+      exact dvd_sub (dvd_neg.mpr ⟨s4, hs4⟩) hprod
+    rw [show (b+b')*B' - (b*b'+D) = 2 * -(γ - β*B') from by rw [← hβ, ← hγ]; ring,
+        show (4:ℤ)*a*a' = 2*(2*a*a') from by ring] at hdvd4
+    exact dvd_neg.mp ((mul_dvd_mul_iff_left (by norm_num : (2:ℤ) ≠ 0)).mp hdvd4)
+  have hB'lin : ∀ i, p i * B' ≡ q i [ZMOD m] := by
+    intro i
+    fin_cases i <;>
+      simp only [hp, hq, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
+        Matrix.cons_val_two, Matrix.tail_cons]
+    · exact f0
+    · exact f1
+    · exact f2
+  exact (simultaneous_congruence_unique 3 p q m hbez B B' hBlin hB'lin).symm
 
 /-- The **Dirichlet composition** of two forms `f`, `g` of discriminant `D` with
 `gcd(a, a', (b+b')/2) = 1`: the form `a a' x² + B x y + ((B²−D)/4 a a') y²`, where

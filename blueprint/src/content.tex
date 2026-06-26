@@ -643,6 +643,15 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   For forms of discriminant $D$ with $\gcd(a,a',(b+b')/2)=1$, there is a $B$, unique
   mod $2aa'$, with $B \equiv b\ (2a)$, $B \equiv b'\ (2a')$, $B^2 \equiv D\ (4aa')$.
 \end{lemma}
+\begin{proof}\leanok
+\uses{lem:l3_5}
+Reduce (Cox (3.4)) to the linear system $a'B\equiv a'b$, $aB\equiv ab'$,
+$\tfrac{b+b'}{2} B\equiv\tfrac{bb'+D}{2}\ (2aa')$; existence is Lemma 3.5 (the
+compatibility (3.6) follows from the equal discriminants), recovering $B\equiv b\
+(2a)$, $B\equiv b'\ (2a')$ by cancelling $a', a$, and $B^2\equiv D\ (4aa')$ from
+$(B-b)(B-b')\equiv 0$. Uniqueness is the companion simultaneous-congruence lemma.
+The degenerate $a=0$ and $a'=0$ cases are dispatched directly.
+\end{proof}
 
 \begin{lemma}[Cox Lemma 3.5]
   \label{lem:l3_5}
