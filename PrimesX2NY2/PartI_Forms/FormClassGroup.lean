@@ -270,10 +270,54 @@ theorem lemma_3_2 (a b c a' b' c' D : ℤ)
     · exact f2
   exact (simultaneous_congruence_unique 3 p q m hbez B B' hBlin hB'lin).symm
 
+open Classical in
+/-- The integer `B` of Lemma 3.2 for the pair `f, g`: chosen (via `lemma_3_2`) when the
+forms share a discriminant and satisfy the coprimality condition, and an arbitrary value
+otherwise. Internal to the Dirichlet composition. -/
+noncomputable def dirichletB (f g : BinaryQF) : ℤ :=
+  if h : ∃ B : ℤ, (B ≡ f.b [ZMOD 2 * f.a]) ∧ (B ≡ g.b [ZMOD 2 * g.a])
+      ∧ (B ^ 2 ≡ f.discr [ZMOD 4 * f.a * g.a])
+  then h.choose else 0
+
 /-- The **Dirichlet composition** of two forms `f`, `g` of discriminant `D` with
 `gcd(a, a', (b+b')/2) = 1`: the form `a a' x² + B x y + ((B²−D)/4 a a') y²`, where
 `B` is the integer of Lemma 3.2. (Cox §3, (3.7).) -/
-def dirichletForm (f g : BinaryQF) : BinaryQF := sorry
+noncomputable def dirichletForm (f g : BinaryQF) : BinaryQF :=
+  ⟨f.a * g.a, dirichletB f g, (dirichletB f g ^ 2 - f.discr) / (4 * f.a * g.a)⟩
+
+/-- Under the discriminant/coprimality hypotheses of Lemma 3.2, the chosen `B` satisfies
+`B² ≡ D (mod 4 a a')`; hence the `y²`-coefficient `(B²−D)/(4 a a')` is an exact integer. -/
+theorem dirichletB_spec (f g : BinaryQF) (D : ℤ) (hf : f.discr = D) (hg : g.discr = D)
+    (hcop : Int.gcd (Int.gcd f.a g.a) ((f.b + g.b) / 2) = 1) :
+    dirichletB f g ^ 2 ≡ f.discr [ZMOD 4 * f.a * g.a] := by
+  have hex : ∃ B : ℤ, (B ≡ f.b [ZMOD 2 * f.a]) ∧ (B ≡ g.b [ZMOD 2 * g.a])
+      ∧ (B ^ 2 ≡ f.discr [ZMOD 4 * f.a * g.a]) := by
+    obtain ⟨B, hB1, hB2, hB3, _⟩ := lemma_3_2 f.a f.b f.c g.a g.b g.c D hf hg hcop
+    exact ⟨B, hB1, hB2, by rw [hf]; exact hB3⟩
+  rw [dirichletB, dif_pos hex]
+  exact hex.choose_spec.2.2
+
+/-- The discriminant of the Dirichlet composition is `D` (Cox Prop 3.8, the discriminant
+calculation). -/
+theorem dirichletForm_discr (f g : BinaryQF) (D : ℤ) (hf : f.discr = D) (hg : g.discr = D)
+    (hcop : Int.gcd (Int.gcd f.a g.a) ((f.b + g.b) / 2) = 1) :
+    (dirichletForm f g).discr = D := by
+  have hsp := dirichletB_spec f g D hf hg hcop
+  have hdvd : (4 * f.a * g.a) ∣ (dirichletB f g ^ 2 - f.discr) :=
+    Int.modEq_iff_dvd.mp hsp.symm
+  have key : (4 * f.a * g.a) * ((dirichletB f g ^ 2 - f.discr) / (4 * f.a * g.a))
+      = dirichletB f g ^ 2 - f.discr := Int.mul_ediv_cancel' hdvd
+  have hdiscr : (dirichletForm f g).discr
+      = dirichletB f g ^ 2
+        - (4 * f.a * g.a) * ((dirichletB f g ^ 2 - f.discr) / (4 * f.a * g.a)) := by
+    simp only [dirichletForm, BinaryQF.discr]; ring
+  rw [hdiscr, key]; linarith [hf]
+
+/-- The leading coefficient of the Dirichlet composition is positive when both inputs have
+positive leading coefficient (Cox Prop 3.8, positivity). -/
+theorem dirichletForm_pos (f g : BinaryQF) (hfa : 0 < f.a) (hga : 0 < g.a) :
+    0 < (dirichletForm f g).a := by
+  simp only [dirichletForm]; exact mul_pos hfa hga
 
 /-- **Proposition 3.8** (Cox §3). The Dirichlet composition `dirichletForm f g` of
 two primitive positive definite forms of discriminant `D` (with the coprimality
@@ -283,6 +327,13 @@ theorem prop_3_8 (f g : BinaryQF) (D : ℤ) (hf : f.discr = D) (hg : g.discr = D
     (hcop : Int.gcd (Int.gcd f.a g.a) ((f.b + g.b) / 2) = 1) :
     (dirichletForm f g).discr = D ∧ (dirichletForm f g).Primitive
       ∧ 0 < (dirichletForm f g).a := by
+  refine ⟨dirichletForm_discr f g D hf hg hcop, ?_, dirichletForm_pos f g hfa hga⟩
+  -- Primitivity (Cox Prop 3.8): deferred. Cox derives `gcd(aa', B, (B²−D)/4aa') = 1`
+  -- from the fact that `dirichletForm f g` is the *direct composition* of `f` and `g`
+  -- (3.1): a prime dividing all of its coefficients would divide every value
+  -- `f(x,y) · g(z,w)`, contradicting primitivity of `f, g` (Cox Exercise 3.6). This is the
+  -- deep Gauss-composition content — the same machinery as `compose`'s well-definedness —
+  -- and is deferred to a later wave.
   sorry
 
 /-- **Dirichlet composition** of two classes of forms of discriminant `D`.
