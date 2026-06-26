@@ -684,6 +684,14 @@ The degenerate $a=0$ and $a'=0$ cases are dispatched directly.
   The Dirichlet composition of two primitive positive definite forms of
   discriminant $D$ is again primitive positive definite of discriminant $D$.
 \end{proposition}
+\begin{proof}\leanok
+\uses{lem:l3_2}
+Discriminant $D$ is the exact-division calculation $B^2-4aa'\cdot\frac{B^2-D}{4aa'}=D$;
+positivity is $aa'>0$. For primitivity, $f$ is properly equivalent to $\langle a,B,a'C\rangle$
+and $g$ to $\langle a',B,aC\rangle$ (translation by $(B-b)/2a$), so $\gcd(a,B,a'C)=1$ and
+$\gcd(a',B,aC)=1$; a prime dividing $aa'$, $B$, $C$ would then divide neither $a$ nor $a'$,
+contradicting $p\mid aa'$ (Cox Exercise 3.6).
+\end{proof}
 
 \begin{theorem}[$C(D)$ is a finite abelian group; Cox Thm 3.9]
   \label{thm:form_class_group_is_group}

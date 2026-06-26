@@ -319,6 +319,105 @@ theorem dirichletForm_pos (f g : BinaryQF) (hfa : 0 < f.a) (hga : 0 < g.a) :
     0 < (dirichletForm f g).a := by
   simp only [dirichletForm]; exact mul_pos hfa hga
 
+/-- Auxiliary for primitivity of the Dirichlet composite: if `f = a x²+ b x y + c y²` is
+primitive and `B = b + 2 a t`, `X = a t²+ b t + c` (i.e. `⟨a,B,X⟩ = action ![![1,t],![0,1]] f`),
+then `gcd(a, B, X) = 1`. -/
+theorem prim_side (a b c B X t : ℤ) (hprim : Int.gcd (Int.gcd a b) c = 1)
+    (hBt : B = b + 2 * a * t) (hXt : X = a * t ^ 2 + b * t + c) :
+    Int.gcd (Int.gcd a B) X = 1 := by
+  have h1 : (Int.gcd (Int.gcd a B) X : ℤ) ∣ a :=
+    (Int.gcd_dvd_left _ _).trans (Int.gcd_dvd_left a B)
+  have h2 : (Int.gcd (Int.gcd a B) X : ℤ) ∣ B :=
+    (Int.gcd_dvd_left _ _).trans (Int.gcd_dvd_right a B)
+  have h3 : (Int.gcd (Int.gcd a B) X : ℤ) ∣ X := Int.gcd_dvd_right _ _
+  have hb : (Int.gcd (Int.gcd a B) X : ℤ) ∣ b := by
+    have he : b = B - 2 * a * t := by rw [hBt]; ring
+    rw [he]; exact dvd_sub h2 ((h1.mul_left 2).mul_right t)
+  have hc : (Int.gcd (Int.gcd a B) X : ℤ) ∣ c := by
+    have he : c = X - a * t ^ 2 - b * t := by rw [hXt]; ring
+    rw [he]; exact dvd_sub (dvd_sub h3 (h1.mul_right (t ^ 2))) (hb.mul_right t)
+  have hg : Int.gcd (Int.gcd a B) X ∣ Int.gcd (Int.gcd a b) c := by
+    apply Int.dvd_gcd _ hc; exact_mod_cast Int.dvd_gcd h1 hb
+  rw [hprim] at hg; exact Nat.dvd_one.mp hg
+
+/-- The chosen `B = dirichletB f g` satisfies `B ≡ b (mod 2a)` (the first congruence of
+Lemma 3.2). -/
+theorem dirichletB_spec1 (f g : BinaryQF) (D : ℤ) (hf : f.discr = D) (hg : g.discr = D)
+    (hcop : Int.gcd (Int.gcd f.a g.a) ((f.b + g.b) / 2) = 1) :
+    dirichletB f g ≡ f.b [ZMOD 2 * f.a] := by
+  have hex : ∃ B : ℤ, (B ≡ f.b [ZMOD 2 * f.a]) ∧ (B ≡ g.b [ZMOD 2 * g.a])
+      ∧ (B ^ 2 ≡ f.discr [ZMOD 4 * f.a * g.a]) := by
+    obtain ⟨B, hB1, hB2, hB3, _⟩ := lemma_3_2 f.a f.b f.c g.a g.b g.c D hf hg hcop
+    exact ⟨B, hB1, hB2, by rw [hf]; exact hB3⟩
+  rw [dirichletB, dif_pos hex]; exact hex.choose_spec.1
+
+/-- The chosen `B = dirichletB f g` satisfies `B ≡ b' (mod 2a')` (the second congruence of
+Lemma 3.2). -/
+theorem dirichletB_spec2 (f g : BinaryQF) (D : ℤ) (hf : f.discr = D) (hg : g.discr = D)
+    (hcop : Int.gcd (Int.gcd f.a g.a) ((f.b + g.b) / 2) = 1) :
+    dirichletB f g ≡ g.b [ZMOD 2 * g.a] := by
+  have hex : ∃ B : ℤ, (B ≡ f.b [ZMOD 2 * f.a]) ∧ (B ≡ g.b [ZMOD 2 * g.a])
+      ∧ (B ^ 2 ≡ f.discr [ZMOD 4 * f.a * g.a]) := by
+    obtain ⟨B, hB1, hB2, hB3, _⟩ := lemma_3_2 f.a f.b f.c g.a g.b g.c D hf hg hcop
+    exact ⟨B, hB1, hB2, by rw [hf]; exact hB3⟩
+  rw [dirichletB, dif_pos hex]; exact hex.choose_spec.2.1
+
+/-- **Proposition 3.8, primitivity** (Cox §3, Exercise 3.6). The Dirichlet composite of two
+primitive positive definite forms is primitive. Proof: `f` is properly equivalent to
+`⟨a, B, a'C⟩` and `g` to `⟨a', B, aC⟩` (translation by `(B-b)/2a`), so both are primitive;
+a prime dividing `aa'`, `B`, `C` would (via `gcd(a,B,a'C)=1` and `gcd(a',B,aC)=1`) divide
+neither `a` nor `a'`, contradicting `p ∣ aa'`. -/
+theorem dirichletForm_primitive (f g : BinaryQF) (D : ℤ) (hf : f.discr = D) (hg : g.discr = D)
+    (hfp : f.Primitive) (hgp : g.Primitive) (hfa : 0 < f.a) (hga : 0 < g.a)
+    (hcop : Int.gcd (Int.gcd f.a g.a) ((f.b + g.b) / 2) = 1) :
+    (dirichletForm f g).Primitive := by
+  have h4fa : (4 * f.a : ℤ) ≠ 0 := (by positivity : (0:ℤ) < 4 * f.a).ne'
+  have h4ga : (4 * g.a : ℤ) ≠ 0 := (by positivity : (0:ℤ) < 4 * g.a).ne'
+  have hsp := dirichletB_spec f g D hf hg hcop
+  have h4dvd : (4 * f.a * g.a) ∣ (dirichletB f g ^ 2 - f.discr) := Int.modEq_iff_dvd.mp hsp.symm
+  have hCmul : 4 * f.a * g.a * ((dirichletB f g ^ 2 - f.discr) / (4 * f.a * g.a))
+      = dirichletB f g ^ 2 - f.discr := Int.mul_ediv_cancel' h4dvd
+  set B := dirichletB f g with hBdef
+  set C := (dirichletB f g ^ 2 - f.discr) / (4 * f.a * g.a) with hCdef
+  have hdfg : f.discr = g.discr := by rw [hf, hg]
+  -- f-side
+  obtain ⟨t1, ht1⟩ := Int.modEq_iff_dvd.mp (dirichletB_spec1 f g D hf hg hcop).symm  -- B - f.b = 2 f.a t1
+  have hBt1 : B = f.b + 2 * f.a * t1 := by linarith [ht1]
+  have hXt1 : g.a * C = f.a * t1 ^ 2 + f.b * t1 + f.c := by
+    have e1 : 4 * f.a * (g.a * C) = B ^ 2 - f.discr := by
+      rw [show 4 * f.a * (g.a * C) = 4 * f.a * g.a * C from by ring]; exact hCmul
+    have e2 : 4 * f.a * (f.a * t1 ^ 2 + f.b * t1 + f.c) = B ^ 2 - f.discr := by
+      rw [hBt1, show f.discr = f.b ^ 2 - 4 * f.a * f.c from rfl]; ring
+    exact mul_left_cancel₀ h4fa (e1.trans e2.symm)
+  have P1 : Int.gcd (Int.gcd f.a B) (g.a * C) = 1 := prim_side f.a f.b f.c B (g.a * C) t1 hfp hBt1 hXt1
+  -- g-side
+  obtain ⟨t2, ht2⟩ := Int.modEq_iff_dvd.mp (dirichletB_spec2 f g D hf hg hcop).symm  -- B - g.b = 2 g.a t2
+  have hBt2 : B = g.b + 2 * g.a * t2 := by linarith [ht2]
+  have hXt2 : f.a * C = g.a * t2 ^ 2 + g.b * t2 + g.c := by
+    have e1 : 4 * g.a * (f.a * C) = B ^ 2 - f.discr := by
+      rw [show 4 * g.a * (f.a * C) = 4 * f.a * g.a * C from by ring]; exact hCmul
+    have e2 : 4 * g.a * (g.a * t2 ^ 2 + g.b * t2 + g.c) = B ^ 2 - f.discr := by
+      rw [hdfg, hBt2, show g.discr = g.b ^ 2 - 4 * g.a * g.c from rfl]; ring
+    exact mul_left_cancel₀ h4ga (e1.trans e2.symm)
+  have P2 : Int.gcd (Int.gcd g.a B) (f.a * C) = 1 := prim_side g.a g.b g.c B (f.a * C) t2 hgp hBt2 hXt2
+  -- prime argument
+  show Int.gcd (Int.gcd (f.a * g.a) B) C = 1
+  by_contra hne
+  obtain ⟨p, hp, hpe⟩ := Nat.exists_prime_and_dvd hne
+  have hpZ : Prime (p : ℤ) := Nat.prime_iff_prime_int.mp hp
+  have hpe' : (p : ℤ) ∣ (Int.gcd (Int.gcd (f.a * g.a) B) C : ℤ) := by exact_mod_cast hpe
+  have hpaa : (p : ℤ) ∣ f.a * g.a :=
+    hpe'.trans ((Int.gcd_dvd_left _ _).trans (Int.gcd_dvd_left _ _))
+  have hpB : (p : ℤ) ∣ B := hpe'.trans ((Int.gcd_dvd_left _ _).trans (Int.gcd_dvd_right _ _))
+  have hpC : (p : ℤ) ∣ C := hpe'.trans (Int.gcd_dvd_right _ _)
+  rcases hpZ.dvd_or_dvd hpaa with hpa | hpa'
+  · have hd : p ∣ Int.gcd (Int.gcd f.a B) (g.a * C) := by
+      apply Int.dvd_gcd _ (hpC.mul_left g.a); exact_mod_cast Int.dvd_gcd hpa hpB
+    rw [P1] at hd; exact absurd (Nat.dvd_one.mp hd) hp.one_lt.ne'
+  · have hd : p ∣ Int.gcd (Int.gcd g.a B) (f.a * C) := by
+      apply Int.dvd_gcd _ (hpC.mul_left f.a); exact_mod_cast Int.dvd_gcd hpa' hpB
+    rw [P2] at hd; exact absurd (Nat.dvd_one.mp hd) hp.one_lt.ne'
+
 /-- **Proposition 3.8** (Cox §3). The Dirichlet composition `dirichletForm f g` of
 two primitive positive definite forms of discriminant `D` (with the coprimality
 hypothesis) is again primitive positive definite of discriminant `D`. -/
@@ -327,14 +426,9 @@ theorem prop_3_8 (f g : BinaryQF) (D : ℤ) (hf : f.discr = D) (hg : g.discr = D
     (hcop : Int.gcd (Int.gcd f.a g.a) ((f.b + g.b) / 2) = 1) :
     (dirichletForm f g).discr = D ∧ (dirichletForm f g).Primitive
       ∧ 0 < (dirichletForm f g).a := by
-  refine ⟨dirichletForm_discr f g D hf hg hcop, ?_, dirichletForm_pos f g hfa hga⟩
-  -- Primitivity (Cox Prop 3.8): deferred. Cox derives `gcd(aa', B, (B²−D)/4aa') = 1`
-  -- from the fact that `dirichletForm f g` is the *direct composition* of `f` and `g`
-  -- (3.1): a prime dividing all of its coefficients would divide every value
-  -- `f(x,y) · g(z,w)`, contradicting primitivity of `f, g` (Cox Exercise 3.6). This is the
-  -- deep Gauss-composition content — the same machinery as `compose`'s well-definedness —
-  -- and is deferred to a later wave.
-  sorry
+  exact ⟨dirichletForm_discr f g D hf hg hcop,
+    dirichletForm_primitive f g D hf hg hfp hgp hfa hga hcop,
+    dirichletForm_pos f g hfa hga⟩
 
 /-- **Dirichlet composition** of two classes of forms of discriminant `D`.
 (Cox, §3, Thm 3.9.) -/
