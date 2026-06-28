@@ -146,6 +146,13 @@ theorem four_mul_eval (f : BinaryQF) (x y : ℤ) :
   simp only [BinaryQF.eval, BinaryQF.discr]
   ring
 
+/-- The values of `action M f` are the values of `f` after the linear change of
+variables `M`: `(action M f)(x,y) = f(M₀₀ x + M₀₁ y, M₁₀ x + M₁₁ y)`. (Cox §2, (2.2).) -/
+theorem eval_action (M : Matrix (Fin 2) (Fin 2) ℤ) (f : BinaryQF) (x y : ℤ) :
+    (action M f).eval x y
+      = f.eval (M 0 0 * x + M 0 1 * y) (M 1 0 * x + M 1 1 * y) := by
+  simp only [action, BinaryQF.eval]; ring
+
 /-- The **principal form** of discriminant `D ≡ 0, 1 (mod 4)`:
 `x² − (D/4)y²` if `D ≡ 0`, and `x² + xy + ((1−D)/4)y²` if `D ≡ 1`. (Cox §2.) -/
 def principalForm (D : ℤ) : BinaryQF :=

@@ -50,7 +50,23 @@ theorem properlyRepresents_iff_isSquare (D : ℤ) (p : ℕ) (hp : p.Prime)
 equivalent to a form `m x² + b x y + c y²` for some `b, c`. (Cox §2.) -/
 theorem properlyRepresents_iff_properlyEquivalent (f : BinaryQF) (m : ℤ) :
     ProperlyRepresents f m ↔ ∃ b c : ℤ, ProperlyEquivalent f ⟨m, b, c⟩ := by
-  sorry
+  constructor
+  · rintro ⟨p, q, hpq, hcop⟩
+    obtain ⟨u, v, huv⟩ := hcop
+    set M : Matrix (Fin 2) (Fin 2) ℤ := !![p, -v; q, u] with hM
+    have hdet : M.det = 1 := by rw [hM, Matrix.det_fin_two_of]; linear_combination huv
+    have ha : (action M f).a = m := by
+      rw [← hpq]
+      simp only [action, BinaryQF.eval, hM, Matrix.cons_val_zero, Matrix.cons_val_one,
+        Matrix.head_cons, Matrix.of_apply, Matrix.cons_val', Matrix.empty_val',
+        Matrix.cons_val_fin_one, Matrix.head_fin_const]
+    exact ⟨(action M f).b, (action M f).c, M, hdet, by rw [← ha]⟩
+  · rintro ⟨b, c, M, hdet, hMf⟩
+    refine ⟨M 0 0, M 1 0, ?_, ?_⟩
+    · have h := eval_action M f 1 0
+      rw [hMf] at h
+      simpa [BinaryQF.eval] using h.symm
+    · exact ⟨M 1 1, -(M 0 1), by rw [Matrix.det_fin_two] at hdet; linear_combination hdet⟩
 
 /-- **Lemma 2.5.** For `D ≡ 0,1 (mod 4)` and odd `m` prime to `D`, `m` is properly
 represented by a primitive form of discriminant `D` iff `D` is a quadratic

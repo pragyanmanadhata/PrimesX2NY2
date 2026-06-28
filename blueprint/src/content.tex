@@ -550,6 +550,12 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \uses{def:represents, def:proper_equiv}
   $f$ properly represents $m$ iff $f \sim [m,b,c]$ for some $b,c$.
 \end{theorem}
+\begin{proof}\leanok
+If $f(p,q)=m$ with $\gcd(p,q)=1$, pick $u,v$ with $up+vq=1$; then $M=\left(\begin{smallmatrix}p&-v\\q&u\end{smallmatrix}\right)$
+has $\det M=1$ and $(\mathrm{action}\,M\,f)(x,y)=f(px-vy,\,qx+uy)$ has leading coefficient
+$f(p,q)=m$, so $f\sim[m,b,c]$. Conversely $[m,b,c]$ represents $m$ at $(1,0)$, and $\det M=1$
+makes the first column of $M$ coprime, so $f$ properly represents $m$.
+\end{proof}
 
 \begin{theorem}[Cox Lemma 2.5]
   \label{lem:repr_iff_isSquare_general}
