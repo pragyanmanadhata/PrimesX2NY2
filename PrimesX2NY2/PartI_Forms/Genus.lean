@@ -68,6 +68,29 @@ theorem properlyRepresents_iff_properlyEquivalent (f : BinaryQF) (m : ℤ) :
       simpa [BinaryQF.eval] using h.symm
     · exact ⟨M 1 1, -(M 0 1), by rw [Matrix.det_fin_two] at hdet; linear_combination hdet⟩
 
+/-- Per-prime foundation of Cox Lemma 2.25: a primitive form takes, at one of the
+coprime points `(1,0), (0,1), (1,1)`, a value not divisible by a given prime `p`
+(else `p` would divide `a`, `c`, and `a+b+c`, hence `b`, hence `gcd(a,b,c)=1`). The full
+Lemma 2.25 combines these per-prime witnesses across `p ∣ M` by CRT. -/
+theorem represents_not_dvd_prime (f : BinaryQF) (hf : f.Primitive) (p : ℕ) (hp : p.Prime) :
+    ∃ x y : ℤ, IsCoprime x y ∧ ¬ (p : ℤ) ∣ f.eval x y := by
+  by_contra hcon
+  simp only [not_exists, not_and, not_not] at hcon
+  have ha : (p : ℤ) ∣ f.a := by
+    have := hcon 1 0 isCoprime_one_left; simpa [BinaryQF.eval] using this
+  have hc : (p : ℤ) ∣ f.c := by
+    have := hcon 0 1 isCoprime_one_right; simpa [BinaryQF.eval] using this
+  have hac : (p : ℤ) ∣ f.a + f.b + f.c := by
+    have := hcon 1 1 isCoprime_one_left; simpa [BinaryQF.eval] using this
+  have hb : (p : ℤ) ∣ f.b := by
+    have e : f.b = (f.a + f.b + f.c) - f.a - f.c := by ring
+    rw [e]; exact dvd_sub (dvd_sub hac ha) hc
+  have hpc : p ∣ Int.gcd (Int.gcd f.a f.b) f.c :=
+    Int.dvd_gcd (by exact_mod_cast Int.dvd_gcd ha hb) hc
+  rw [hf] at hpc
+  exact absurd (Nat.dvd_one.mp hpc) hp.one_lt.ne'
+
+
 /-- **Lemma 2.5.** For `D ≡ 0,1 (mod 4)` and odd `m` prime to `D`, `m` is properly
 represented by a primitive form of discriminant `D` iff `D` is a quadratic
 residue mod `m`. (Cox §2; the general odd-`m` form of which

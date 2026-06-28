@@ -102,6 +102,46 @@ theorem discr_eq_of_properlyEquivalent {f g : BinaryQF} (h : ProperlyEquivalent 
   obtain ⟨M, hM, rfl⟩ := h
   rw [discr_action, hM]; ring
 
+/-- The content `gcd(a,b,c)` divides the content of `action M f`: each coefficient of
+`action M f` is a `ℤ`-linear combination of `a, b, c`. -/
+theorem content_dvd_action (M : Matrix (Fin 2) (Fin 2) ℤ) (f : BinaryQF) :
+    Int.gcd (Int.gcd f.a f.b) f.c
+      ∣ Int.gcd (Int.gcd (action M f).a (action M f).b) (action M f).c := by
+  have hca : (Int.gcd (Int.gcd f.a f.b) f.c : ℤ) ∣ f.a :=
+    (Int.gcd_dvd_left _ _).trans (Int.gcd_dvd_left f.a f.b)
+  have hcb : (Int.gcd (Int.gcd f.a f.b) f.c : ℤ) ∣ f.b :=
+    (Int.gcd_dvd_left _ _).trans (Int.gcd_dvd_right f.a f.b)
+  have hcc : (Int.gcd (Int.gcd f.a f.b) f.c : ℤ) ∣ f.c := Int.gcd_dvd_right _ _
+  have dAa : (Int.gcd (Int.gcd f.a f.b) f.c : ℤ) ∣ (action M f).a := by
+    simp only [action]
+    exact dvd_add (dvd_add (hca.mul_right _) ((hcb.mul_right _).mul_right _)) (hcc.mul_right _)
+  have dAb : (Int.gcd (Int.gcd f.a f.b) f.c : ℤ) ∣ (action M f).b := by
+    simp only [action]
+    exact dvd_add (dvd_add (((hca.mul_left 2).mul_right _).mul_right _) (hcb.mul_right _))
+      (((hcc.mul_left 2).mul_right _).mul_right _)
+  have dAc : (Int.gcd (Int.gcd f.a f.b) f.c : ℤ) ∣ (action M f).c := by
+    simp only [action]
+    exact dvd_add (dvd_add (hca.mul_right _) ((hcb.mul_right _).mul_right _)) (hcc.mul_right _)
+  apply Int.dvd_gcd _ dAc
+  exact_mod_cast Int.dvd_gcd dAa dAb
+
+/-- The `SL₂(ℤ)`-action preserves primitivity (the content is an invariant). -/
+theorem primitive_action_iff (M : Matrix (Fin 2) (Fin 2) ℤ) (f : BinaryQF) (hM : M.det = 1) :
+    (action M f).Primitive ↔ f.Primitive := by
+  unfold BinaryQF.Primitive
+  have h1 := content_dvd_action M f
+  have h2 : Int.gcd (Int.gcd (action M f).a (action M f).b) (action M f).c
+      ∣ Int.gcd (Int.gcd f.a f.b) f.c := by
+    have := content_dvd_action M.adjugate (action M f)
+    rwa [action_mul, Matrix.mul_adjugate, hM, one_smul, action_one] at this
+  exact ⟨fun h => Nat.dvd_one.mp (h ▸ h1), fun h => Nat.dvd_one.mp (h ▸ h2)⟩
+
+/-- Proper equivalence preserves primitivity. (Cox, §2.) -/
+theorem primitive_of_properlyEquivalent {f g : BinaryQF} (h : ProperlyEquivalent f g) :
+    f.Primitive ↔ g.Primitive := by
+  obtain ⟨M, hM, rfl⟩ := h
+  exact (primitive_action_iff M f hM).symm
+
 /-- A positive definite form `(a, b, c)` is **reduced** when `|b| ≤ a ≤ c`, with
 `b ≥ 0` whenever `|b| = a` or `a = c`. (Cox, §2.3.) -/
 def BinaryQF.Reduced (f : BinaryQF) : Prop :=
@@ -152,6 +192,28 @@ theorem eval_action (M : Matrix (Fin 2) (Fin 2) ℤ) (f : BinaryQF) (x y : ℤ) 
     (action M f).eval x y
       = f.eval (M 0 0 * x + M 0 1 * y) (M 1 0 * x + M 1 1 * y) := by
   simp only [action, BinaryQF.eval]; ring
+
+/-- A positive definite form takes strictly positive values at every nonzero `(x,y)`.
+From `4 a f(x,y) = (2ax+by)² − D y²` with `a > 0` and `D < 0`. (Cox, §2.) -/
+theorem eval_pos_of_posDef (f : BinaryQF) (hf : f.PosDef) (x y : ℤ)
+    (hxy : x ≠ 0 ∨ y ≠ 0) : 0 < f.eval x y := by
+  obtain ⟨ha, hD⟩ := hf
+  have key : 4 * f.a * f.eval x y = (2 * f.a * x + f.b * y) ^ 2 + (-f.discr) * y ^ 2 := by
+    rw [four_mul_eval]; ring
+  have hpos : 0 < 4 * f.a * f.eval x y := by
+    rw [key]
+    rcases eq_or_ne y 0 with hy0 | hy0
+    · subst hy0
+      have hx : x ≠ 0 := by tauto
+      have h2ax : 2 * f.a * x ≠ 0 := mul_ne_zero (mul_ne_zero (by norm_num) ha.ne') hx
+      have heq : (2 * f.a * x + f.b * 0) ^ 2 + (-f.discr) * (0 : ℤ) ^ 2 = (2 * f.a * x) ^ 2 := by
+        ring
+      rw [heq]
+      exact lt_of_le_of_ne (sq_nonneg _) (Ne.symm (pow_ne_zero 2 h2ax))
+    · have hy2 : (0 : ℤ) < y ^ 2 := lt_of_le_of_ne (sq_nonneg y) (Ne.symm (pow_ne_zero 2 hy0))
+      nlinarith [sq_nonneg (2 * f.a * x + f.b * y),
+        mul_pos (show (0 : ℤ) < -f.discr by linarith) hy2]
+  nlinarith [hpos, ha]
 
 /-- The **principal form** of discriminant `D ≡ 0, 1 (mod 4)`:
 `x² − (D/4)y²` if `D ≡ 0`, and `x² + xy + ((1−D)/4)y²` if `D ≡ 1`. (Cox §2.) -/
