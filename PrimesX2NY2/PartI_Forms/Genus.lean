@@ -239,6 +239,82 @@ theorem composeForm_primitive (D : ℤ) (hD : D < 0) (F G : DiscrForms D) :
 theorem composeForm_pos (D : ℤ) (hD : D < 0) (F G : DiscrForms D) :
     0 < (composeForm D hD F G).1.a := (composeForm D hD F G).2.2.2
 
+/-- The discriminant is unchanged under `b ↦ −b` (the opposite/inverse form). -/
+theorem opposite_discr (f : BinaryQF) : f.opposite.discr = f.discr := by
+  simp only [BinaryQF.opposite, BinaryQF.discr]; ring
+
+/-- The opposite form is primitive iff the form is (the content `gcd` is unchanged by `b ↦ −b`). -/
+theorem opposite_primitive (f : BinaryQF) : f.opposite.Primitive ↔ f.Primitive := by
+  simp only [BinaryQF.opposite, BinaryQF.Primitive, Int.gcd]; rw [Int.natAbs_neg]
+
+/-- The opposite form has the same leading coefficient. -/
+theorem opposite_pos (f : BinaryQF) : 0 < f.opposite.a ↔ 0 < f.a := by
+  simp only [BinaryQF.opposite]
+
+/-- **Translation equivalence.** Two forms `⟨a,b,c⟩`, `⟨a,B,C⟩` with the same nonzero leading
+coefficient, the same discriminant, and `B ≡ b (mod 2a)` are properly equivalent — via the
+unimodular translation `x ↦ x + t y`, `t = (B-b)/2a`. (Cox §2.) -/
+theorem translation_equiv (a b c B C : ℤ) (ha : a ≠ 0) (ht : 2 * a ∣ (B - b))
+    (hd : b ^ 2 - 4 * a * c = B ^ 2 - 4 * a * C) :
+    ProperlyEquivalent (⟨a, b, c⟩ : BinaryQF) ⟨a, B, C⟩ := by
+  obtain ⟨t, htt⟩ := ht
+  have hB' : B = b + 2 * a * t := by linarith
+  have hC' : a * t ^ 2 + b * t + c = C := by
+    have h4 : 4 * a * (a * t ^ 2 + b * t + c) = 4 * a * C := by rw [hB'] at hd; linear_combination -hd
+    exact mul_left_cancel₀ (by simp [ha] : (4 * a : ℤ) ≠ 0) h4
+  refine ⟨!![1, t; 0, 1], by rw [Matrix.det_fin_two_of]; ring, ?_⟩
+  simp only [action, BinaryQF.mk.injEq, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
+    Matrix.of_apply, Matrix.cons_val', Matrix.empty_val', Matrix.cons_val_fin_one,
+    Matrix.head_fin_const]
+  exact ⟨by ring, by linarith, by linarith [hC']⟩
+
+/-- **Composing with the principal form is the identity up to proper equivalence.** For any form
+`g'` of discriminant `D` with `0 < g'.a`, `dirichletForm (principalForm D) g' ~ g'` (the composite
+is a translation of `g'`, since the principal form has leading coefficient `1`). -/
+theorem dirichletForm_principal_equiv (D : ℤ) (g' : BinaryQF) (hg : g'.discr = D) (hga : 0 < g'.a) :
+    ProperlyEquivalent (dirichletForm (principalForm D) g') g' := by
+  have hD4 : D % 4 = 0 ∨ D % 4 = 1 := hg ▸ discr_mod_four g'
+  have hpa : (principalForm D).a = 1 := by simp only [principalForm]; split <;> rfl
+  have hpd : (principalForm D).discr = D := principalForm_discr D hD4
+  have hcop : Int.gcd (Int.gcd (principalForm D).a g'.a) (((principalForm D).b + g'.b) / 2) = 1 := by
+    rw [hpa]; simp
+  have hBspec : dirichletB (principalForm D) g' ≡ g'.b [ZMOD 2 * g'.a] :=
+    dirichletB_spec2 (principalForm D) g' D hpd hg hcop
+  have hBsq0 := dirichletB_spec (principalForm D) g' D hpd hg hcop
+  rw [hpd, hpa] at hBsq0
+  have hBsq : dirichletB (principalForm D) g' ^ 2 ≡ D [ZMOD 4 * g'.a] := by simpa using hBsq0
+  set B := dirichletB (principalForm D) g' with hBdef
+  have hdvd : (4 * g'.a) ∣ (B ^ 2 - D) := Int.modEq_iff_dvd.mp hBsq.symm
+  have hcomp : dirichletForm (principalForm D) g' = ⟨g'.a, B, (B ^ 2 - D) / (4 * g'.a)⟩ := by
+    simp only [dirichletForm, hpa, hpd, ← hBdef, one_mul, mul_one]
+  rw [hcomp]
+  refine properlyEquivalent_equivalence.symm ?_
+  have hgeta : g' = (⟨g'.a, g'.b, g'.c⟩ : BinaryQF) := rfl
+  rw [hgeta]
+  apply translation_equiv g'.a g'.b g'.c B ((B ^ 2 - D) / (4 * g'.a)) hga.ne'
+  · exact Int.modEq_iff_dvd.mp hBspec.symm
+  · have hmul : 4 * g'.a * ((B ^ 2 - D) / (4 * g'.a)) = B ^ 2 - D := Int.mul_ediv_cancel' hdvd
+    have hgd : g'.b ^ 2 - 4 * g'.a * g'.c = D := hg
+    rw [hmul]; linarith
+
+/-- **Left identity (form level).** If `P` is the principal class, `composeForm D hD P F` is
+properly equivalent to `F`. Choice-robust: holds for the `Classical`-chosen concordant `g'`,
+since composing with the principal form is a translation. (Cox Thm 3.9, form-level identity.) -/
+theorem composeForm_principal_left (D : ℤ) (hD : D < 0) (F P : DiscrForms D)
+    (hP : P.1 = principalForm D) :
+    ProperlyEquivalent (composeForm D hD P F).1 F.1 := by
+  have hc := concordance P.1 F.1 D hD P.2.2.2 F.2.1 F.2.2.1 F.2.2.2
+  have hgd : hc.choose.discr = D := hc.choose_spec.2.1
+  have hga : 0 < hc.choose.a := hc.choose_spec.2.2.2.1
+  have hgF : ProperlyEquivalent F.1 hc.choose := hc.choose_spec.1
+  have key : (composeForm D hD P F).1 = dirichletForm P.1 hc.choose := rfl
+  rw [key]
+  set g' := hc.choose with hg'def
+  rw [hP]
+  exact properlyEquivalent_equivalence.trans
+    (dirichletForm_principal_equiv D g' hgd hga)
+    (properlyEquivalent_equivalence.symm hgF)
+
 
 
 /-- **Lemma 2.5.** For `D ≡ 0,1 (mod 4)` and odd `m` prime to `D`, `m` is properly
