@@ -207,6 +207,38 @@ theorem concordance (f g : BinaryQF) (D : ℤ) (hD : D < 0)
   · show Int.gcd f.a m = 1
     rw [Int.gcd_comm]; exact Int.isCoprime_iff_gcd_eq_one.mp hcopval
 
+/-- **Gauss composition identity** (Cox §3, (3.1)). For the concordant shapes
+`f = ⟨a, B, a'C⟩`, `g = ⟨a', B, aC⟩`, `F = ⟨a a', B, C⟩`, the bilinear substitution
+`X = x₁x₂ − C y₁y₂`, `Y = a x₁y₂ + a' x₂y₁ + B y₁y₂` realises `F` as the direct
+composition of `f` and `g`: `f(x₁,y₁)·g(x₂,y₂) = F(X,Y)`. (Pure polynomial identity.) -/
+theorem dirichlet_compose_repr (a a' B C x₁ y₁ x₂ y₂ : ℤ) :
+    (⟨a, B, a' * C⟩ : BinaryQF).eval x₁ y₁ * (⟨a', B, a * C⟩ : BinaryQF).eval x₂ y₂
+      = (⟨a * a', B, C⟩ : BinaryQF).eval
+          (x₁ * x₂ - C * y₁ * y₂) (a * x₁ * y₂ + a' * x₂ * y₁ + B * y₁ * y₂) := by
+  simp only [BinaryQF.eval]; ring
+
+/-- **Representative-level Dirichlet composition** of `F, G : DiscrForms D` (`D < 0`):
+bring `G` to a form `g'` concordant with `F` (leading coeff coprime to `F.a`, via
+`concordance`), then take the Dirichlet composite `dirichletForm F.1 g'`, which is a
+primitive positive form of discriminant `D` by `prop_3_8`. The concordant choice is made by
+`Classical.choice`; well-definedness on classes (Cox Thm 3.9, deferred to the §7 ideal
+correspondence) would neutralise that choice. -/
+noncomputable def composeForm (D : ℤ) (hD : D < 0) (F G : DiscrForms D) : DiscrForms D :=
+  let hc := concordance F.1 G.1 D hD F.2.2.2 G.2.1 G.2.2.1 G.2.2.2
+  ⟨dirichletForm F.1 hc.choose,
+    prop_3_8 F.1 hc.choose D F.2.1 hc.choose_spec.2.1 F.2.2.1 hc.choose_spec.2.2.1
+      F.2.2.2 hc.choose_spec.2.2.2.1
+      (by rw [hc.choose_spec.2.2.2.2]; simp)⟩
+
+theorem composeForm_discr (D : ℤ) (hD : D < 0) (F G : DiscrForms D) :
+    (composeForm D hD F G).1.discr = D := (composeForm D hD F G).2.1
+
+theorem composeForm_primitive (D : ℤ) (hD : D < 0) (F G : DiscrForms D) :
+    (composeForm D hD F G).1.Primitive := (composeForm D hD F G).2.2.1
+
+theorem composeForm_pos (D : ℤ) (hD : D < 0) (F G : DiscrForms D) :
+    0 < (composeForm D hD F G).1.a := (composeForm D hD F G).2.2.2
+
 
 
 /-- **Lemma 2.5.** For `D ≡ 0,1 (mod 4)` and odd `m` prime to `D`, `m` is properly
@@ -254,11 +286,12 @@ theorem principalForm_values_subgroup (D : ℤ) (hD : D % 4 = 0 ∨ D % 4 = 1)
           ((principalForm D).eval x y : ZMod D.natAbs) = (u : ZMod D.natAbs)) := by
   sorry
 
-/-- **Lemma 2.25** (Gauss). Every form properly represents some value relatively
-prime to a given integer `M`. (Cox §2.) -/
-theorem properlyRepresents_coprime (f : BinaryQF) (M : ℤ) :
-    ∃ x y : ℤ, IsCoprime x y ∧ IsCoprime (f.eval x y) M := by
-  sorry
+/-- **Lemma 2.25** (Gauss). Every *primitive* form properly represents some value
+relatively prime to a given nonzero integer `M`. The `Primitive` and `M ≠ 0` hypotheses
+are required: without them the statement is false (e.g. `⟨2, 2, 2⟩` represents only even
+values, so represents nothing coprime to `M = 2`). (Cox §2, Exercise 2.18.) -/
+theorem properlyRepresents_coprime (f : BinaryQF) (hf : f.Primitive) (M : ℤ) (hM : M ≠ 0) :
+    ∃ x y : ℤ, IsCoprime x y ∧ IsCoprime (f.eval x y) M := lemma_2_25 f hf M hM
 
 /-- **Theorem 2.26.** For negative `D ≡ 0,1 (mod 4)`, an odd prime `p ∤ D` lies in
 the genus of a form `g` of discriminant `D` iff `p` is represented by a reduced

@@ -796,8 +796,15 @@ contradicting $p\mid aa'$ (Cox Exercise 3.6).
   \lean{PrimesX2NY2.Genus.properlyRepresents_coprime}
   \leanok
   \uses{def:form_eval}
-  Every form properly represents some value relatively prime to a given $M$.
+  Every \emph{primitive} form properly represents some value relatively prime to a given
+  nonzero $M$. (The primitivity and $M\neq 0$ hypotheses are necessary.)
 \end{theorem}
+\begin{proof}\leanok
+For each prime $p\mid M$, one of $(1,0),(0,1),(1,1)$ gives $f\not\equiv 0\ (p)$ (else
+$p\mid a,c,a{+}b{+}c$, so $p\mid b$, contradicting primitivity); the Chinese Remainder
+Theorem over the prime factors of $M$ assembles a single $(x,y)$ with $\gcd(f(x,y),M)=1$,
+made proper by dividing out $\gcd(x,y)$.
+\end{proof}
 
 \begin{theorem}[Cox Theorem 2.26]
   \label{thm:t2_26}
