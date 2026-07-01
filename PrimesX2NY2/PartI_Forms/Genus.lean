@@ -315,6 +315,48 @@ theorem composeForm_principal_left (D : ℤ) (hD : D < 0) (F P : DiscrForms D)
     (dirichletForm_principal_equiv D g' hgd hga)
     (properlyEquivalent_equivalence.symm hgF)
 
+/-- Projection-friendly form of `translation_equiv`: two forms with equal nonzero leading
+coefficient, equal discriminant, and `g.b ≡ f.b (mod 2 f.a)` are properly equivalent. -/
+theorem translation_equiv_proj (f g : BinaryQF) (ha : f.a ≠ 0) (haa : f.a = g.a)
+    (ht : 2 * f.a ∣ (g.b - f.b)) (hd : f.discr = g.discr) : ProperlyEquivalent f g := by
+  obtain ⟨fa, fb, fc⟩ := f
+  obtain ⟨ga, gb, gc⟩ := g
+  simp only [BinaryQF.discr] at hd
+  subst haa
+  exact translation_equiv fa fb fc gb gc ha ht hd
+
+/-- A form of discriminant `D` with leading coefficient `1` is properly equivalent to the
+principal form (Cox §2 / the `a = 1` case of Exercise 3.7). -/
+theorem principal_of_a_one (D : ℤ) (f : BinaryQF) (hd : f.discr = D) (ha : f.a = 1) :
+    ProperlyEquivalent f (principalForm D) := by
+  have hD4 : D % 4 = 0 ∨ D % 4 = 1 := hd ▸ discr_mod_four f
+  have hpa : (principalForm D).a = 1 := by simp only [principalForm]; split <;> rfl
+  have hpd : (principalForm D).discr = D := principalForm_discr D hD4
+  have hfd : f.b ^ 2 - 4 * f.a * f.c = D := hd
+  have hppd : (principalForm D).b ^ 2 - 4 * (principalForm D).a * (principalForm D).c = D := hpd
+  have h4 : (4 : ℤ) ∣ (f.b ^ 2 - (principalForm D).b ^ 2) :=
+    ⟨f.c - (principalForm D).c, by rw [ha, hpa] at *; linarith⟩
+  have hpar : (2 : ℤ) ∣ ((principalForm D).b - f.b) := by
+    obtain ⟨k, hk⟩ := two_dvd_sub_of_four_dvd_sq_sub_sq f.b (principalForm D).b h4
+    exact ⟨-k, by linarith⟩
+  apply translation_equiv_proj f (principalForm D) (by rw [ha]; norm_num) (ha.trans hpa.symm)
+  · rw [ha]; simpa using hpar
+  · rw [hd, hpd]
+
+/-- **(3i) — concordant-choice invariance** — *STATED, NOT PROVED* (this is the single deferred
+fact unlocking class-level respect + the form-level inverse and associativity; only the
+form-level identity escapes it, see `composeForm_principal_left`). The Dirichlet composite
+`dirichletForm F.1 g'` is independent, up to proper equivalence, of which concordant
+representative `g'` of the second class is chosen. Cox (Thm 3.9 proof) routes well-definedness
+through the §7 ideal class group correspondence; the elementary direct route is Cox Exercise
+3.5(c) (representative-invariance of *direct* composition), whose parts (a) `translation_equiv`
+and (b) `dirichlet_compose_repr` are already in hand. -/
+theorem concordant_choice_invariant (D : ℤ) (F : DiscrForms D) (g₁ g₂ : BinaryQF)
+    (he : ProperlyEquivalent g₁ g₂)
+    (hd₁ : g₁.discr = D) (ha₁ : 0 < g₁.a) (hc₁ : Int.gcd F.1.a g₁.a = 1)
+    (hd₂ : g₂.discr = D) (ha₂ : 0 < g₂.a) (hc₂ : Int.gcd F.1.a g₂.a = 1) :
+    ProperlyEquivalent (dirichletForm F.1 g₁) (dirichletForm F.1 g₂) := sorry
+
 
 
 /-- **Lemma 2.5.** For `D ≡ 0,1 (mod 4)` and odd `m` prime to `D`, `m` is properly
