@@ -357,6 +357,78 @@ theorem concordant_choice_invariant (D : ℤ) (F : DiscrForms D) (g₁ g₂ : Bi
     (hd₂ : g₂.discr = D) (ha₂ : 0 < g₂.a) (hc₂ : Int.gcd F.1.a g₂.a = 1) :
     ProperlyEquivalent (dirichletForm F.1 g₁) (dirichletForm F.1 g₂) := sorry
 
+/-- **Direct composition** (Cox §3.A, (3.1)). `F` is the *direct composition* of `f` and `g`
+if there is an integral bilinear substitution `Bᵢ = aᵢxz+bᵢxw+cᵢyz+dᵢyw` with
+`f(x,y)·g(z,w) = F(B₁,B₂)`, whose leading-coefficient minors take the `+` sign of Gauss's
+formulas (3.1): `a₁b₂−a₂b₁ = f(1,0)`, `a₁c₂−a₂c₁ = g(1,0)`. Carrier-neutral (a statement about
+`eval`), so it ports unchanged to any binary-quadratic-form carrier. -/
+def DirectlyComposes (f g F : BinaryQF) : Prop :=
+  ∃ a₁ b₁ c₁ d₁ a₂ b₂ c₂ d₂ : ℤ,
+    (∀ x y z w : ℤ, f.eval x y * g.eval z w
+      = F.eval (a₁ * x * z + b₁ * x * w + c₁ * y * z + d₁ * y * w)
+               (a₂ * x * z + b₂ * x * w + c₂ * y * z + d₂ * y * w))
+    ∧ a₁ * b₂ - a₂ * b₁ = f.eval 1 0
+    ∧ a₁ * c₂ - a₂ * c₁ = g.eval 1 0
+
+/-- **Cox 3.5(d) (concordant-shape).** The Gauss composite of the concordant forms
+`⟨a,B,a'C⟩`, `⟨a',B,aC⟩` is their *direct* composition `⟨aa',B,C⟩` (the `+` sign of (3.1) holds).
+The substitution is `(1,0,0,-C ; 0,a,a',B)`, and the composition identity is the Gauss bilinear
+identity `dirichlet_compose_repr`. To lift to arbitrary concordant `f,g` via `dirichletForm f g`
+one bridges `f ~ ⟨a,B,a'C⟩` by `translation_equiv` + the representative-invariance
+`directlyComposes_of_properlyEquivalent_left` (Cox 3.5(c), stated below). -/
+theorem dirichletForm_directlyComposes_concordant (a a' B C : ℤ) :
+    DirectlyComposes (⟨a, B, a' * C⟩ : BinaryQF) ⟨a', B, a * C⟩ ⟨a * a', B, C⟩ :=
+  ⟨1, 0, 0, -C, 0, a, a', B,
+    fun x y z w => by simp only [BinaryQF.eval]; ring,
+    by simp only [BinaryQF.eval]; ring,
+    by simp only [BinaryQF.eval]; ring⟩
+
+/-- **Commutativity of Dirichlet composition up to proper equivalence.** `dirichletForm f g ~
+dirichletForm g f`: the two composites have equal leading coefficient `f.a·g.a` and their
+`B`-values agree modulo `2 f.a g.a` (both solve the same simultaneous congruences, so are equal
+by Lemma 3.2's uniqueness), so they are related by a translation. This is the symmetry lemma
+that lets first-argument invariance follow from second-argument invariance in the respect
+proof. -/
+theorem dirichletForm_comm_equiv (f g : BinaryQF) (D : ℤ) (hf : f.discr = D) (hg : g.discr = D)
+    (hfa : 0 < f.a) (hga : 0 < g.a)
+    (hcop_fg : Int.gcd (Int.gcd f.a g.a) ((f.b + g.b) / 2) = 1)
+    (hcop_gf : Int.gcd (Int.gcd g.a f.a) ((g.b + f.b) / 2) = 1) :
+    ProperlyEquivalent (dirichletForm f g) (dirichletForm g f) := by
+  obtain ⟨B₀, _, _, _, huniq⟩ := lemma_3_2 f.a f.b f.c g.a g.b g.c D hf hg hcop_fg
+  have hfg : dirichletB f g ≡ B₀ [ZMOD 2 * f.a * g.a] := by
+    refine huniq _ ⟨dirichletB_spec1 f g D hf hg hcop_fg, dirichletB_spec2 f g D hf hg hcop_fg, ?_⟩
+    have := dirichletB_spec f g D hf hg hcop_fg; rwa [hf] at this
+  have hgf : dirichletB g f ≡ B₀ [ZMOD 2 * f.a * g.a] := by
+    refine huniq _ ⟨dirichletB_spec2 g f D hg hf hcop_gf, dirichletB_spec1 g f D hg hf hcop_gf, ?_⟩
+    have := dirichletB_spec g f D hg hf hcop_gf
+    rw [hg] at this; rwa [show (4 * g.a * f.a : ℤ) = 4 * f.a * g.a from by ring] at this
+  have hBcong : dirichletB f g ≡ dirichletB g f [ZMOD 2 * f.a * g.a] := hfg.trans hgf.symm
+  apply translation_equiv_proj (dirichletForm f g) (dirichletForm g f)
+  · show f.a * g.a ≠ 0; exact mul_ne_zero hfa.ne' hga.ne'
+  · show f.a * g.a = g.a * f.a; ring
+  · show 2 * (f.a * g.a) ∣ (dirichletB g f - dirichletB f g)
+    rw [show 2 * (f.a * g.a) = 2 * f.a * g.a from by ring]; exact Int.modEq_iff_dvd.mp hBcong
+  · rw [dirichletForm_discr f g D hf hg hcop_fg, dirichletForm_discr g f D hg hf hcop_gf]
+
+/-- **Cox 3.5(c) — representative-invariance of direct composition** — *STATED, NOT PROVED*
+(the crux of well-definedness; carrier-sensitive, to grind after the BinaryQF-vs-QuadraticForm
+decision). If `G` is the direct composition of `h` and `k`, and `h ~ h'`, then `G` is the direct
+composition of `h'` and `k`. Classical proof: pre-compose the bilinear substitution with the
+`SL₂(ℤ)` matrix carrying `h → h'`, checking the (3.1) sign conditions transform (elementary
+`Matrix.det`/`ring`, no ideal theory). -/
+theorem directlyComposes_of_properlyEquivalent_left (h k G h' : BinaryQF)
+    (hDC : DirectlyComposes h k G) (he : ProperlyEquivalent h h') :
+    DirectlyComposes h' k G := sorry
+
+/-- **Uniqueness of direct composition up to ~** — *STATED, NOT PROVED*. Two direct compositions
+of the same pair of primitive positive forms of discriminant `D` are properly equivalent; needed
+to compare the two composites in the class-level respect proof. -/
+theorem directlyComposes_unique (f g F F' : BinaryQF) (D : ℤ)
+    (hf : f.discr = D) (hg : g.discr = D)
+    (hF : DirectlyComposes f g F) (hFd : F.discr = D) (hFp : F.Primitive) (hFa : 0 < F.a)
+    (hF' : DirectlyComposes f g F') (hF'd : F'.discr = D) (hF'p : F'.Primitive) (hF'a : 0 < F'.a) :
+    ProperlyEquivalent F F' := sorry
+
 
 
 /-- **Lemma 2.5.** For `D ≡ 0,1 (mod 4)` and odd `m` prime to `D`, `m` is properly
