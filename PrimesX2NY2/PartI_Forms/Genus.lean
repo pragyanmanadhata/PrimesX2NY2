@@ -410,12 +410,109 @@ theorem dirichletForm_comm_equiv (f g : BinaryQF) (D : ℤ) (hf : f.discr = D) (
     rw [show 2 * (f.a * g.a) = 2 * f.a * g.a from by ring]; exact Int.modEq_iff_dvd.mp hBcong
   · rw [dirichletForm_discr f g D hf hg hcop_fg, dirichletForm_discr g f D hg hf hcop_gf]
 
-/-- **Cox 3.5(c) — representative-invariance of direct composition** — *STATED, NOT PROVED*
-(the crux of well-definedness; carrier-sensitive, to grind after the BinaryQF-vs-QuadraticForm
-decision). If `G` is the direct composition of `h` and `k`, and `h ~ h'`, then `G` is the direct
-composition of `h'` and `k`. Classical proof: pre-compose the bilinear substitution with the
-`SL₂(ℤ)` matrix carrying `h → h'`, checking the (3.1) sign conditions transform (elementary
-`Matrix.det`/`ring`, no ideal theory). -/
+/-- **Gauss' minor relations (Cox Exercise 3.1 / [Gauss §235]).** If `G` is a direct composition
+of `h` and `k` with bilinear coefficients `a₁ … d₂` — the `+` sign `a₁b₂−a₂b₁ = h.a` of (3.1)
+holding — and the two forms `k`, `G` share a **nonzero** discriminant, then the remaining Gauss
+minors are pinned: `(a₁d₂−a₂d₁)−(b₁c₂−b₂c₁) = h.b` and `c₁d₂−c₂d₁ = h.c`.
+
+The nonzero-discriminant hypothesis is essential — Cox states it verbatim in Exercise 3.1 ("all
+three forms have discriminant `D ≠ 0`"); the degenerate `h=k=G=⟨1,0,0⟩` with witness
+`(1,0,0,0,0,1,1,5)` is a direct composition for which `(a₁d₂−a₂d₁)−(b₁c₂−b₂c₁)=5≠0=h.b`.
+
+Proof: the composition identity read as a form in `(z,w)` gives, for every `x,y`, the
+discriminant identity `(h(x,y))²·disc k = Ψ(x,y)²·disc G` with `Ψ = (a₁b₂−a₂b₁)x² +
+((a₁d₂−a₂d₁)−(b₁c₂−b₂c₁))xy + (c₁d₂−c₂d₁)y²` (Cox 3.1(a),(b)); cancelling the common nonzero
+discriminant yields `h(x,y)² = Ψ(x,y)²` as a polynomial identity, and comparing the `x³y`- and
+`x²y²`-coefficients (evaluating at `x∈{−2,…,2}, y=1`) pins the two minors, the `+` sign carried
+over from `a₁b₂−a₂b₁ = h.a`. -/
+theorem directlyComposes_minors (h k G : BinaryQF) (a₁ b₁ c₁ d₁ a₂ b₂ c₂ d₂ : ℤ)
+    (hid : ∀ x y z w : ℤ, h.eval x y * k.eval z w
+      = G.eval (a₁*x*z+b₁*x*w+c₁*y*z+d₁*y*w) (a₂*x*z+b₂*x*w+c₂*y*z+d₂*y*w))
+    (hsign : a₁*b₂ - a₂*b₁ = h.a)
+    (hha : h.a ≠ 0) (hkG : k.discr = G.discr) (hG0 : G.discr ≠ 0) :
+    ((a₁*d₂-a₂*d₁) - (b₁*c₂-b₂*c₁) = h.b) ∧ (c₁*d₂-c₂*d₁ = h.c) := by
+  have hD' : ∀ x y : ℤ, (h.eval x y)^2 * k.discr
+      = ((a₁*b₂-a₂*b₁)*x^2 + ((a₁*d₂-a₂*d₁)-(b₁*c₂-b₂*c₁))*x*y + (c₁*d₂-c₂*d₁)*y^2)^2 * G.discr := by
+    intro x y
+    have hka : h.eval x y * k.a = G.eval (a₁*x+c₁*y) (a₂*x+c₂*y) := by
+      have hh := hid x y 1 0; simp only [BinaryQF.eval] at hh ⊢; linear_combination hh
+    have hkc : h.eval x y * k.c = G.eval (b₁*x+d₁*y) (b₂*x+d₂*y) := by
+      have hh := hid x y 0 1; simp only [BinaryQF.eval] at hh ⊢; linear_combination hh
+    have qall : h.eval x y * (k.a+k.b+k.c) = G.eval ((a₁+b₁)*x+(c₁+d₁)*y) ((a₂+b₂)*x+(c₂+d₂)*y) := by
+      have hh := hid x y 1 1; simp only [BinaryQF.eval] at hh ⊢; linear_combination hh
+    have expand : (h.eval x y)^2 * k.discr
+        = (h.eval x y * (k.a+k.b+k.c) - h.eval x y * k.a - h.eval x y * k.c)^2
+          - 4*(h.eval x y * k.a)*(h.eval x y * k.c) := by
+      simp only [BinaryQF.discr]; ring
+    rw [expand, qall, hka, hkc]
+    simp only [BinaryQF.eval, BinaryQF.discr]; ring
+  have key2 : ∀ x y : ℤ, (h.eval x y)^2
+      = ((a₁*b₂-a₂*b₁)*x^2 + ((a₁*d₂-a₂*d₁)-(b₁*c₂-b₂*c₁))*x*y + (c₁*d₂-c₂*d₁)*y^2)^2 := by
+    intro x y
+    have := hD' x y; rw [hkG] at this; exact mul_right_cancel₀ hG0 this
+  have k0 := key2 0 1; have k1 := key2 1 1; have km1 := key2 (-1) 1
+  have k2 := key2 2 1; have km2 := key2 (-2) 1
+  simp only [BinaryQF.eval] at k0 k1 km1 k2 km2
+  have h24 : (24:ℤ)*h.a ≠ 0 := mul_ne_zero (by norm_num) hha
+  have c3 : 24*h.a*h.b = 24*(a₁*b₂-a₂*b₁)*((a₁*d₂-a₂*d₁)-(b₁*c₂-b₂*c₁)) := by
+    linear_combination (-km2) + 2*km1 - 2*k1 + k2
+  rw [hsign] at c3
+  have hbe : (24*h.a)*h.b = (24*h.a)*((a₁*d₂-a₂*d₁)-(b₁*c₂-b₂*c₁)) := by linear_combination c3
+  have hbeq : h.b = (a₁*d₂-a₂*d₁)-(b₁*c₂-b₂*c₁) := mul_left_cancel₀ h24 hbe
+  refine ⟨hbeq.symm, ?_⟩
+  have c2 : 24*(h.b^2+2*h.a*h.c)
+      = 24*(((a₁*d₂-a₂*d₁)-(b₁*c₂-b₂*c₁))^2 + 2*(a₁*b₂-a₂*b₁)*(c₁*d₂-c₂*d₁)) := by
+    linear_combination 16*k1 + 16*km1 - 30*k0 - k2 - km2
+  rw [hsign, ← hbeq] at c2
+  have h48 : (48:ℤ)*h.a ≠ 0 := mul_ne_zero (by norm_num) hha
+  have hce : (48*h.a)*h.c = (48*h.a)*(c₁*d₂-c₂*d₁) := by linear_combination c2
+  exact (mul_left_cancel₀ h48 hce).symm
+
+/-- **Cox 3.5(c) — representative-invariance of direct composition (discriminant version).**
+If `G` is the direct composition of `h` and `k`, `h` is properly equivalent to `h'`, and the
+forms have the nonzero common discriminant of Cox's setting (`h.a ≠ 0`, `k.discr = G.discr ≠ 0`),
+then `G` is also the direct composition of `h'` and `k`.
+
+This is the faithful form of Cox's Exercise 3.5(c): §3.A works throughout with primitive positive
+definite forms of a fixed discriminant `D < 0`, so `h.a > 0` and `disc = D ≠ 0` hold there. The
+proof pre-composes the bilinear substitution with the `SL₂(ℤ)` matrix `M` carrying `h → h'`
+(giving the new coefficients `āᵢ = aᵢ·M₀₀ + cᵢ·M₁₀`, …); the composition identity and the
+`k`-side `(3.1)` sign are elementary (`eval_action`/`Matrix.det`/`ring`), while the `h`-side sign
+`ā₁b̄₂−ā₂b̄₁ = h'(1,0)` reduces via `directlyComposes_minors` to `M₀₀²·h.a + M₀₀M₁₀·h.b +
+M₁₀²·h.c = h(M₀₀,M₁₀) = h'(1,0)`. -/
+theorem directlyComposes_of_properlyEquivalent_left_of_discr (h k G h' : BinaryQF)
+    (hDC : DirectlyComposes h k G) (he : ProperlyEquivalent h h')
+    (hha : h.a ≠ 0) (hkG : k.discr = G.discr) (hG0 : G.discr ≠ 0) :
+    DirectlyComposes h' k G := by
+  obtain ⟨a₁, b₁, c₁, d₁, a₂, b₂, c₂, d₂, hid, hb, hc⟩ := hDC
+  obtain ⟨M, hdet, hM⟩ := he
+  have hsign : a₁*b₂ - a₂*b₁ = h.a := by rw [hb]; simp [BinaryQF.eval]
+  obtain ⟨hbmin, hcmin⟩ := directlyComposes_minors h k G a₁ b₁ c₁ d₁ a₂ b₂ c₂ d₂ hid hsign hha hkG hG0
+  have hdet2 : M 0 0*M 1 1 - M 0 1*M 1 0 = 1 := by rw [← Matrix.det_fin_two]; exact hdet
+  refine ⟨a₁*(M 0 0)+c₁*(M 1 0), b₁*(M 0 0)+d₁*(M 1 0), a₁*(M 0 1)+c₁*(M 1 1), b₁*(M 0 1)+d₁*(M 1 1),
+          a₂*(M 0 0)+c₂*(M 1 0), b₂*(M 0 0)+d₂*(M 1 0), a₂*(M 0 1)+c₂*(M 1 1), b₂*(M 0 1)+d₂*(M 1 1),
+          ?_, ?_, ?_⟩
+  · intro x y z w
+    rw [← hM, eval_action]
+    have := hid (M 0 0*x+M 0 1*y) (M 1 0*x+M 1 1*y) z w
+    rw [this]; congr 1 <;> ring
+  · rw [← hM, eval_action]; simp only [BinaryQF.eval]
+    linear_combination (M 0 0^2)*hsign + (M 0 0*M 1 0)*hbmin + (M 1 0^2)*hcmin
+  · linear_combination (M 0 0*M 1 1 - M 0 1*M 1 0)*hc + (k.eval 1 0)*hdet2
+
+/-- **Cox 3.5(c) — representative-invariance of direct composition (carrier-neutral form)** —
+*STATED, NOT PROVED*. If `G` is the direct composition of `h` and `k`, and `h ~ h'`, then `G` is
+the direct composition of `h'` and `k`.
+
+FLAG (Wave 18): as stated here — with no discriminant hypothesis — this is **under-hypothesized
+relative to Cox**, whose Exercise 3.1 explicitly assumes "all three forms have discriminant
+`D ≠ 0`". The natural `M`-substitution proof genuinely needs it: for `h=k=G=⟨1,0,0⟩` (discr `0`)
+and witness `(1,0,0,0,0,1,1,5)` the substituted `h`-side sign fails for any `M` with `M₀₀,M₁₀`
+both nonzero (see the counterexample in `directlyComposes_minors`). The statement is still true
+(the existential witness can be repaired via `gcd(M₀₀,M₀₁)=1`), but the clean proof wants the
+discriminant hypotheses. The fully-proved faithful form is
+`directlyComposes_of_properlyEquivalent_left_of_discr`; this bare form is left as a target pending
+a decision to add `h.a ≠ 0 ∧ k.discr = G.discr ≠ 0` (Cox's `D < 0` ambient supplies both). -/
 theorem directlyComposes_of_properlyEquivalent_left (h k G h' : BinaryQF)
     (hDC : DirectlyComposes h k G) (he : ProperlyEquivalent h h') :
     DirectlyComposes h' k G := sorry
