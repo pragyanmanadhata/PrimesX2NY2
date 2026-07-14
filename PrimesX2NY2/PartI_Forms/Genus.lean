@@ -500,26 +500,212 @@ theorem directlyComposes_of_properlyEquivalent_left_of_discr (h k G h' : BinaryQ
     linear_combination (M 0 0^2)*hsign + (M 0 0*M 1 0)*hbmin + (M 1 0^2)*hcmin
   · linear_combination (M 0 0*M 1 1 - M 0 1*M 1 0)*hc + (k.eval 1 0)*hdet2
 
-/-- **Cox 3.5(c) — representative-invariance of direct composition (carrier-neutral form)** —
-*STATED, NOT PROVED*. If `G` is the direct composition of `h` and `k`, and `h ~ h'`, then `G` is
-the direct composition of `h'` and `k`.
+/-- **Gauss' minor relations, `g`-side mirror (Cox Exercise 3.1 / [Gauss §235]).** The companion
+of `directlyComposes_minors`: reading the composition identity as a form in `(x,y)` (rather than
+`(z,w)`) gives `(k(z,w))²·disc h = Φ(z,w)²·disc G` with `Φ = m₁₃·z² + (m₁₄+m₂₃)·zw + m₂₄·w²`;
+cancelling the common nonzero discriminant and comparing coefficients pins the remaining two
+minors. Note the **`+` sign** in `m₁₄+m₂₃ = k.b` (against the `−` in `m₁₄−m₂₃ = h.b`), and that
+this mirror cancels `disc h` rather than `disc k`.
 
-FLAG (Wave 18): as stated here — with no discriminant hypothesis — this is **under-hypothesized
-relative to Cox**, whose Exercise 3.1 explicitly assumes "all three forms have discriminant
-`D ≠ 0`". The natural `M`-substitution proof genuinely needs it: for `h=k=G=⟨1,0,0⟩` (discr `0`)
-and witness `(1,0,0,0,0,1,1,5)` the substituted `h`-side sign fails for any `M` with `M₀₀,M₁₀`
-both nonzero (see the counterexample in `directlyComposes_minors`). The statement is still true
-(the existential witness can be repaired via `gcd(M₀₀,M₀₁)=1`), but the clean proof wants the
-discriminant hypotheses. The fully-proved faithful form is
-`directlyComposes_of_properlyEquivalent_left_of_discr`; this bare form is left as a target pending
-a decision to add `h.a ≠ 0 ∧ k.discr = G.discr ≠ 0` (Cox's `D < 0` ambient supplies both). -/
+Together with `directlyComposes_minors` and the two `(3.1)` sign conditions, this completes the
+Plücker vector: all six `2×2` minors of the substitution matrix are determined by `(h,k)` alone —
+`m₁₂ = h.a`, `m₁₃ = k.a`, `m₁₄ = (h.b+k.b)/2`, `m₂₃ = (k.b−h.b)/2`, `m₂₄ = k.c`, `m₃₄ = h.c`. -/
+theorem directlyComposes_minors_right (h k G : BinaryQF) (a₁ b₁ c₁ d₁ a₂ b₂ c₂ d₂ : ℤ)
+    (hid : ∀ x y z w : ℤ, h.eval x y * k.eval z w
+      = G.eval (a₁*x*z+b₁*x*w+c₁*y*z+d₁*y*w) (a₂*x*z+b₂*x*w+c₂*y*z+d₂*y*w))
+    (hsign : a₁*c₂ - a₂*c₁ = k.a)
+    (hka : k.a ≠ 0) (hhG : h.discr = G.discr) (hG0 : G.discr ≠ 0) :
+    ((a₁*d₂-a₂*d₁) + (b₁*c₂-b₂*c₁) = k.b) ∧ (b₁*d₂-b₂*d₁ = k.c) := by
+  have hD' : ∀ z w : ℤ, (k.eval z w)^2 * h.discr
+      = ((a₁*c₂-a₂*c₁)*z^2 + ((a₁*d₂-a₂*d₁)+(b₁*c₂-b₂*c₁))*z*w + (b₁*d₂-b₂*d₁)*w^2)^2 * G.discr := by
+    intro z w
+    have hha : k.eval z w * h.a = G.eval (a₁*z+b₁*w) (a₂*z+b₂*w) := by
+      have hh := hid 1 0 z w; simp only [BinaryQF.eval] at hh ⊢; linear_combination hh
+    have hhc : k.eval z w * h.c = G.eval (c₁*z+d₁*w) (c₂*z+d₂*w) := by
+      have hh := hid 0 1 z w; simp only [BinaryQF.eval] at hh ⊢; linear_combination hh
+    have qall : k.eval z w * (h.a+h.b+h.c)
+        = G.eval ((a₁+c₁)*z+(b₁+d₁)*w) ((a₂+c₂)*z+(b₂+d₂)*w) := by
+      have hh := hid 1 1 z w; simp only [BinaryQF.eval] at hh ⊢; linear_combination hh
+    have expand : (k.eval z w)^2 * h.discr
+        = (k.eval z w * (h.a+h.b+h.c) - k.eval z w * h.a - k.eval z w * h.c)^2
+          - 4*(k.eval z w * h.a)*(k.eval z w * h.c) := by
+      simp only [BinaryQF.discr]; ring
+    rw [expand, qall, hha, hhc]
+    simp only [BinaryQF.eval, BinaryQF.discr]; ring
+  have key2 : ∀ z w : ℤ, (k.eval z w)^2
+      = ((a₁*c₂-a₂*c₁)*z^2 + ((a₁*d₂-a₂*d₁)+(b₁*c₂-b₂*c₁))*z*w + (b₁*d₂-b₂*d₁)*w^2)^2 := by
+    intro z w
+    have := hD' z w; rw [hhG] at this; exact mul_right_cancel₀ hG0 this
+  have k0 := key2 0 1; have k1 := key2 1 1; have km1 := key2 (-1) 1
+  have k2 := key2 2 1; have km2 := key2 (-2) 1
+  simp only [BinaryQF.eval] at k0 k1 km1 k2 km2
+  have h24 : (24:ℤ)*k.a ≠ 0 := mul_ne_zero (by norm_num) hka
+  have c3 : 24*k.a*k.b = 24*(a₁*c₂-a₂*c₁)*((a₁*d₂-a₂*d₁)+(b₁*c₂-b₂*c₁)) := by
+    linear_combination (-km2) + 2*km1 - 2*k1 + k2
+  rw [hsign] at c3
+  have hbe : (24*k.a)*k.b = (24*k.a)*((a₁*d₂-a₂*d₁)+(b₁*c₂-b₂*c₁)) := by linear_combination c3
+  have hbeq : k.b = (a₁*d₂-a₂*d₁)+(b₁*c₂-b₂*c₁) := mul_left_cancel₀ h24 hbe
+  refine ⟨hbeq.symm, ?_⟩
+  have c2 : 24*(k.b^2+2*k.a*k.c)
+      = 24*(((a₁*d₂-a₂*d₁)+(b₁*c₂-b₂*c₁))^2 + 2*(a₁*c₂-a₂*c₁)*(b₁*d₂-b₂*d₁)) := by
+    linear_combination 16*k1 + 16*km1 - 30*k0 - k2 - km2
+  rw [hsign, ← hbeq] at c2
+  have h48 : (48:ℤ)*k.a ≠ 0 := mul_ne_zero (by norm_num) hka
+  have hce : (48*k.a)*k.c = (48*k.a)*(b₁*d₂-b₂*d₁) := by linear_combination c2
+  exact (mul_left_cancel₀ h48 hce).symm
+
+/-- Componentwise extensionality for `BinaryQF`. -/
+theorem binaryQF_ext (p q : BinaryQF) (h1 : p.a = q.a) (h2 : p.b = q.b) (h3 : p.c = q.c) : p = q := by
+  obtain ⟨pa,pb,pc⟩ := p; obtain ⟨qa,qb,qc⟩ := q; simp_all
+
+/-- **Cox 3.5(c) — representative-invariance of direct composition.** If `G` is the direct
+composition of `h` and `k`, and `h` is properly equivalent to `h'`, then `G` is also the direct
+composition of `h'` and `k`.
+
+The discriminant hypotheses match Cox's Exercise 3.1 verbatim ("all three forms have discriminant
+`D ≠ 0`") and are essential — see the degenerate `⟨1,0,0⟩` counterexample recorded at
+`directlyComposes_minors`. In Cox's §3.A ambient (primitive positive definite forms of a fixed
+`D < 0`) both hold automatically. Discharged by
+`directlyComposes_of_properlyEquivalent_left_of_discr`. -/
 theorem directlyComposes_of_properlyEquivalent_left (h k G h' : BinaryQF)
-    (hDC : DirectlyComposes h k G) (he : ProperlyEquivalent h h') :
-    DirectlyComposes h' k G := sorry
+    (hDC : DirectlyComposes h k G) (he : ProperlyEquivalent h h')
+    (hha : h.a ≠ 0) (hkG : k.discr = G.discr) (hG0 : G.discr ≠ 0) :
+    DirectlyComposes h' k G :=
+  directlyComposes_of_properlyEquivalent_left_of_discr h k G h' hDC he hha hkG hG0
 
-/-- **Uniqueness of direct composition up to ~** — *STATED, NOT PROVED*. Two direct compositions
-of the same pair of primitive positive forms of discriminant `D` are properly equivalent; needed
-to compare the two composites in the class-level respect proof. -/
+/-- **Uniqueness of direct composition up to proper equivalence** (Cox 4b / [Gauss §§236–240];
+Cox defers this to §7, see Theorem 3.9's proof: *"we will assume that (i) and (ii) are true"*).
+
+Two direct compositions `F`, `F'` of the same pair `(f,g)` of discriminant `D < 0` with
+`gcd(f.a, g.a) = 1` are properly equivalent.
+
+Proof (equal-Plücker → `SL₂` → transport). By `directlyComposes_minors` and
+`directlyComposes_minors_right`, **all six minors of the substitution matrix are determined by
+`(f,g)`**, so the two witnesses `M`, `M'` have identical Plücker vectors (in particular
+`m₂₃ = m₂₃'`, obtained by halving `(m₁₄+m₂₃) − (m₁₄−m₂₃) = g.b − f.b`). Setting `y = 0` collapses
+the composition identity onto the first two columns, so it suffices to produce `S` with `S·T = T'`
+for `T = !![a₁,b₁;a₂,b₂]` (`det T = m₁₂ = f.a`). Bézout `u·f.a + v·g.a = 1` gives the *integral*
+`S := u·(T'·adj T) + v·(U'·adj U)` (`U` = columns 1,3, `det U = m₁₃ = g.a`); the four identities
+`S·T = T'` follow from the sign conditions, `m₂₃ = m₂₃'` and the Plücker/Cramer relation
+`m₂₃'·p₁ − m₁₃'·q₁ + m₁₂'·r₁ = 0`. Then `det S · f.a = f.a` forces `det S = 1`, and
+`E := F − action S F'` vanishes at `(a₁,a₂)`, `(b₁,b₂)`, `(a₁+b₁,a₂+b₂)`, whose Cramer combination
+gives `f.a²·E = 0`, hence `E = 0` and `action S F' = F`. -/
+theorem directlyComposes_unique_of_coprime (f g F F' : BinaryQF) (D : ℤ)
+    (hD : D < 0) (hf : f.discr = D) (hg : g.discr = D) (hcop : IsCoprime f.a g.a)
+    (hF : DirectlyComposes f g F) (hFd : F.discr = D)
+    (hF' : DirectlyComposes f g F') (hF'd : F'.discr = D) :
+    ProperlyEquivalent F F' := by
+  have hD0 : D ≠ 0 := ne_of_lt hD
+  have hfa : f.a ≠ 0 := by
+    intro h0
+    have hb : f.discr = f.b^2 := by simp [BinaryQF.discr, h0]
+    rw [hf] at hb; nlinarith [sq_nonneg f.b]
+  have hga : g.a ≠ 0 := by
+    intro h0
+    have hb : g.discr = g.b^2 := by simp [BinaryQF.discr, h0]
+    rw [hg] at hb; nlinarith [sq_nonneg g.b]
+  obtain ⟨a₁,b₁,c₁,d₁,a₂,b₂,c₂,d₂, hid, hsb, hsc⟩ := hF
+  obtain ⟨p₁,q₁,r₁,s₁,p₂,q₂,r₂,s₂, hid', hsb', hsc'⟩ := hF'
+  have hm12 : a₁*b₂ - a₂*b₁ = f.a := by rw [hsb]; simp [BinaryQF.eval]
+  have hm13 : a₁*c₂ - a₂*c₁ = g.a := by rw [hsc]; simp [BinaryQF.eval]
+  have hm12' : p₁*q₂ - p₂*q₁ = f.a := by rw [hsb']; simp [BinaryQF.eval]
+  have hm13' : p₁*r₂ - p₂*r₁ = g.a := by rw [hsc']; simp [BinaryQF.eval]
+  have hgF : g.discr = F.discr := by rw [hg, hFd]
+  have hfF : f.discr = F.discr := by rw [hf, hFd]
+  have hF0 : F.discr ≠ 0 := by rw [hFd]; exact hD0
+  have hgF' : g.discr = F'.discr := by rw [hg, hF'd]
+  have hfF' : f.discr = F'.discr := by rw [hf, hF'd]
+  have hF'0 : F'.discr ≠ 0 := by rw [hF'd]; exact hD0
+  obtain ⟨hL1, _⟩ := directlyComposes_minors f g F a₁ b₁ c₁ d₁ a₂ b₂ c₂ d₂ hid hm12 hfa hgF hF0
+  obtain ⟨hR1, _⟩ := directlyComposes_minors_right f g F a₁ b₁ c₁ d₁ a₂ b₂ c₂ d₂ hid hm13 hga hfF hF0
+  obtain ⟨hL1', _⟩ := directlyComposes_minors f g F' p₁ q₁ r₁ s₁ p₂ q₂ r₂ s₂ hid' hm12' hfa hgF' hF'0
+  obtain ⟨hR1', _⟩ :=
+    directlyComposes_minors_right f g F' p₁ q₁ r₁ s₁ p₂ q₂ r₂ s₂ hid' hm13' hga hfF' hF'0
+  have hm23 : b₁*c₂ - b₂*c₁ = q₁*r₂ - q₂*r₁ := by linarith [hL1, hR1, hL1', hR1']
+  obtain ⟨u, v, huv⟩ := hcop
+  set S00 := u*(p₁*b₂ - q₁*a₂) + v*(p₁*c₂ - r₁*a₂) with hS00def
+  set S01 := u*(q₁*a₁ - p₁*b₁) + v*(r₁*a₁ - p₁*c₁) with hS01def
+  set S10 := u*(p₂*b₂ - q₂*a₂) + v*(p₂*c₂ - r₂*a₂) with hS10def
+  set S11 := u*(q₂*a₁ - p₂*b₁) + v*(r₂*a₁ - p₂*c₁) with hS11def
+  have G1 : S00*a₁ + S01*a₂ = p₁ := by
+    rw [hS00def, hS01def]
+    linear_combination (u*p₁)*hm12 + (v*p₁)*hm13 + p₁*huv
+  have G2 : S10*a₁ + S11*a₂ = p₂ := by
+    rw [hS10def, hS11def]
+    linear_combination (u*p₂)*hm12 + (v*p₂)*hm13 + p₂*huv
+  have G3 : S00*b₁ + S01*b₂ = q₁ := by
+    rw [hS00def, hS01def]
+    linear_combination (u*q₁ + v*r₁)*hm12 + (v*p₁)*hm23 + q₁*huv - (v*r₁)*hm12' + (v*q₁)*hm13'
+  have G4 : S10*b₁ + S11*b₂ = q₂ := by
+    rw [hS10def, hS11def]
+    linear_combination (u*q₂ + v*r₂)*hm12 + (v*p₂)*hm23 + q₂*huv - (v*r₂)*hm12' + (v*q₂)*hm13'
+  have hkey : (S00*S11 - S01*S10) * f.a = f.a := by
+    calc (S00*S11 - S01*S10) * f.a
+        = (S00*S11 - S01*S10) * (a₁*b₂ - a₂*b₁) := by rw [hm12]
+      _ = p₁*q₂ - p₂*q₁ := by rw [← G1, ← G2, ← G3, ← G4]; ring
+      _ = f.a := hm12'
+  have hdet1 : S00*S11 - S01*S10 = 1 :=
+    mul_right_cancel₀ hfa (hkey.trans (one_mul f.a).symm)
+  refine properlyEquivalent_equivalence.symm ⟨!![S00, S01; S10, S11], ?_, ?_⟩
+  · rw [Matrix.det_fin_two_of]; exact hdet1
+  · have hM00 : (!![S00, S01; S10, S11] : Matrix (Fin 2) (Fin 2) ℤ) 0 0 = S00 := rfl
+    have hM01 : (!![S00, S01; S10, S11] : Matrix (Fin 2) (Fin 2) ℤ) 0 1 = S01 := rfl
+    have hM10 : (!![S00, S01; S10, S11] : Matrix (Fin 2) (Fin 2) ℤ) 1 0 = S10 := rfl
+    have hM11 : (!![S00, S01; S10, S11] : Matrix (Fin 2) (Fin 2) ℤ) 1 1 = S11 := rfl
+    have hEval : ∀ z w : ℤ,
+        (action (!![S00, S01; S10, S11] : Matrix (Fin 2) (Fin 2) ℤ) F').eval
+            (a₁*z + b₁*w) (a₂*z + b₂*w)
+          = F.eval (a₁*z + b₁*w) (a₂*z + b₂*w) := by
+      intro z w
+      rw [eval_action, hM00, hM01, hM10, hM11]
+      have harg1 : S00*(a₁*z + b₁*w) + S01*(a₂*z + b₂*w) = p₁*z + q₁*w := by
+        linear_combination z*G1 + w*G3
+      have harg2 : S10*(a₁*z + b₁*w) + S11*(a₂*z + b₂*w) = p₂*z + q₂*w := by
+        linear_combination z*G2 + w*G4
+      rw [harg1, harg2]
+      have e1 := hid' 1 0 z w
+      have e2 := hid 1 0 z w
+      simp only [BinaryQF.eval] at e1 e2 ⊢
+      linear_combination e2 - e1
+    set H := action (!![S00, S01; S10, S11] : Matrix (Fin 2) (Fin 2) ℤ) F' with hHdef
+    have E1 := hEval 1 0
+    have E2 := hEval 0 1
+    have E3 := hEval 1 1
+    simp only [BinaryQF.eval] at E1 E2 E3
+    have eq1 : (F.a - H.a)*a₁^2 + (F.b - H.b)*a₁*a₂ + (F.c - H.c)*a₂^2 = 0 := by
+      linear_combination -E1
+    have eq2 : (F.a - H.a)*b₁^2 + (F.b - H.b)*b₁*b₂ + (F.c - H.c)*b₂^2 = 0 := by
+      linear_combination -E2
+    have eq3 : 2*(F.a - H.a)*a₁*b₁ + (F.b - H.b)*(a₁*b₂ + a₂*b₁) + 2*(F.c - H.c)*a₂*b₂ = 0 := by
+      linear_combination -E3 - eq1 - eq2
+    have hfa2 : f.a^2 ≠ 0 := pow_ne_zero 2 hfa
+    have hA : f.a^2 * (F.a - H.a) = 0 := by
+      rw [← hm12]; linear_combination b₂^2*eq1 + a₂^2*eq2 - a₂*b₂*eq3
+    have hB : f.a^2 * (F.b - H.b) = 0 := by
+      rw [← hm12]
+      linear_combination (-2*b₁*b₂)*eq1 + (-2*a₁*a₂)*eq2 + (a₁*b₂ + a₂*b₁)*eq3
+    have hC : f.a^2 * (F.c - H.c) = 0 := by
+      rw [← hm12]; linear_combination b₁^2*eq1 + a₁^2*eq2 - a₁*b₁*eq3
+    have hAa : F.a = H.a := by have := (mul_eq_zero.mp hA).resolve_left hfa2; linarith
+    have hBb : F.b = H.b := by have := (mul_eq_zero.mp hB).resolve_left hfa2; linarith
+    have hCc : F.c = H.c := by have := (mul_eq_zero.mp hC).resolve_left hfa2; linarith
+    exact (binaryQF_ext F H hAa hBb hCc).symm
+
+/-- **Uniqueness of direct composition up to ~ (carrier-neutral form)** — *STATED, NOT PROVED*.
+
+FLAG (Wave 19): as stated here this is **under-hypothesized**. The fully-proved form is
+`directlyComposes_unique_of_coprime`, which needs two hypotheses this signature lacks:
+* `hD : D < 0` — genuinely required: the whole minor machinery (Cox Ex 3.1) needs `D ≠ 0`, and
+  `D < 0` additionally *derives* `f.a ≠ 0` and `g.a ≠ 0` (if `f.a = 0` then `f.discr = f.b² ≥ 0`).
+  The present `F.Primitive ∧ 0 < F.a` does **not** give `D ≠ 0` (witness `F = ⟨1,0,0⟩`).
+* `hcop : IsCoprime f.a g.a` — the concordance condition. Cox's own proof of Theorem 3.9 supplies
+  it ("we can replace `g(x,y)` by a properly equivalent form ... where `gcd(a,a') = 1`"), and
+  `concordance` produces it in the reduction. It powers the two-term Bézout that makes the
+  transition matrix `S` integral; the general statement holds under `f.Primitive` via a six-term
+  Bézout over all six minors, which is far heavier and is not needed downstream.
+
+Note `F.Primitive`, `0 < F.a`, `F'.Primitive`, `0 < F'.a` turn out to be **unnecessary**. This
+bare form is left as a target pending a decision to adopt the hypothesis set above. -/
 theorem directlyComposes_unique (f g F F' : BinaryQF) (D : ℤ)
     (hf : f.discr = D) (hg : g.discr = D)
     (hF : DirectlyComposes f g F) (hFd : F.discr = D) (hFp : F.Primitive) (hFa : 0 < F.a)
