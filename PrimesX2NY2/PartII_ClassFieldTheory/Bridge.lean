@@ -5,6 +5,7 @@ Authors: Pragyan Manadhata
 -/
 import Mathlib
 import PrimesX2NY2.PartI_Forms.FormClassGroup
+import PrimesX2NY2.PartI_Forms.Genus
 import PrimesX2NY2.PartII_ClassFieldTheory.Orders
 
 /-!

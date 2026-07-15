@@ -430,10 +430,6 @@ theorem prop_3_8 (f g : BinaryQF) (D : ℤ) (hf : f.discr = D) (hg : g.discr = D
     dirichletForm_primitive f g D hf hg hfp hgp hfa hga hcop,
     dirichletForm_pos f g hfa hga⟩
 
-/-- **Dirichlet composition** of two classes of forms of discriminant `D`.
-(Cox, §3, Thm 3.9.) -/
-def compose (D : ℤ) : FormClassGroup D → FormClassGroup D → FormClassGroup D := sorry
-
 /-- The class of the **principal form** of discriminant `D` (the identity of
 `C(D)`). Cox's form class group is defined only for discriminants `D ≡ 0,1 (mod 4)`
 (Thm 3.9): non-discriminants have no forms, so `FormClassGroup D` is empty and no
@@ -441,26 +437,6 @@ identity exists — hence the `D ≡ 0,1 (mod 4)` hypothesis. (Cox, §3.) -/
 def principalClass (D : ℤ) (hD : D % 4 = 0 ∨ D % 4 = 1) : FormClassGroup D :=
   classOf D (principalForm D)
     ⟨principalForm_discr D hD, principalForm_primitive D, principalForm_pos D⟩
-
-/-- **Theorem 3.9** (Cox §3). For `D < 0`, Dirichlet composition makes `C(D)` a
-finite abelian group: it is associative and commutative, the principal class is a
-right identity, and every class has an inverse. (Faithful replacement of the
-earlier vacuous `Nonempty (CommGroup …)`, which holds for any nonempty type.) -/
-theorem isCommGroup (D : ℤ) (hD : D < 0) (hD4 : D % 4 = 0 ∨ D % 4 = 1) :
-    (∀ x y z : FormClassGroup D, compose D (compose D x y) z = compose D x (compose D y z))
-      ∧ (∀ x y : FormClassGroup D, compose D x y = compose D y x)
-      ∧ (∀ x : FormClassGroup D, compose D x (principalClass D hD4) = x)
-      ∧ (∀ x : FormClassGroup D, ∃ y : FormClassGroup D, compose D x y = principalClass D hD4) := by
-  sorry
-
-/-- **Theorem 3.9, inverse** (Cox §3). The inverse of the class of `f` is the class
-of the opposite form `a x² − b x y + c y²`. -/
-theorem thm_3_9_inverse (D : ℤ) (f : BinaryQF) (hd : f.discr = D)
-    (hp : f.Primitive) (ha : 0 < f.a)
-    (hd' : f.opposite.discr = D) (hp' : f.opposite.Primitive) (ha' : 0 < f.opposite.a) :
-    compose D (classOf D f ⟨hd, hp, ha⟩) (classOf D f.opposite ⟨hd', hp', ha'⟩)
-      = principalClass D (by rw [← hd]; exact discr_mod_four f) := by
-  sorry
 
 /-- The number of distinct odd primes dividing `D`. (Cox §3, Prop 3.11.) -/
 def oddPrimeDivisorCount (D : ℤ) : ℕ := (D.natAbs.primeFactors.erase 2).card
@@ -476,22 +452,6 @@ def mu (D : ℤ) : ℕ :=
     if n % 4 = 1 ∨ n % 4 = 2 then r + 1
     else if n % 4 = 3 then r
     else if n % 8 = 0 then r + 2 else r + 1
-
-/-- **Lemma 3.10** (Cox §3). A reduced primitive form `f = a x²+ b x y + c y²` of
-discriminant `D` has order `≤ 2` in `C(D)` (its class squares to the principal
-class) iff `b = 0`, `a = b`, or `a = c`. -/
-theorem lemma_3_10 (D : ℤ) (f : BinaryQF) (hd : f.discr = D) (hp : f.Primitive)
-    (ha : 0 < f.a) (hr : f.Reduced) :
-    compose D (classOf D f ⟨hd, hp, ha⟩) (classOf D f ⟨hd, hp, ha⟩)
-      = principalClass D (by rw [← hd]; exact discr_mod_four f)
-      ↔ (f.b = 0 ∨ f.a = f.b ∨ f.a = f.c) := by
-  sorry
-
-/-- **Proposition 3.11** (Cox §3). For `D ≡ 0,1 (mod 4)` negative, the class group
-`C(D)` has exactly `2^{μ−1}` elements of order `≤ 2`, where `μ = mu D`. -/
-theorem prop_3_11 (D : ℤ) (hD : D < 0) (hD4 : D % 4 = 0 ∨ D % 4 = 1) :
-    {x : FormClassGroup D | compose D x x = principalClass D hD4}.ncard = 2 ^ (mu D - 1) := by
-  sorry
 
 /-- The form class group of a negative discriminant is finite. (Cox, §3.) -/
 theorem finite (D : ℤ) (hD : D < 0) : Nonempty (Fintype (FormClassGroup D)) := sorry

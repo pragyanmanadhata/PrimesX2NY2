@@ -356,6 +356,12 @@ theorem concordant_choice_invariant (D : ℤ) (F : DiscrForms D) (g₁ g₂ : Bi
     (hd₁ : g₁.discr = D) (ha₁ : 0 < g₁.a) (hc₁ : Int.gcd F.1.a g₁.a = 1)
     (hd₂ : g₂.discr = D) (ha₂ : 0 < g₂.a) (hc₂ : Int.gcd F.1.a g₂.a = 1) :
     ProperlyEquivalent (dirichletForm F.1 g₁) (dirichletForm F.1 g₂) := sorry
+-- FLAG (Wave 20): under-hypothesized — missing `hD : D < 0`. The proof needs `D ≠ 0` (the minor
+-- machinery of Cox Ex 3.1; see the `⟨1,0,0⟩` counterexample at `directlyComposes_minors`), and
+-- `F.Primitive ∧ 0 < F.a` does not supply it. Cox's Thm 3.9 states the ambient explicitly:
+-- "Let `D ≡ 0,1 mod 4` be **negative**". The fully-proved form is
+-- `concordant_choice_invariant_of_neg`; restating this one with `hD` is a one-line change,
+-- deliberately not made unilaterally.
 
 /-- **Direct composition** (Cox §3.A, (3.1)). `F` is the *direct composition* of `f` and `g`
 if there is an integral bilinear substitution `Bᵢ = aᵢxz+bᵢxw+cᵢyz+dᵢyw` with
@@ -691,26 +697,22 @@ theorem directlyComposes_unique_of_coprime (f g F F' : BinaryQF) (D : ℤ)
     have hCc : F.c = H.c := by have := (mul_eq_zero.mp hC).resolve_left hfa2; linarith
     exact (binaryQF_ext F H hAa hBb hCc).symm
 
-/-- **Uniqueness of direct composition up to ~ (carrier-neutral form)** — *STATED, NOT PROVED*.
+/-- **Uniqueness of direct composition up to proper equivalence** (Cox 4b). Two direct
+compositions of the same pair are properly equivalent.
 
-FLAG (Wave 19): as stated here this is **under-hypothesized**. The fully-proved form is
-`directlyComposes_unique_of_coprime`, which needs two hypotheses this signature lacks:
-* `hD : D < 0` — genuinely required: the whole minor machinery (Cox Ex 3.1) needs `D ≠ 0`, and
-  `D < 0` additionally *derives* `f.a ≠ 0` and `g.a ≠ 0` (if `f.a = 0` then `f.discr = f.b² ≥ 0`).
-  The present `F.Primitive ∧ 0 < F.a` does **not** give `D ≠ 0` (witness `F = ⟨1,0,0⟩`).
-* `hcop : IsCoprime f.a g.a` — the concordance condition. Cox's own proof of Theorem 3.9 supplies
-  it ("we can replace `g(x,y)` by a properly equivalent form ... where `gcd(a,a') = 1`"), and
-  `concordance` produces it in the reduction. It powers the two-term Bézout that makes the
-  transition matrix `S` integral; the general statement holds under `f.Primitive` via a six-term
-  Bézout over all six minors, which is far heavier and is not needed downstream.
-
-Note `F.Primitive`, `0 < F.a`, `F'.Primitive`, `0 < F'.a` turn out to be **unnecessary**. This
-bare form is left as a target pending a decision to adopt the hypothesis set above. -/
+Hypothesis divergence (resolved, Wave 20): Cox omits `D < 0` and `gcd(f.a,g.a)=1` because §3.A
+carries them ambiently (Thm 3.9: "Let `D ≡ 0,1 mod 4` be **negative**"; and its proof replaces `g`
+by a properly equivalent form "where `gcd(a,a') = 1`"). Both are genuinely needed — `D ≠ 0` by the
+`⟨1,0,0⟩` counterexample at `directlyComposes_minors`, and coprimality by the Bézout that makes the
+transition matrix integral. `F.Primitive` and `0 < F.a` turn out to be unnecessary and were dropped.
+Discharged by `directlyComposes_unique_of_coprime`. -/
 theorem directlyComposes_unique (f g F F' : BinaryQF) (D : ℤ)
+    (hD : D < 0) (hcop : IsCoprime f.a g.a)
     (hf : f.discr = D) (hg : g.discr = D)
-    (hF : DirectlyComposes f g F) (hFd : F.discr = D) (hFp : F.Primitive) (hFa : 0 < F.a)
-    (hF' : DirectlyComposes f g F') (hF'd : F'.discr = D) (hF'p : F'.Primitive) (hF'a : 0 < F'.a) :
-    ProperlyEquivalent F F' := sorry
+    (hF : DirectlyComposes f g F) (hFd : F.discr = D)
+    (hF' : DirectlyComposes f g F') (hF'd : F'.discr = D) :
+    ProperlyEquivalent F F' :=
+  directlyComposes_unique_of_coprime f g F F' D hD hf hg hcop hF hFd hF' hF'd
 
 
 
@@ -790,4 +792,283 @@ theorem represents_principal_iff_congruence (n : ℕ) (hn : 0 < n) (p : ℕ)
           ((p : ℤ) ≡ β ^ 2 + (n : ℤ) [ZMOD (4 * n)]) := by
   sorry
 
+/-- `DirectlyComposes` is **symmetric** in its two arguments: swapping the roles of `f` and `g`
+swaps columns 2 and 3 of the bilinear substitution matrix, which interchanges the two `(3.1)`
+sign conditions `m₁₂ ↔ m₁₃` exactly. -/
+theorem directlyComposes_symm (f g F : BinaryQF) (h : DirectlyComposes f g F) :
+    DirectlyComposes g f F := by
+  obtain ⟨a₁,b₁,c₁,d₁,a₂,b₂,c₂,d₂, hid, hsb, hsc⟩ := h
+  refine ⟨a₁, c₁, b₁, d₁, a₂, c₂, b₂, d₂, ?_, hsc, hsb⟩
+  intro x y z w
+  have hh := hid z w x y
+  rw [mul_comm (g.eval x y) (f.eval z w), hh]
+  congr 1 <;> ring
+
+/-- **Cox 3.5(c) in the second argument.** If `G` is the direct composition of `h` and `k`, and
+`k ~ k'`, then `G` is the direct composition of `h` and `k'`. (Symmetry + the left version.) -/
+theorem directlyComposes_of_properlyEquivalent_right (h k G k' : BinaryQF)
+    (hDC : DirectlyComposes h k G) (he : ProperlyEquivalent k k')
+    (hka : k.a ≠ 0) (hhG : h.discr = G.discr) (hG0 : G.discr ≠ 0) :
+    DirectlyComposes h k' G :=
+  directlyComposes_symm k' h G
+    (directlyComposes_of_properlyEquivalent_left k h G k' (directlyComposes_symm h k G hDC)
+      he hka hhG hG0)
+
+/-- Discriminant of the Dirichlet composite of a **two-way coprime** pair (the concordant case). -/
+theorem dirichletForm_discr_of_coprime (f g : BinaryQF) (D : ℤ) (hf : f.discr = D)
+    (hg : g.discr = D) (hcop : Int.gcd f.a g.a = 1) : (dirichletForm f g).discr = D :=
+  dirichletForm_discr f g D hf hg (by rw [hcop]; simp)
+
+/-- **The Dirichlet composite IS a direct composition of its (concordant) pair** — the linchpin
+tying Cox's explicit formula (3.7) to Gauss's relation (3.1).
+
+With `B := dirichletB f g` and `C := (B²−D)/(4·f.a·g.a)`, `dirichletForm f g = ⟨f.a·g.a, B, C⟩`,
+and the translations `f ~ ⟨f.a, B, g.a·C⟩`, `g ~ ⟨g.a, B, f.a·C⟩` (Cox 3.5(a), via
+`dirichletB_spec1/2` and `translation_equiv_proj`) put the pair into the concordant shape of
+`dirichletForm_directlyComposes_concordant` (Cox 3.5(b)); transporting both arguments back by
+Cox 3.5(c) gives the claim. This is on the critical path for BOTH well-definedness of `compose`
+and (via united forms) associativity. -/
+theorem dirichletForm_directlyComposes (f g : BinaryQF) (D : ℤ) (hD : D < 0)
+    (hf : f.discr = D) (hg : g.discr = D) (hfa : 0 < f.a) (hga : 0 < g.a)
+    (hcop : Int.gcd f.a g.a = 1) :
+    DirectlyComposes f g (dirichletForm f g) := by
+  have hD0 : D ≠ 0 := ne_of_lt hD
+  have hcop3 : Int.gcd (Int.gcd f.a g.a) ((f.b + g.b) / 2) = 1 := by rw [hcop]; simp
+  set B := dirichletB f g with hBdef
+  set C := (B^2 - D) / (4 * f.a * g.a) with hCdef
+  have hdf : dirichletForm f g = ⟨f.a * g.a, B, C⟩ := by
+    simp only [dirichletForm, hBdef, hCdef, hf]
+  have hFa : (⟨f.a, B, g.a * C⟩ : BinaryQF).a ≠ 0 := hfa.ne'
+  have hdvd : (4 * f.a * g.a : ℤ) ∣ B^2 - D := by
+    have := dirichletB_spec f g D hf hg hcop3
+    rw [hf] at this
+    exact Int.ModEq.dvd this.symm
+  have hC4 : 4 * f.a * g.a * C = B^2 - D := by rw [hCdef]; exact Int.mul_ediv_cancel' hdvd
+  have hdiscrF : (⟨f.a, B, g.a * C⟩ : BinaryQF).discr = D := by
+    simp only [BinaryQF.discr]; linarith [hC4]
+  have hdiscrG : (⟨g.a, B, f.a * C⟩ : BinaryQF).discr = D := by
+    simp only [BinaryQF.discr]; linarith [hC4]
+  have hdiscrFG : (⟨f.a * g.a, B, C⟩ : BinaryQF).discr = D := by
+    simp only [BinaryQF.discr]; linarith [hC4]
+  have hfe : ProperlyEquivalent (⟨f.a, B, g.a * C⟩ : BinaryQF) f := by
+    refine translation_equiv_proj _ _ hFa rfl ?_ ?_
+    · exact Int.ModEq.dvd (dirichletB_spec1 f g D hf hg hcop3)
+    · rw [hdiscrF, hf]
+  have hge : ProperlyEquivalent (⟨g.a, B, f.a * C⟩ : BinaryQF) g := by
+    refine translation_equiv_proj _ _ hga.ne' rfl ?_ ?_
+    · exact Int.ModEq.dvd (dirichletB_spec2 f g D hf hg hcop3)
+    · rw [hdiscrG, hg]
+  have hconc := dirichletForm_directlyComposes_concordant f.a g.a B C
+  rw [hdf]
+  have hG0' : (⟨f.a * g.a, B, C⟩ : BinaryQF).discr ≠ 0 := by rw [hdiscrFG]; exact hD0
+  have step1 : DirectlyComposes f (⟨g.a, B, f.a * C⟩ : BinaryQF) ⟨f.a * g.a, B, C⟩ :=
+    directlyComposes_of_properlyEquivalent_left _ _ _ f hconc hfe hFa
+      (by rw [hdiscrG, hdiscrFG]) hG0'
+  exact directlyComposes_of_properlyEquivalent_right f _ _ g step1 hge hga.ne'
+    (by rw [hf, hdiscrFG]) hG0'
+
+/-- **(3i) Concordant-choice invariance** — the Dirichlet composite does not depend (up to `~`) on
+which concordant representative is chosen. Carries the `hD : D < 0` that the bare
+`concordant_choice_invariant` lacks (see the FLAG there). -/
+theorem concordant_choice_invariant_of_neg (D : ℤ) (hD : D < 0) (F : DiscrForms D)
+    (g₁ g₂ : BinaryQF) (he : ProperlyEquivalent g₁ g₂)
+    (hd₁ : g₁.discr = D) (ha₁ : 0 < g₁.a) (hc₁ : Int.gcd F.1.a g₁.a = 1)
+    (hd₂ : g₂.discr = D) (ha₂ : 0 < g₂.a) (hc₂ : Int.gcd F.1.a g₂.a = 1) :
+    ProperlyEquivalent (dirichletForm F.1 g₁) (dirichletForm F.1 g₂) := by
+  have hD0 : D ≠ 0 := ne_of_lt hD
+  have hFd : F.1.discr = D := F.2.1
+  have hFa : 0 < F.1.a := F.2.2.2
+  have hE1 : (dirichletForm F.1 g₁).discr = D := dirichletForm_discr_of_coprime F.1 g₁ D hFd hd₁ hc₁
+  have hE2 : (dirichletForm F.1 g₂).discr = D := dirichletForm_discr_of_coprime F.1 g₂ D hFd hd₂ hc₂
+  have hdc₁ : DirectlyComposes F.1 g₁ (dirichletForm F.1 g₁) :=
+    dirichletForm_directlyComposes F.1 g₁ D hD hFd hd₁ hFa ha₁ hc₁
+  have hdc₂ : DirectlyComposes F.1 g₂ (dirichletForm F.1 g₂) :=
+    dirichletForm_directlyComposes F.1 g₂ D hD hFd hd₂ hFa ha₂ hc₂
+  have hdc₁' : DirectlyComposes F.1 g₂ (dirichletForm F.1 g₁) :=
+    directlyComposes_of_properlyEquivalent_right F.1 g₁ _ g₂ hdc₁ he ha₁.ne'
+      (by rw [hFd, hE1]) (by rw [hE1]; exact hD0)
+  exact directlyComposes_unique_of_coprime F.1 g₂ _ _ D hD hFd hd₂
+    (Int.isCoprime_iff_gcd_eq_one.mpr hc₂) hdc₁' hE1 hdc₂ hE2
+
+/-- **Class-level respect** — the `Quotient.lift₂` obligation for `compose`:
+`f ~ f'` and `g ~ g'` imply `composeForm f g ~ composeForm f' g'`. Proved by transporting the
+direct-composition witness through both arguments (Cox 3.5(c) left and right) and then invoking
+uniqueness on the common pair. -/
+theorem composeForm_respects (D : ℤ) (hD : D < 0) (F₁ G₁ F₂ G₂ : DiscrForms D)
+    (hF : ProperlyEquivalent F₁.1 F₂.1) (hG : ProperlyEquivalent G₁.1 G₂.1) :
+    ProperlyEquivalent (composeForm D hD F₁ G₁).1 (composeForm D hD F₂ G₂).1 := by
+  have hD0 : D ≠ 0 := ne_of_lt hD
+  set h1 := concordance F₁.1 G₁.1 D hD F₁.2.2.2 G₁.2.1 G₁.2.2.1 G₁.2.2.2 with hh1
+  set h2 := concordance F₂.1 G₂.1 D hD F₂.2.2.2 G₂.2.1 G₂.2.2.1 G₂.2.2.2 with hh2
+  obtain ⟨he₁, hd₁, _, ha₁, hcop₁⟩ := h1.choose_spec
+  obtain ⟨he₂, hd₂, _, ha₂, hcop₂⟩ := h2.choose_spec
+  have hcf₁ : (composeForm D hD F₁ G₁).1 = dirichletForm F₁.1 h1.choose := rfl
+  have hcf₂ : (composeForm D hD F₂ G₂).1 = dirichletForm F₂.1 h2.choose := rfl
+  rw [hcf₁, hcf₂]
+  have hF1d : F₁.1.discr = D := F₁.2.1
+  have hF2d : F₂.1.discr = D := F₂.2.1
+  have hE1 : (dirichletForm F₁.1 h1.choose).discr = D :=
+    dirichletForm_discr_of_coprime _ _ D hF1d hd₁ hcop₁
+  have hE2 : (dirichletForm F₂.1 h2.choose).discr = D :=
+    dirichletForm_discr_of_coprime _ _ D hF2d hd₂ hcop₂
+  have hdc₁ : DirectlyComposes F₁.1 h1.choose (dirichletForm F₁.1 h1.choose) :=
+    dirichletForm_directlyComposes _ _ D hD hF1d hd₁ F₁.2.2.2 ha₁ hcop₁
+  have hdc₂ : DirectlyComposes F₂.1 h2.choose (dirichletForm F₂.1 h2.choose) :=
+    dirichletForm_directlyComposes _ _ D hD hF2d hd₂ F₂.2.2.2 ha₂ hcop₂
+  have step1 : DirectlyComposes F₂.1 h1.choose (dirichletForm F₁.1 h1.choose) :=
+    directlyComposes_of_properlyEquivalent_left F₁.1 h1.choose _ F₂.1 hdc₁ hF
+      F₁.2.2.2.ne' (by rw [hd₁, hE1]) (by rw [hE1]; exact hD0)
+  have hchain : ProperlyEquivalent h1.choose h2.choose :=
+    properlyEquivalent_equivalence.trans
+      (properlyEquivalent_equivalence.trans (properlyEquivalent_equivalence.symm he₁) hG) he₂
+  have step2 : DirectlyComposes F₂.1 h2.choose (dirichletForm F₁.1 h1.choose) :=
+    directlyComposes_of_properlyEquivalent_right F₂.1 h1.choose _ h2.choose step1 hchain ha₁.ne'
+      (by rw [hF2d, hE1]) (by rw [hE1]; exact hD0)
+  exact directlyComposes_unique_of_coprime F₂.1 h2.choose _ _ D hD hF2d hd₂
+    (Int.isCoprime_iff_gcd_eq_one.mpr hcop₂) step2 hE1 hdc₂ hE2
+
+/-- **Commutativity of the form-level composite** (Cox Thm 3.9). -/
+theorem composeForm_comm (D : ℤ) (hD : D < 0) (F G : DiscrForms D) :
+    ProperlyEquivalent (composeForm D hD F G).1 (composeForm D hD G F).1 := by
+  have hD0 : D ≠ 0 := ne_of_lt hD
+  set h1 := concordance F.1 G.1 D hD F.2.2.2 G.2.1 G.2.2.1 G.2.2.2 with hh1
+  set h2 := concordance G.1 F.1 D hD G.2.2.2 F.2.1 F.2.2.1 F.2.2.2 with hh2
+  obtain ⟨he₁, hd₁, _, ha₁, hcop₁⟩ := h1.choose_spec
+  obtain ⟨he₂, hd₂, _, ha₂, hcop₂⟩ := h2.choose_spec
+  have hcf₁ : (composeForm D hD F G).1 = dirichletForm F.1 h1.choose := rfl
+  have hcf₂ : (composeForm D hD G F).1 = dirichletForm G.1 h2.choose := rfl
+  rw [hcf₁, hcf₂]
+  have hFd : F.1.discr = D := F.2.1
+  have hGd : G.1.discr = D := G.2.1
+  have hE1 : (dirichletForm F.1 h1.choose).discr = D :=
+    dirichletForm_discr_of_coprime _ _ D hFd hd₁ hcop₁
+  have hE2 : (dirichletForm G.1 h2.choose).discr = D :=
+    dirichletForm_discr_of_coprime _ _ D hGd hd₂ hcop₂
+  have hdc₁ : DirectlyComposes F.1 h1.choose (dirichletForm F.1 h1.choose) :=
+    dirichletForm_directlyComposes _ _ D hD hFd hd₁ F.2.2.2 ha₁ hcop₁
+  have hdc₂ : DirectlyComposes G.1 h2.choose (dirichletForm G.1 h2.choose) :=
+    dirichletForm_directlyComposes _ _ D hD hGd hd₂ G.2.2.2 ha₂ hcop₂
+  have hsw : DirectlyComposes h2.choose G.1 (dirichletForm G.1 h2.choose) :=
+    directlyComposes_symm _ _ _ hdc₂
+  have s1 : DirectlyComposes F.1 G.1 (dirichletForm G.1 h2.choose) :=
+    directlyComposes_of_properlyEquivalent_left h2.choose G.1 _ F.1 hsw
+      (properlyEquivalent_equivalence.symm he₂) ha₂.ne' (by rw [hGd, hE2]) (by rw [hE2]; exact hD0)
+  have s2 : DirectlyComposes F.1 h1.choose (dirichletForm G.1 h2.choose) :=
+    directlyComposes_of_properlyEquivalent_right F.1 G.1 _ h1.choose s1 he₁ G.2.2.2.ne'
+      (by rw [hFd, hE2]) (by rw [hE2]; exact hD0)
+  exact directlyComposes_unique_of_coprime F.1 h1.choose _ _ D hD hFd hd₁
+    (Int.isCoprime_iff_gcd_eq_one.mpr hcop₁) hdc₁ hE1 s2 hE2
+
 end PrimesX2NY2.Genus
+
+/-! ## The class group operation
+
+`compose` and the Cox §3 class-group theorems live here rather than in `FormClassGroup.lean`
+because defining `compose` requires `composeForm`/`concordance`/`DirectlyComposes`, which are
+downstream of that file in the import DAG. The declarations keep their fully-qualified
+`PrimesX2NY2.Forms.*` names, so blueprint nodes and callers are unaffected. -/
+
+namespace PrimesX2NY2.Forms
+
+open PrimesX2NY2.Genus
+
+/-- **Dirichlet composition** of two classes of forms of discriminant `D`. (Cox, §3, Thm 3.9.)
+
+Well-defined: `composeForm` is lifted through the quotient by `composeForm_respects`.
+
+Cox defines `C(D)` only for **negative** `D` (Thm 3.9: "Let `D ≡ 0,1 mod 4` be negative"), and the
+composition genuinely needs `D < 0` (concordance, and `D ≠ 0` for the Gauss minor relations). Since
+`compose`'s signature carries no `hD`, the definition branches: on `D < 0` it is the honest
+Dirichlet composition, and off that domain it is the junk projection `fun a _ => a`. Every Cox
+theorem about `compose` carries `hD : D < 0`, so the junk branch is never observed; use
+`compose_mk` to reduce. (Junk-value convention, as with `x / 0 = 0` in Mathlib.) -/
+noncomputable def compose (D : ℤ) : FormClassGroup D → FormClassGroup D → FormClassGroup D :=
+  if hD : D < 0 then
+    Quotient.lift₂ (fun F G => Quotient.mk (properSetoid D) (composeForm D hD F G))
+      (fun F₁ G₁ F₂ G₂ hF hG => Quotient.sound (composeForm_respects D hD F₁ G₁ F₂ G₂ hF hG))
+  else fun a _ => a
+
+/-- The computation rule for `compose` on the negative-discriminant branch. -/
+theorem compose_mk (D : ℤ) (hD : D < 0) (F G : DiscrForms D) :
+    compose D (Quotient.mk (properSetoid D) F) (Quotient.mk (properSetoid D) G)
+      = Quotient.mk (properSetoid D) (composeForm D hD F G) := by
+  simp only [compose, dif_pos hD]; rfl
+
+/-- **Theorem 3.9, commutativity.** Dirichlet composition is commutative on `C(D)`. -/
+theorem compose_comm (D : ℤ) (hD : D < 0) (x y : FormClassGroup D) :
+    compose D x y = compose D y x := by
+  induction x using Quotient.inductionOn with | _ F =>
+  induction y using Quotient.inductionOn with | _ G =>
+  rw [compose_mk D hD F G, compose_mk D hD G F]
+  exact Quotient.sound (composeForm_comm D hD F G)
+
+/-- **Theorem 3.9, identity.** The principal class is a (two-sided, by `compose_comm`) identity. -/
+theorem compose_principalClass (D : ℤ) (hD : D < 0) (hD4 : D % 4 = 0 ∨ D % 4 = 1)
+    (x : FormClassGroup D) : compose D x (principalClass D hD4) = x := by
+  induction x using Quotient.inductionOn with | _ F =>
+  have hPeq : principalClass D hD4
+      = Quotient.mk (properSetoid D) (⟨principalForm D, principalForm_discr D hD4,
+          principalForm_primitive D, principalForm_pos D⟩ : DiscrForms D) := rfl
+  rw [hPeq, compose_comm D hD _ _, compose_mk D hD _ F]
+  exact Quotient.sound (composeForm_principal_left D hD F _ rfl)
+
+/-- **Theorem 3.9, associativity** — *STATED, NOT PROVED*.
+
+Cox postpones associativity to §7 (ideal class groups): "The proofs of (i) and (ii) can be done
+directly using the definition of Dirichlet composition (see Dirichlet [28, Supplement X] or Flath
+[36, §V.2]), but the argument is much easier using ideal class groups (to be studied in §7). We
+will therefore postpone this part of the proof until then." Gauss's elementary route (§240) is the
+notorious **28 equations**.
+
+ROUTE (chosen, Wave 20 recon — Dirichlet's *united forms*, i.e. Flath §V.2): pick representatives
+with **pairwise coprime** `a₁,a₂,a₃`, a common `B`, and a common `C` with `B² − 4a₁a₂a₃C = D`, so
+`f ~ ⟨a₁,B,a₂a₃C⟩`, `g ~ ⟨a₂,B,a₁a₃C⟩`, `h ~ ⟨a₃,B,a₁a₂C⟩`. Four instantiations of
+`dirichletForm_directlyComposes_concordant` then give `(f∗g)∗h = ⟨a₁a₂a₃,B,C⟩ = f∗(g∗h)` **on the
+nose** — associativity is `rfl` at the form level, and the 28 equations evaporate (they are already
+paid, once, inside `directlyComposes_minors`/`_right` and `directlyComposes_unique_of_coprime`).
+Needs: triple concordance (clone of `concordance`), a common `B` (two applications of `lemma_3_2`),
+and `compose_eq_of_directlyComposes`. Estimated 300–400 lines. -/
+theorem class_group_mul_assoc (D : ℤ) (hD : D < 0) (x y z : FormClassGroup D) :
+    compose D (compose D x y) z = compose D x (compose D y z) := sorry
+
+/-- **Theorem 3.9** (Cox §3). For `D < 0`, Dirichlet composition makes `C(D)` a
+finite abelian group: it is associative and commutative, the principal class is a
+right identity, and every class has an inverse. (Faithful replacement of the
+earlier vacuous `Nonempty (CommGroup …)`, which holds for any nonempty type.)
+
+Commutativity and the identity are discharged (`compose_comm`, `compose_principalClass`);
+associativity is `class_group_mul_assoc` (stubbed, route pinned) and the inverse is
+`thm_3_9_inverse` (stubbed). -/
+theorem isCommGroup (D : ℤ) (hD : D < 0) (hD4 : D % 4 = 0 ∨ D % 4 = 1) :
+    (∀ x y z : FormClassGroup D, compose D (compose D x y) z = compose D x (compose D y z))
+      ∧ (∀ x y : FormClassGroup D, compose D x y = compose D y x)
+      ∧ (∀ x : FormClassGroup D, compose D x (principalClass D hD4) = x)
+      ∧ (∀ x : FormClassGroup D, ∃ y : FormClassGroup D, compose D x y = principalClass D hD4) := by
+  sorry
+
+/-- **Theorem 3.9, inverse** (Cox §3). The inverse of the class of `f` is the class
+of the opposite form `a x² − b x y + c y²`. -/
+theorem thm_3_9_inverse (D : ℤ) (f : BinaryQF) (hd : f.discr = D)
+    (hp : f.Primitive) (ha : 0 < f.a)
+    (hd' : f.opposite.discr = D) (hp' : f.opposite.Primitive) (ha' : 0 < f.opposite.a) :
+    compose D (classOf D f ⟨hd, hp, ha⟩) (classOf D f.opposite ⟨hd', hp', ha'⟩)
+      = principalClass D (by rw [← hd]; exact discr_mod_four f) := by
+  sorry
+
+/-- **Lemma 3.10** (Cox §3). A reduced primitive form `f = a x²+ b x y + c y²` of
+discriminant `D` has order `≤ 2` in `C(D)` (its class squares to the principal
+class) iff `b = 0`, `a = b`, or `a = c`. -/
+theorem lemma_3_10 (D : ℤ) (f : BinaryQF) (hd : f.discr = D) (hp : f.Primitive)
+    (ha : 0 < f.a) (hr : f.Reduced) :
+    compose D (classOf D f ⟨hd, hp, ha⟩) (classOf D f ⟨hd, hp, ha⟩)
+      = principalClass D (by rw [← hd]; exact discr_mod_four f)
+      ↔ (f.b = 0 ∨ f.a = f.b ∨ f.a = f.c) := by
+  sorry
+
+/-- **Proposition 3.11** (Cox §3). For `D ≡ 0,1 (mod 4)` negative, the class group
+`C(D)` has exactly `2^{μ−1}` elements of order `≤ 2`, where `μ = mu D`. -/
+theorem prop_3_11 (D : ℤ) (hD : D < 0) (hD4 : D % 4 = 0 ∨ D % 4 = 1) :
+    {x : FormClassGroup D | compose D x x = principalClass D hD4}.ncard = 2 ^ (mu D - 1) := by
+  sorry
+
+end PrimesX2NY2.Forms
