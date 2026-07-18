@@ -990,6 +990,90 @@ theorem composeForm_comm (D : ℤ) (hD : D < 0) (F G : DiscrForms D) :
   exact directlyComposes_unique_of_coprime F.1 h1.choose _ _ D hD hFd hd₁
     (Int.isCoprime_iff_gcd_eq_one.mpr hcop₁) hdc₁ hE1 s2 hE2
 
+/-- **Dirichlet's united triple.** Any three forms of the same negative discriminant can be
+replaced by properly equivalent forms whose positive leading coefficients are pairwise coprime
+and whose middle coefficient is one common `B`. Their final coefficients then have the united
+shape determined by one `C`, with `B² - 4a₁a₂a₃C = D`.
+
+Choose the second leading coefficient coprime to the first by `concordance`, then choose the
+third coprime to their product. The common `B` is `exists_commonB_three`; exact division gives
+`C`, and `translation_equiv_proj` supplies the three proper equivalences. -/
+theorem exists_united_triple (D : ℤ) (hD : D < 0) (F G H : DiscrForms D) :
+    ∃ (F' G' H' : DiscrForms D) (B C : ℤ),
+      ProperlyEquivalent F.1 F'.1 ∧
+      ProperlyEquivalent G.1 G'.1 ∧
+      ProperlyEquivalent H.1 H'.1 ∧
+      Int.gcd F'.1.a G'.1.a = 1 ∧
+      Int.gcd F'.1.a H'.1.a = 1 ∧
+      Int.gcd G'.1.a H'.1.a = 1 ∧
+      F'.1 = ⟨F'.1.a, B, G'.1.a * H'.1.a * C⟩ ∧
+      G'.1 = ⟨G'.1.a, B, F'.1.a * H'.1.a * C⟩ ∧
+      H'.1 = ⟨H'.1.a, B, F'.1.a * G'.1.a * C⟩ ∧
+      B ^ 2 - 4 * F'.1.a * G'.1.a * H'.1.a * C = D := by
+  obtain ⟨g, hGg, hgd, hgp, hga, h12⟩ :=
+    concordance F.1 G.1 D hD F.2.2.2 G.2.1 G.2.2.1 G.2.2.2
+  let P : BinaryQF := ⟨F.1.a * g.a, 0, 0⟩
+  have hPa : 0 < P.a := by
+    dsimp [P]
+    exact mul_pos F.2.2.2 hga
+  obtain ⟨h, hHh, hhd, hhp, hha, h123⟩ :=
+    concordance P H.1 D hD hPa H.2.1 H.2.2.1 H.2.2.2
+  have h123' : Int.gcd (F.1.a * g.a) h.a = 1 := by
+    simpa [P] using h123
+  have hi123 : IsCoprime (F.1.a * g.a) h.a :=
+    Int.isCoprime_iff_gcd_eq_one.mpr h123'
+  have h13 : Int.gcd F.1.a h.a = 1 :=
+    Int.isCoprime_iff_gcd_eq_one.mp hi123.of_mul_left_left
+  have h23 : Int.gcd g.a h.a = 1 :=
+    Int.isCoprime_iff_gcd_eq_one.mp hi123.of_mul_left_right
+  obtain ⟨B, hB1, hB2, hB3, hBsq⟩ :=
+    exists_commonB_three F.1.a F.1.b F.1.c g.a g.b g.c h.a h.b h.c D
+      F.2.1 hgd hhd h12 h13 h23
+  set C := (B ^ 2 - D) / (4 * F.1.a * g.a * h.a) with hCdef
+  have hCmul : 4 * F.1.a * g.a * h.a * C = B ^ 2 - D := by
+    simpa [hCdef] using commonC_three F.1.a g.a h.a B D hBsq
+  let fU : BinaryQF := ⟨F.1.a, B, g.a * h.a * C⟩
+  let gU : BinaryQF := ⟨g.a, B, F.1.a * h.a * C⟩
+  let hU : BinaryQF := ⟨h.a, B, F.1.a * g.a * C⟩
+  have hfUd : fU.discr = D := by
+    simp only [fU, BinaryQF.discr]
+    linear_combination -hCmul
+  have hgUd : gU.discr = D := by
+    simp only [gU, BinaryQF.discr]
+    linear_combination -hCmul
+  have hhUd : hU.discr = D := by
+    simp only [hU, BinaryQF.discr]
+    linear_combination -hCmul
+  have hFfU : ProperlyEquivalent F.1 fU := by
+    refine translation_equiv_proj F.1 fU F.2.2.2.ne' rfl ?_ ?_
+    · exact Int.ModEq.dvd hB1.symm
+    · rw [F.2.1, hfUd]
+  have hggU : ProperlyEquivalent g gU := by
+    refine translation_equiv_proj g gU hga.ne' rfl ?_ ?_
+    · exact Int.ModEq.dvd hB2.symm
+    · rw [hgd, hgUd]
+  have hhhU : ProperlyEquivalent h hU := by
+    refine translation_equiv_proj h hU hha.ne' rfl ?_ ?_
+    · exact Int.ModEq.dvd hB3.symm
+    · rw [hhd, hhUd]
+  have hfUp : fU.Primitive := (primitive_of_properlyEquivalent hFfU).mp F.2.2.1
+  have hgUp : gU.Primitive := (primitive_of_properlyEquivalent hggU).mp hgp
+  have hhUp : hU.Primitive := (primitive_of_properlyEquivalent hhhU).mp hhp
+  let F' : DiscrForms D := ⟨fU, hfUd, hfUp, by simpa [fU] using F.2.2.2⟩
+  let G' : DiscrForms D := ⟨gU, hgUd, hgUp, by simpa [gU] using hga⟩
+  let H' : DiscrForms D := ⟨hU, hhUd, hhUp, by simpa [hU] using hha⟩
+  refine ⟨F', G', H', B, C, hFfU,
+    properlyEquivalent_equivalence.trans hGg hggU,
+    properlyEquivalent_equivalence.trans hHh hhhU, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · simpa [F', G', fU, gU] using h12
+  · simpa [F', H', fU, hU] using h13
+  · simpa [G', H', gU, hU] using h23
+  · rfl
+  · rfl
+  · rfl
+  · simp only [F', G', H', fU, gU, hU]
+    linarith
+
 end PrimesX2NY2.Genus
 
 /-! ## The class group operation
