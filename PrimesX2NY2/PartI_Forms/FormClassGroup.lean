@@ -270,6 +270,56 @@ theorem lemma_3_2 (a b c a' b' c' D : ℤ)
     · exact f2
   exact (simultaneous_congruence_unique 3 p q m hbez B B' hBlin hB'lin).symm
 
+/-- **Three-way common middle coefficient.** Iterating Lemma 3.2 gives one `B` congruent to
+the middle coefficients of three equal-discriminant forms modulo their respective `2aᵢ`, when
+their leading coefficients are pairwise coprime. The second application uses the intermediate
+form of leading coefficient `a₁a₂`; its congruence modulo `2a₁a₂` weakens to the first two
+moduli. This is the arithmetic core of Dirichlet's united-forms associativity argument. -/
+theorem exists_commonB_three (a1 b1 c1 a2 b2 c2 a3 b3 c3 D : ℤ)
+    (h1 : b1 ^ 2 - 4 * a1 * c1 = D)
+    (h2 : b2 ^ 2 - 4 * a2 * c2 = D)
+    (h3 : b3 ^ 2 - 4 * a3 * c3 = D)
+    (h12 : Int.gcd a1 a2 = 1) (h13 : Int.gcd a1 a3 = 1)
+    (h23 : Int.gcd a2 a3 = 1) :
+    ∃ B : ℤ, (B ≡ b1 [ZMOD 2 * a1]) ∧ (B ≡ b2 [ZMOD 2 * a2])
+      ∧ (B ≡ b3 [ZMOD 2 * a3]) ∧ (B ^ 2 ≡ D [ZMOD 4 * a1 * a2 * a3]) := by
+  have hc12 : Int.gcd (Int.gcd a1 a2) ((b1 + b2) / 2) = 1 := by
+    rw [h12]
+    simp
+  obtain ⟨B12, hB121, hB122, hB12sq, _⟩ :=
+    lemma_3_2 a1 b1 c1 a2 b2 c2 D h1 h2 hc12
+  set C12 := (B12 ^ 2 - D) / (4 * a1 * a2) with hC12
+  have hdvd12 : (4 * a1 * a2) ∣ (B12 ^ 2 - D) := Int.ModEq.dvd hB12sq.symm
+  have hmul12 : (4 * a1 * a2) * C12 = B12 ^ 2 - D := by
+    rw [hC12]
+    exact Int.mul_ediv_cancel' hdvd12
+  have hF12 : B12 ^ 2 - 4 * (a1 * a2) * C12 = D := by
+    calc
+      B12 ^ 2 - 4 * (a1 * a2) * C12 = B12 ^ 2 - (4 * a1 * a2) * C12 := by ring
+      _ = D := by linarith
+  have hi13 : IsCoprime a1 a3 := Int.isCoprime_iff_gcd_eq_one.mpr h13
+  have hi23 : IsCoprime a2 a3 := Int.isCoprime_iff_gcd_eq_one.mpr h23
+  have hprod : Int.gcd (a1 * a2) a3 = 1 :=
+    Int.isCoprime_iff_gcd_eq_one.mp (hi13.mul_left hi23)
+  have hc123 : Int.gcd (Int.gcd (a1 * a2) a3) ((B12 + b3) / 2) = 1 := by
+    rw [hprod]
+    simp
+  obtain ⟨B, hBB12, hB3, hBsq, _⟩ :=
+    lemma_3_2 (a1 * a2) B12 C12 a3 b3 c3 D hF12 h3 hc123
+  refine ⟨B, ?_, ?_, hB3, ?_⟩
+  · exact (hBB12.of_dvd ⟨a2, by ring⟩).trans hB121
+  · exact (hBB12.of_dvd ⟨a1, by ring⟩).trans hB122
+  · simpa [mul_assoc] using hBsq
+
+/-- Materialize the common final coefficient in a united triple. The square congruence supplied
+by `exists_commonB_three` says exactly that the Euclidean division is exact. -/
+theorem commonC_three (a1 a2 a3 B D : ℤ)
+    (hsq : B ^ 2 ≡ D [ZMOD 4 * a1 * a2 * a3]) :
+    let C := (B ^ 2 - D) / (4 * a1 * a2 * a3)
+    4 * a1 * a2 * a3 * C = B ^ 2 - D := by
+  dsimp
+  exact Int.mul_ediv_cancel' (Int.ModEq.dvd hsq.symm)
+
 open Classical in
 /-- The integer `B` of Lemma 3.2 for the pair `f, g`: chosen (via `lemma_3_2`) when the
 forms share a discriminant and satisfy the coprimality condition, and an arbitrary value
