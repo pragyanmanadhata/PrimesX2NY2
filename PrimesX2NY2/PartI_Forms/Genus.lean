@@ -389,6 +389,20 @@ theorem dirichletForm_directlyComposes_concordant (a a' B C : ℤ) :
     by simp only [BinaryQF.eval]; ring,
     by simp only [BinaryQF.eval]; ring⟩
 
+/-- A form and its opposite directly compose to the discriminant-preserving form
+`⟨1, b, ac⟩`. Its leading coefficient is `1`, so `principal_of_a_one` identifies its class
+with the principal class. This is the norm identity underlying the inverse in Cox Theorem 3.9. -/
+theorem directlyComposes_opposite_one (f : BinaryQF) :
+    DirectlyComposes f f.opposite (⟨1, f.b, f.a * f.c⟩ : BinaryQF) := by
+  refine ⟨f.a, -f.b, 0, -f.c, 0, 1, 1, 0, ?_, ?_, ?_⟩
+  · intro x y z w
+    simp only [BinaryQF.eval, BinaryQF.opposite]
+    ring
+  · simp only [BinaryQF.eval]
+    ring
+  · simp only [BinaryQF.eval, BinaryQF.opposite]
+    ring
+
 /-- **Commutativity of Dirichlet composition up to proper equivalence.** `dirichletForm f g ~
 dirichletForm g f`: the two composites have equal leading coefficient `f.a·g.a` and their
 `B`-values agree modulo `2 f.a g.a` (both solve the same simultaneous congruences, so are equal
@@ -867,6 +881,23 @@ theorem dirichletForm_directlyComposes (f g : BinaryQF) (D : ℤ) (hD : D < 0)
   exact directlyComposes_of_properlyEquivalent_right f _ _ g step1 hge hga.ne'
     (by rw [hf, hdiscrFG]) hG0'
 
+/-- The chosen representative-level composite is a direct composition of the original pair.
+The definition first replaces the second form by a coprime properly equivalent representative;
+Cox 3.5(c) transports the direct-composition identity back to the original representative. -/
+theorem composeForm_directlyComposes (D : ℤ) (hD : D < 0) (F G : DiscrForms D) :
+    DirectlyComposes F.1 G.1 (composeForm D hD F G).1 := by
+  set hc := concordance F.1 G.1 D hD F.2.2.2 G.2.1 G.2.2.1 G.2.2.2 with hhc
+  obtain ⟨he, hd, _, ha, hcop⟩ := hc.choose_spec
+  have hcf : (composeForm D hD F G).1 = dirichletForm F.1 hc.choose := rfl
+  rw [hcf]
+  have hdc : DirectlyComposes F.1 hc.choose (dirichletForm F.1 hc.choose) :=
+    dirichletForm_directlyComposes F.1 hc.choose D hD F.2.1 hd F.2.2.2 ha hcop
+  have hE : (dirichletForm F.1 hc.choose).discr = D :=
+    dirichletForm_discr_of_coprime F.1 hc.choose D F.2.1 hd hcop
+  exact directlyComposes_of_properlyEquivalent_right F.1 hc.choose _ G.1 hdc
+    (properlyEquivalent_equivalence.symm he) ha.ne'
+    (by rw [F.2.1, hE]) (by rw [hE]; exact ne_of_lt hD)
+
 /-- **(3i) Concordant-choice invariance** — the Dirichlet composite does not depend (up to `~`) on
 which concordant representative is chosen. Carries the `hD : D < 0` that the bare
 `concordant_choice_invariant` lacks (see the FLAG there). -/
@@ -994,6 +1025,20 @@ theorem compose_mk (D : ℤ) (hD : D < 0) (F G : DiscrForms D) :
       = Quotient.mk (properSetoid D) (composeForm D hD F G) := by
   simp only [compose, dif_pos hD]; rfl
 
+/-- Any direct composition of a coprime pair represents the class product. The canonical
+`composeForm` and the supplied direct composite are properly equivalent by uniqueness of direct
+composition, so their quotient classes agree. -/
+theorem compose_eq_of_directlyComposes (D : ℤ) (hD : D < 0)
+    (F G P : DiscrForms D) (hcop : IsCoprime F.1.a G.1.a)
+    (hP : DirectlyComposes F.1 G.1 P.1) :
+    compose D (Quotient.mk (properSetoid D) F) (Quotient.mk (properSetoid D) G)
+      = Quotient.mk (properSetoid D) P := by
+  rw [compose_mk D hD F G]
+  exact Quotient.sound
+    (directlyComposes_unique_of_coprime F.1 G.1 (composeForm D hD F G).1 P.1 D
+      hD F.2.1 G.2.1 hcop (composeForm_directlyComposes D hD F G)
+      (composeForm_discr D hD F G) hP P.2.1)
+
 /-- **Theorem 3.9, commutativity.** Dirichlet composition is commutative on `C(D)`. -/
 theorem compose_comm (D : ℤ) (hD : D < 0) (x y : FormClassGroup D) :
     compose D x y = compose D y x := by
@@ -1048,12 +1093,34 @@ theorem isCommGroup (D : ℤ) (hD : D < 0) (hD4 : D % 4 = 0 ∨ D % 4 = 1) :
 
 /-- **Theorem 3.9, inverse** (Cox §3). The inverse of the class of `f` is the class
 of the opposite form `a x² − b x y + c y²`. -/
-theorem thm_3_9_inverse (D : ℤ) (f : BinaryQF) (hd : f.discr = D)
+theorem thm_3_9_inverse (D : ℤ) (hD : D < 0) (f : BinaryQF) (hd : f.discr = D)
     (hp : f.Primitive) (ha : 0 < f.a)
     (hd' : f.opposite.discr = D) (hp' : f.opposite.Primitive) (ha' : 0 < f.opposite.a) :
     compose D (classOf D f ⟨hd, hp, ha⟩) (classOf D f.opposite ⟨hd', hp', ha'⟩)
       = principalClass D (by rw [← hd]; exact discr_mod_four f) := by
-  sorry
+  let F : DiscrForms D := ⟨f, hd, hp, ha⟩
+  let Q : BinaryQF := ⟨1, f.b, f.a * f.c⟩
+  have hQd : Q.discr = D := by
+    change f.b ^ 2 - 4 * 1 * (f.a * f.c) = D
+    rw [show 4 * 1 * (f.a * f.c) = 4 * f.a * f.c by ring]
+    exact hd
+  have hQp : Q.Primitive := by simp [Q, BinaryQF.Primitive]
+  have hQa : 0 < Q.a := by simp [Q]
+  let P : DiscrForms D := ⟨Q, hQd, hQp, hQa⟩
+  set hc := concordance f f.opposite D hD ha hd' hp' ha' with hhc
+  let G : DiscrForms D :=
+    ⟨hc.choose, hc.choose_spec.2.1, hc.choose_spec.2.2.1, hc.choose_spec.2.2.2.1⟩
+  have hOG : classOf D f.opposite ⟨hd', hp', ha'⟩ =
+      Quotient.mk (properSetoid D) G := Quotient.sound hc.choose_spec.1
+  rw [hOG]
+  have hDC0 : DirectlyComposes f f.opposite Q := directlyComposes_opposite_one f
+  have hDC : DirectlyComposes f G.1 Q :=
+    directlyComposes_of_properlyEquivalent_right f f.opposite Q G.1 hDC0
+      hc.choose_spec.1 ha'.ne' (by rw [hd, hQd]) (by rw [hQd]; exact ne_of_lt hD)
+  change compose D (Quotient.mk (properSetoid D) F) (Quotient.mk (properSetoid D) G) = _
+  rw [compose_eq_of_directlyComposes D hD F G P
+    (Int.isCoprime_iff_gcd_eq_one.mpr hc.choose_spec.2.2.2.2) hDC]
+  exact Quotient.sound (principal_of_a_one D Q hQd rfl)
 
 /-- **Lemma 3.10** (Cox §3). A reduced primitive form `f = a x²+ b x y + c y²` of
 discriminant `D` has order `≤ 2` in `C(D)` (its class squares to the principal
