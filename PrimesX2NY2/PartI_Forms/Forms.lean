@@ -195,6 +195,258 @@ theorem reduced_strict_value_rigidity (f : BinaryQF) (hr : f.Reduced)
       have hne_c : f.eval x y ≠ f.c := by linarith
       simp [hne_a, hne_c, hx, hy]
 
+/-- A reduced positive form has its leading coefficient as its least nonzero value. -/
+theorem reduced_le_eval (f : BinaryQF) (hr : f.Reduced) (ha : 0 < f.a)
+    (x y : ℤ) (hxy : x ≠ 0 ∨ y ≠ 0) : f.a ≤ f.eval x y := by
+  rcases eq_or_ne x 0 with rfl | hx
+  · have hy : y ≠ 0 := by tauto
+    have hy2pos : 0 < y ^ 2 := sq_pos_of_ne_zero hy
+    have hy2 : (1 : ℤ) ≤ y ^ 2 := by omega
+    have hc : 0 ≤ f.c := le_trans (le_of_lt ha) hr.2.1
+    calc
+      f.a ≤ f.c := hr.2.1
+      _ = f.c * 1 := by ring
+      _ ≤ f.c * y ^ 2 := mul_le_mul_of_nonneg_left hy2 hc
+      _ = f.eval 0 y := by simp [BinaryQF.eval]
+  · rcases eq_or_ne y 0 with rfl | hy
+    · have hx2pos : 0 < x ^ 2 := sq_pos_of_ne_zero hx
+      have hx2 : (1 : ℤ) ≤ x ^ 2 := by omega
+      calc
+        f.a = f.a * 1 := by ring
+        _ ≤ f.a * x ^ 2 := mul_le_mul_of_nonneg_left hx2 (le_of_lt ha)
+        _ = f.eval x 0 := by simp [BinaryQF.eval]
+    · have hx2pos : 0 < x ^ 2 := sq_pos_of_ne_zero hx
+      have hy2pos : 0 < y ^ 2 := sq_pos_of_ne_zero hy
+      have hx2 : (1 : ℤ) ≤ x ^ 2 := by omega
+      have hy2 : (1 : ℤ) ≤ y ^ 2 := by omega
+      have hmin : (1 : ℤ) ≤ min (x ^ 2) (y ^ 2) := le_min hx2 hy2
+      have hcoeff : f.a ≤ f.a - |f.b| + f.c := by linarith [hr.1, hr.2.1]
+      have hcoeff0 : 0 ≤ f.a - |f.b| + f.c :=
+        le_trans (le_of_lt ha) hcoeff
+      calc
+        f.a = f.a * 1 := by ring
+        _ ≤ (f.a - |f.b| + f.c) * 1 :=
+          mul_le_mul_of_nonneg_right hcoeff (by norm_num)
+        _ ≤ (f.a - |f.b| + f.c) * min (x ^ 2) (y ^ 2) :=
+          mul_le_mul_of_nonneg_left hmin hcoeff0
+        _ ≤ f.eval x y := reduced_eval_lower_bound f hr x y
+
+/-- Equality at the minimum in a reduced positive form can use the second
+coordinate only on the boundary `a = c`. -/
+theorem eq_c_of_reduced_eval_eq_a_of_right_ne_zero (f : BinaryQF)
+    (hr : f.Reduced) (ha : 0 < f.a) (x y : ℤ) (hy : y ≠ 0)
+    (heval : f.eval x y = f.a) : f.a = f.c := by
+  have hy2pos : 0 < y ^ 2 := sq_pos_of_ne_zero hy
+  have hy2 : (1 : ℤ) ≤ y ^ 2 := by omega
+  rcases eq_or_ne x 0 with rfl | hx
+  · have hc : 0 ≤ f.c := le_trans (le_of_lt ha) hr.2.1
+    have hcy : f.c ≤ f.c * y ^ 2 := by
+      simpa using mul_le_mul_of_nonneg_left hy2 hc
+    have hca : f.c ≤ f.a := by
+      rw [← heval]
+      simpa [BinaryQF.eval] using hcy
+    exact le_antisymm hr.2.1 hca
+  · have hx2pos : 0 < x ^ 2 := sq_pos_of_ne_zero hx
+    have hx2 : (1 : ℤ) ≤ x ^ 2 := by omega
+    have hmin : (1 : ℤ) ≤ min (x ^ 2) (y ^ 2) := le_min hx2 hy2
+    have hc_le_coeff : f.c ≤ f.a - |f.b| + f.c := by linarith [hr.1]
+    have hcoeff0 : 0 ≤ f.a - |f.b| + f.c := by
+      linarith [ha, hr.1, hr.2.1]
+    have hc_le_eval : f.c ≤ f.eval x y := calc
+      f.c ≤ f.a - |f.b| + f.c := hc_le_coeff
+      _ = (f.a - |f.b| + f.c) * 1 := by ring
+      _ ≤ (f.a - |f.b| + f.c) * min (x ^ 2) (y ^ 2) :=
+        mul_le_mul_of_nonneg_left hmin hcoeff0
+      _ ≤ f.eval x y := reduced_eval_lower_bound f hr x y
+    rw [heval] at hc_le_eval
+    exact le_antisymm hr.2.1 hc_le_eval
+
+/-- A reduced middle coefficient is unique in its residue class modulo `2a`.
+The endpoint convention excludes the only two possible wraparounds. -/
+private theorem reduced_middle_eq_of_two_mul_dvd
+    {a b b' : ℤ} (ha : 0 < a) (hb : |b| ≤ a) (hb' : |b'| ≤ a)
+    (htie : |b| = a → 0 ≤ b) (htie' : |b'| = a → 0 ≤ b')
+    (hdvd : 2 * a ∣ b' - b) : b' = b := by
+  have hb_bounds : -a ≤ b ∧ b ≤ a := abs_le.mp hb
+  have hb'_bounds : -a ≤ b' ∧ b' ≤ a := abs_le.mp hb'
+  have hb_lower : -a < b := by
+    rcases eq_or_lt_of_le hb_bounds.1 with heq | hlt
+    · have habs : |b| = a := by
+        rw [← heq, abs_neg, abs_of_nonneg (le_of_lt ha)]
+      have := htie habs
+      omega
+    · exact hlt
+  have hb'_lower : -a < b' := by
+    rcases eq_or_lt_of_le hb'_bounds.1 with heq | hlt
+    · have habs : |b'| = a := by
+        rw [← heq, abs_neg, abs_of_nonneg (le_of_lt ha)]
+      have := htie' habs
+      omega
+    · exact hlt
+  have habs_sub : |b' - b| < 2 * a := by
+    rw [abs_lt]
+    constructor <;> omega
+  have hz : b' - b = 0 := Int.eq_zero_of_abs_lt_dvd hdvd habs_sub
+  omega
+
+private theorem binaryQF_eq_of_coeff_eq (f g : BinaryQF)
+    (ha : f.a = g.a) (hb : f.b = g.b) (hc : f.c = g.c) : f = g := by
+  obtain ⟨fa, fb, fc⟩ := f
+  obtain ⟨ga, gb, gc⟩ := g
+  simp_all
+
+/-- Two properly equivalent reduced positive definite forms coincide, including
+the square and hexagonal boundary cases. This is the uniqueness half of reduction. -/
+theorem reduced_eq_of_properlyEquivalent (f g : BinaryQF)
+    (hf : f.Reduced) (hg : g.Reduced) (hfp : f.PosDef)
+    (h : ProperlyEquivalent f g) : f = g := by
+  obtain ⟨M, hM, hMf⟩ := h
+  have hcolM : M 0 0 ≠ 0 ∨ M 1 0 ≠ 0 := by
+    by_contra hzero
+    simp only [not_or, not_not] at hzero
+    have : M.det = 0 := by simp [Matrix.det_fin_two, hzero.1, hzero.2]
+    omega
+  have hga_eval : g.a = f.eval (M 0 0) (M 1 0) := by
+    rw [← hMf]
+    simp [action, BinaryQF.eval]
+  have haf_le : f.a ≤ g.a := by
+    rw [hga_eval]
+    exact reduced_le_eval f hf hfp.1 _ _ hcolM
+  have hgD : g.discr < 0 := by
+    rw [← discr_eq_of_properlyEquivalent ⟨M, hM, hMf⟩]
+    exact hfp.2
+  have hga0 : 0 ≤ g.a := le_trans (abs_nonneg g.b) hg.1
+  have hga_pos : 0 < g.a := by
+    by_contra hnot
+    have hga_zero : g.a = 0 := by omega
+    simp only [BinaryQF.discr, hga_zero, mul_zero, zero_mul, sub_zero] at hgD
+    nlinarith [sq_nonneg g.b]
+  have hsym : ProperlyEquivalent g f :=
+    properlyEquivalent_equivalence.symm ⟨M, hM, hMf⟩
+  obtain ⟨N, hN, hNg⟩ := hsym
+  have hcolN : N 0 0 ≠ 0 ∨ N 1 0 ≠ 0 := by
+    by_contra hzero
+    simp only [not_or, not_not] at hzero
+    have : N.det = 0 := by simp [Matrix.det_fin_two, hzero.1, hzero.2]
+    omega
+  have hfa_eval : f.a = g.eval (N 0 0) (N 1 0) := by
+    rw [← hNg]
+    simp [action, BinaryQF.eval]
+  have hga_le : g.a ≤ f.a := by
+    rw [hfa_eval]
+    exact reduced_le_eval g hg hga_pos _ _ hcolN
+  have haeq : f.a = g.a := le_antisymm haf_le hga_le
+  have hminM : f.eval (M 0 0) (M 1 0) = f.a := by rw [← hga_eval, ← haeq]
+  have hdet : M 0 0 * M 1 1 - M 0 1 * M 1 0 = 1 := by
+    simpa [Matrix.det_fin_two] using hM
+  have hgb : g.b =
+      2 * f.a * M 0 0 * M 0 1 +
+        f.b * (M 0 0 * M 1 1 + M 0 1 * M 1 0) +
+          2 * f.c * M 1 0 * M 1 1 := by
+    rw [← hMf]
+    rfl
+  rcases eq_or_ne (M 1 0) 0 with hr0 | hr0
+  · have hdiv : 2 * f.a ∣ g.b - f.b := by
+      simp only [hr0, mul_zero, zero_mul, add_zero] at hdet hgb
+      refine ⟨M 0 0 * M 0 1, ?_⟩
+      rw [hgb]
+      linear_combination f.b * hdet
+    have hb_eq : g.b = f.b := reduced_middle_eq_of_two_mul_dvd hfp.1 hf.1
+      (by simpa only [haeq] using hg.1) (fun heq ↦ hf.2.2 (Or.inl heq))
+      (fun heq ↦ hg.2.2 (Or.inl (by rwa [← haeq]))) hdiv
+    have hdisc := discr_eq_of_properlyEquivalent ⟨M, hM, hMf⟩
+    simp only [BinaryQF.discr] at hdisc
+    rw [hb_eq, ← haeq] at hdisc
+    have hprod_eq : f.a * (g.c - f.c) = 0 := by nlinarith
+    have hceq : f.c = g.c := by
+      rcases mul_eq_zero.mp hprod_eq with ha0 | hca0
+      · omega
+      · omega
+    exact binaryQF_eq_of_coeff_eq f g haeq hb_eq.symm hceq
+  · have hac : f.a = f.c :=
+      eq_c_of_reduced_eval_eq_a_of_right_ne_zero f hf hfp.1 _ _ hr0 hminM
+    rcases eq_or_lt_of_le hf.1 with hhex | hstrict
+    · have hfb0 : 0 ≤ f.b := hf.2.2 (Or.inl hhex)
+      have hfb : f.b = f.a := by
+        rw [abs_of_nonneg hfb0] at hhex
+        exact hhex
+      have hgb_bounds : -f.a ≤ g.b ∧ g.b ≤ f.a := by
+        have := abs_le.mp hg.1
+        omega
+      have hgc_lower : f.a ≤ g.c := by
+        rw [haeq]
+        exact hg.2.1
+      have hgb_sq : g.b ^ 2 ≤ f.a ^ 2 := by
+        have hsum : 0 ≤ f.a + g.b := by omega
+        have hmul : 0 ≤ (f.a - g.b) * (f.a + g.b) :=
+          mul_nonneg (sub_nonneg.mpr hgb_bounds.2) hsum
+        nlinarith
+      have hdisc := discr_eq_of_properlyEquivalent ⟨M, hM, hMf⟩
+      simp only [BinaryQF.discr] at hdisc
+      rw [hfb, ← hac, ← haeq] at hdisc
+      have hprod0 : 0 ≤ f.a * (g.c - f.a) :=
+        mul_nonneg (le_of_lt hfp.1) (sub_nonneg.mpr hgc_lower)
+      have hprod_eq : f.a * (g.c - f.a) = 0 := by
+        nlinarith [hgb_sq, hprod0]
+      have hgc : g.c = f.a := by
+        rcases mul_eq_zero.mp hprod_eq with ha0 | hca0
+        · omega
+        · omega
+      rw [hgc] at hdisc
+      have hgb_sq_eq : g.b ^ 2 = f.a ^ 2 := by nlinarith
+      have hgb0 : 0 ≤ g.b := hg.2.2 (Or.inr (by omega))
+      have hgb_eq : g.b = f.a := by
+        rcases eq_or_eq_neg_of_sq_eq_sq g.b f.a hgb_sq_eq with heq | heq
+        · exact heq
+        · omega
+      exact binaryQF_eq_of_coeff_eq f g haeq (by omega) (by omega)
+    · have hp0 : M 0 0 = 0 := by
+        by_contra hp0
+        have hp2pos : 0 < M 0 0 ^ 2 := sq_pos_of_ne_zero hp0
+        have hr2pos : 0 < M 1 0 ^ 2 := sq_pos_of_ne_zero hr0
+        have hp2 : (1 : ℤ) ≤ M 0 0 ^ 2 := by omega
+        have hr2 : (1 : ℤ) ≤ M 1 0 ^ 2 := by omega
+        have hmin : (1 : ℤ) ≤ min (M 0 0 ^ 2) (M 1 0 ^ 2) := le_min hp2 hr2
+        have hcoeff_pos : 0 < f.a - |f.b| + f.c := by linarith
+        have hcoeff_le : f.a - |f.b| + f.c ≤
+            (f.a - |f.b| + f.c) * min (M 0 0 ^ 2) (M 1 0 ^ 2) := by
+          simpa using mul_le_mul_of_nonneg_left hmin (le_of_lt hcoeff_pos)
+        have hlower := reduced_eval_lower_bound f hf (M 0 0) (M 1 0)
+        have : f.a < f.eval (M 0 0) (M 1 0) := by
+          calc
+            f.a < f.a - |f.b| + f.c := by linarith
+            _ ≤ _ := hcoeff_le
+            _ ≤ _ := hlower
+        omega
+      have hdiv : 2 * f.a ∣ g.b - (-f.b) := by
+        rw [← hac] at hgb
+        simp only [hp0, mul_zero, zero_mul, zero_add] at hdet hgb
+        refine ⟨M 1 0 * M 1 1, ?_⟩
+        rw [hgb]
+        linear_combination -f.b * hdet
+      have hneg_tie : |-f.b| = f.a → 0 ≤ -f.b := by
+        intro heq
+        have : |f.b| = f.a := by simpa only [abs_neg] using heq
+        omega
+      have hgb_eq : g.b = -f.b := reduced_middle_eq_of_two_mul_dvd hfp.1
+        (by simpa only [abs_neg] using le_of_lt hstrict)
+        (by simpa only [haeq] using hg.1) hneg_tie
+        (fun heq ↦ hg.2.2 (Or.inl (by rwa [← haeq]))) hdiv
+      have hgb_sq : g.b ^ 2 = f.b ^ 2 := by rw [hgb_eq]; ring
+      have hdisc := discr_eq_of_properlyEquivalent ⟨M, hM, hMf⟩
+      simp only [BinaryQF.discr] at hdisc
+      rw [hgb_sq, ← hac, ← haeq] at hdisc
+      have hprod_eq : f.a * (g.c - f.a) = 0 := by nlinarith
+      have hgc : g.c = f.a := by
+        rcases mul_eq_zero.mp hprod_eq with ha0 | hca0
+        · omega
+        · omega
+      have hfb0 : 0 ≤ f.b := hf.2.2 (Or.inr hac)
+      have hgb0 : 0 ≤ g.b := hg.2.2 (Or.inr (by omega))
+      have hfb : f.b = 0 := by omega
+      have hgb' : g.b = 0 := by omega
+      exact binaryQF_eq_of_coeff_eq f g haeq (by omega) (by omega)
+
 /-- **Reduction theorem** (Cox, Thm 2.8). Every positive definite form is
 properly equivalent to a unique reduced form. -/
 theorem exists_unique_reduced (f : BinaryQF) (hf : f.PosDef) :

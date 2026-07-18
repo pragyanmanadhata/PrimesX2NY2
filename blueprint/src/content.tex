@@ -944,7 +944,14 @@ forces the other coordinate to be $\pm1$, giving exactly the four stated cases.
   \leanok
   Uniqueness part of Theorem 2.8 (exceptional cases).
 \end{theorem}
-\begin{proof}\uses{thm:reduction}\end{proof}
+\begin{proof}\leanok\uses{def:reduced, def:proper_equiv}
+The leading coefficient of a reduced positive form is its least nonzero
+represented value, so proper equivalence in both directions forces the two
+leading coefficients to agree. The first column of the transforming matrix
+then leaves only the interior, square-boundary, and hexagonal-boundary cases;
+the reduction endpoint convention fixes the middle coefficient in each case,
+and equality of discriminants fixes the final coefficient.
+\end{proof}
 
 \begin{theorem}[Exercise 2.9(a)]
   \label{exr:s2_9_a}

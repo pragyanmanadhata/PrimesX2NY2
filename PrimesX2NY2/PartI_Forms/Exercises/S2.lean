@@ -106,7 +106,7 @@ cases `|b| = a`, `a = c`): two properly equivalent reduced positive definite
 forms are equal. -/
 theorem ex_2_8_b (f g : BinaryQF) (hf : f.Reduced) (hg : g.Reduced) (hfp : f.PosDef)
     (h : ProperlyEquivalent f g) : f = g := by
-  sorry
+  exact reduced_eq_of_properlyEquivalent f g hf hg hfp h
 
 /-- **Exercise 2.10(a).** For indefinite nonsquare discriminant, every form is
 properly equivalent to one with `|b| ≤ |a| ≤ |c|`. -/
