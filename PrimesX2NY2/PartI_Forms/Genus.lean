@@ -1141,24 +1141,112 @@ theorem compose_principalClass (D : ℤ) (hD : D < 0) (hD4 : D % 4 = 0 ∨ D % 4
   rw [hPeq, compose_comm D hD _ _, compose_mk D hD _ F]
   exact Quotient.sound (composeForm_principal_left D hD F _ rfl)
 
-/-- **Theorem 3.9, associativity** — *STATED, NOT PROVED*.
-
-Cox postpones associativity to §7 (ideal class groups): "The proofs of (i) and (ii) can be done
-directly using the definition of Dirichlet composition (see Dirichlet [28, Supplement X] or Flath
-[36, §V.2]), but the argument is much easier using ideal class groups (to be studied in §7). We
-will therefore postpone this part of the proof until then." Gauss's elementary route (§240) is the
-notorious **28 equations**.
-
-ROUTE (chosen, Wave 20 recon — Dirichlet's *united forms*, i.e. Flath §V.2): pick representatives
-with **pairwise coprime** `a₁,a₂,a₃`, a common `B`, and a common `C` with `B² − 4a₁a₂a₃C = D`, so
-`f ~ ⟨a₁,B,a₂a₃C⟩`, `g ~ ⟨a₂,B,a₁a₃C⟩`, `h ~ ⟨a₃,B,a₁a₂C⟩`. Four instantiations of
-`dirichletForm_directlyComposes_concordant` then give `(f∗g)∗h = ⟨a₁a₂a₃,B,C⟩ = f∗(g∗h)` **on the
-nose** — associativity is `rfl` at the form level, and the 28 equations evaporate (they are already
-paid, once, inside `directlyComposes_minors`/`_right` and `directlyComposes_unique_of_coprime`).
-Needs: triple concordance (clone of `concordance`), a common `B` (two applications of `lemma_3_2`),
-and `compose_eq_of_directlyComposes`. Estimated 300–400 lines. -/
+/-- **Theorem 3.9, associativity.** Choose united representatives with pairwise coprime
+leading coefficients and common middle coefficient `B`. Both bracketings then directly compose
+to the same form `⟨a₁a₂a₃, B, C⟩`; uniqueness of direct composition identifies their classes. -/
 theorem class_group_mul_assoc (D : ℤ) (hD : D < 0) (x y z : FormClassGroup D) :
-    compose D (compose D x y) z = compose D x (compose D y z) := sorry
+    compose D (compose D x y) z = compose D x (compose D y z) := by
+  induction x using Quotient.inductionOn with | _ F =>
+  induction y using Quotient.inductionOn with | _ G =>
+  induction z using Quotient.inductionOn with | _ H =>
+  obtain ⟨F', G', H', B, C, hFF', hGG', hHH', h12g, h13g, h23g,
+      hFshape, hGshape, hHshape, hdisc⟩ := exists_united_triple D hD F G H
+  have hqF : Quotient.mk (properSetoid D) F = Quotient.mk (properSetoid D) F' :=
+    Quotient.sound hFF'
+  have hqG : Quotient.mk (properSetoid D) G = Quotient.mk (properSetoid D) G' :=
+    Quotient.sound hGG'
+  have hqH : Quotient.mk (properSetoid D) H = Quotient.mk (properSetoid D) H' :=
+    Quotient.sound hHH'
+  rw [hqF, hqG, hqH]
+  have h12 : IsCoprime F'.1.a G'.1.a :=
+    Int.isCoprime_iff_gcd_eq_one.mpr h12g
+  have h13 : IsCoprime F'.1.a H'.1.a :=
+    Int.isCoprime_iff_gcd_eq_one.mpr h13g
+  have h23 : IsCoprime G'.1.a H'.1.a :=
+    Int.isCoprime_iff_gcd_eq_one.mpr h23g
+  have h12_3 : IsCoprime (F'.1.a * G'.1.a) H'.1.a := h13.mul_left h23
+  have h1_23 : IsCoprime F'.1.a (G'.1.a * H'.1.a) := h12.mul_right h13
+
+  let fgQ : BinaryQF := ⟨F'.1.a * G'.1.a, B, H'.1.a * C⟩
+  let ghQ : BinaryQF := ⟨G'.1.a * H'.1.a, B, F'.1.a * C⟩
+  let tQ : BinaryQF := ⟨F'.1.a * G'.1.a * H'.1.a, B, C⟩
+  have hfgd : fgQ.discr = D := by
+    simp only [fgQ, BinaryQF.discr]
+    linear_combination hdisc
+  have hghd : ghQ.discr = D := by
+    simp only [ghQ, BinaryQF.discr]
+    linear_combination hdisc
+  have htd : tQ.discr = D := by
+    simp only [tQ, BinaryQF.discr]
+    linear_combination hdisc
+  have hfgpos : 0 < fgQ.a := by
+    simpa only [fgQ] using mul_pos F'.2.2.2 G'.2.2.2
+  have hghpos : 0 < ghQ.a := by
+    simpa only [ghQ] using mul_pos G'.2.2.2 H'.2.2.2
+  have htpos : 0 < tQ.a := by
+    simpa only [tQ] using mul_pos (mul_pos F'.2.2.2 G'.2.2.2) H'.2.2.2
+
+  have hdcFG : DirectlyComposes F'.1 G'.1 fgQ := by
+    rw [hFshape, hGshape]
+    simpa only [fgQ, mul_assoc] using
+      dirichletForm_directlyComposes_concordant F'.1.a G'.1.a B (H'.1.a * C)
+  have heqFG : ProperlyEquivalent (composeForm D hD F' G').1 fgQ :=
+    directlyComposes_unique_of_coprime F'.1 G'.1 (composeForm D hD F' G').1 fgQ D
+      hD F'.2.1 G'.2.1 h12 (composeForm_directlyComposes D hD F' G')
+      (composeForm_discr D hD F' G') hdcFG hfgd
+  have hfgp : fgQ.Primitive :=
+    (primitive_of_properlyEquivalent heqFG).mp (composeForm_primitive D hD F' G')
+  let FG : DiscrForms D := ⟨fgQ, hfgd, hfgp, hfgpos⟩
+
+  have hdcGH : DirectlyComposes G'.1 H'.1 ghQ := by
+    rw [hGshape, hHshape]
+    simpa only [ghQ, mul_assoc, mul_comm, mul_left_comm] using
+      dirichletForm_directlyComposes_concordant G'.1.a H'.1.a B (F'.1.a * C)
+  have heqGH : ProperlyEquivalent (composeForm D hD G' H').1 ghQ :=
+    directlyComposes_unique_of_coprime G'.1 H'.1 (composeForm D hD G' H').1 ghQ D
+      hD G'.2.1 H'.2.1 h23 (composeForm_directlyComposes D hD G' H')
+      (composeForm_discr D hD G' H') hdcGH hghd
+  have hghp : ghQ.Primitive :=
+    (primitive_of_properlyEquivalent heqGH).mp (composeForm_primitive D hD G' H')
+  let GH : DiscrForms D := ⟨ghQ, hghd, hghp, hghpos⟩
+
+  have hdcLeft : DirectlyComposes FG.1 H'.1 tQ := by
+    change DirectlyComposes fgQ H'.1 tQ
+    rw [hHshape]
+    simpa only [fgQ, tQ, mul_assoc] using
+      dirichletForm_directlyComposes_concordant
+        (F'.1.a * G'.1.a) H'.1.a B C
+  have heqT : ProperlyEquivalent (composeForm D hD FG H').1 tQ :=
+    directlyComposes_unique_of_coprime FG.1 H'.1 (composeForm D hD FG H').1 tQ D
+      hD FG.2.1 H'.2.1 h12_3 (composeForm_directlyComposes D hD FG H')
+      (composeForm_discr D hD FG H') hdcLeft htd
+  have htp : tQ.Primitive :=
+    (primitive_of_properlyEquivalent heqT).mp (composeForm_primitive D hD FG H')
+  let T : DiscrForms D := ⟨tQ, htd, htp, htpos⟩
+
+  have hdcRight : DirectlyComposes F'.1 GH.1 tQ := by
+    change DirectlyComposes F'.1 ghQ tQ
+    rw [hFshape]
+    simpa only [ghQ, tQ, mul_assoc] using
+      dirichletForm_directlyComposes_concordant
+        F'.1.a (G'.1.a * H'.1.a) B C
+  have hFGclass :
+      compose D (Quotient.mk (properSetoid D) F') (Quotient.mk (properSetoid D) G') =
+        Quotient.mk (properSetoid D) FG :=
+    compose_eq_of_directlyComposes D hD F' G' FG h12 (by simpa only [FG] using hdcFG)
+  have hGHclass :
+      compose D (Quotient.mk (properSetoid D) G') (Quotient.mk (properSetoid D) H') =
+        Quotient.mk (properSetoid D) GH :=
+    compose_eq_of_directlyComposes D hD G' H' GH h23 (by simpa only [GH] using hdcGH)
+  have hLeftclass :
+      compose D (Quotient.mk (properSetoid D) FG) (Quotient.mk (properSetoid D) H') =
+        Quotient.mk (properSetoid D) T :=
+    compose_eq_of_directlyComposes D hD FG H' T h12_3 (by simpa only [T] using hdcLeft)
+  have hRightclass :
+      compose D (Quotient.mk (properSetoid D) F') (Quotient.mk (properSetoid D) GH) =
+        Quotient.mk (properSetoid D) T :=
+    compose_eq_of_directlyComposes D hD F' GH T h1_23 (by simpa only [T] using hdcRight)
+  rw [hFGclass, hLeftclass, hGHclass, hRightclass]
 
 /-- **Theorem 3.9** (Cox §3). For `D < 0`, Dirichlet composition makes `C(D)` a
 finite abelian group: it is associative and commutative, the principal class is a
