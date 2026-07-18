@@ -147,6 +147,54 @@ theorem primitive_of_properlyEquivalent {f g : BinaryQF} (h : ProperlyEquivalent
 def BinaryQF.Reduced (f : BinaryQF) : Prop :=
   |f.b| ≤ f.a ∧ f.a ≤ f.c ∧ ((|f.b| = f.a ∨ f.a = f.c) → 0 ≤ f.b)
 
+/-- The elementary lower bound behind reduction theory: if `f` is reduced, then
+`(a - |b| + c) min(x²,y²) ≤ f(x,y)`. (Cox §2, (2.9).) -/
+theorem reduced_eval_lower_bound (f : BinaryQF) (hr : f.Reduced) (x y : ℤ) :
+    (f.a - |f.b| + f.c) * min (x ^ 2) (y ^ 2) ≤ f.eval x y := by
+  obtain ⟨h1, h2, -⟩ := hr
+  cases abs_cases f.b <;> simp_all +decide [BinaryQF.eval]
+  · cases le_total (x ^ 2) (y ^ 2) <;> simp_all +decide [abs_of_nonneg]
+    · nlinarith [sq_nonneg (x + y), sq_nonneg (x - y),
+        mul_le_mul_of_nonneg_left ‹x ^ 2 ≤ y ^ 2› (show 0 ≤ f.c by linarith)]
+    · nlinarith [sq_nonneg (x + y), sq_nonneg (x - y)]
+  · cases le_total (x ^ 2) (y ^ 2) <;> simp +decide [*]
+    all_goals rw [abs_of_nonpos] <;>
+      nlinarith [sq_nonneg (x + y), sq_nonneg (x - y)]
+
+/-- In the strict interior of the reduced region, the two coordinate values are
+rigid at primitive inputs: `a` occurs only at `±(1,0)`, and `c` only at
+`±(0,1)`. (Cox §2, (2.11).) -/
+theorem reduced_strict_value_rigidity (f : BinaryQF) (hr : f.Reduced)
+    (hba : |f.b| < f.a) (hac : f.a < f.c) (x y : ℤ) (hcop : IsCoprime x y) :
+    (f.eval x y = f.a ↔ (x = 1 ∧ y = 0) ∨ (x = -1 ∧ y = 0)) ∧
+      (f.eval x y = f.c ↔ (x = 0 ∧ y = 1) ∨ (x = 0 ∧ y = -1)) := by
+  rcases eq_or_ne y 0 with rfl | hy
+  · have hxunit : IsUnit x := isCoprime_zero_right.mp hcop
+    rcases Int.isUnit_iff.mp hxunit with rfl | rfl <;>
+      simp [BinaryQF.eval, hac.ne]
+  · rcases eq_or_ne x 0 with rfl | hx
+    · have hyunit : IsUnit y := isCoprime_zero_left.mp hcop
+      rcases Int.isUnit_iff.mp hyunit with rfl | rfl <;>
+        simp [BinaryQF.eval, hac.ne']
+    · have hx2pos : 0 < x ^ 2 := sq_pos_of_ne_zero hx
+      have hy2pos : 0 < y ^ 2 := sq_pos_of_ne_zero hy
+      have hx2 : (1 : ℤ) ≤ x ^ 2 := by omega
+      have hy2 : (1 : ℤ) ≤ y ^ 2 := by omega
+      have hmin : (1 : ℤ) ≤ min (x ^ 2) (y ^ 2) := le_min hx2 hy2
+      have hcoeff : 0 ≤ f.a - |f.b| + f.c := by
+        linarith [abs_nonneg f.b]
+      have hcoeff_le :
+          f.a - |f.b| + f.c ≤
+            (f.a - |f.b| + f.c) * min (x ^ 2) (y ^ 2) := by
+        simpa using mul_le_mul_of_nonneg_left hmin hcoeff
+      have hlower := reduced_eval_lower_bound f hr x y
+      have hgap : f.c < f.a - |f.b| + f.c := by linarith
+      have hceval : f.c < f.eval x y :=
+        lt_of_lt_of_le hgap (hcoeff_le.trans hlower)
+      have hne_a : f.eval x y ≠ f.a := by linarith
+      have hne_c : f.eval x y ≠ f.c := by linarith
+      simp [hne_a, hne_c, hx, hy]
+
 /-- **Reduction theorem** (Cox, Thm 2.8). Every positive definite form is
 properly equivalent to a unique reduced form. -/
 theorem exists_unique_reduced (f : BinaryQF) (hf : f.PosDef) :

@@ -932,7 +932,11 @@ made proper by dividing out $\gcd(x,y)$.
   \leanok
   The minima (2.11) of a reduced form.
 \end{theorem}
-\begin{proof}\uses{def:reduced}\end{proof}
+\begin{proof}\leanok\uses{def:reduced}
+The reduced-form lower bound (2.9) is strictly larger than $c$ when both
+coordinates are nonzero. If one coordinate vanishes, primitivity of the pair
+forces the other coordinate to be $\pm1$, giving exactly the four stated cases.
+\end{proof}
 
 \begin{theorem}[Exercise 2.8(b)]
   \label{exr:s2_8_b}

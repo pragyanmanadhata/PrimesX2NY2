@@ -99,7 +99,7 @@ theorem ex_2_8_a (f : BinaryQF) (hr : f.Reduced) (h1 : |f.b| < f.a) (h2 : f.a < 
     (x y : ℤ) (hcop : IsCoprime x y) :
     (f.eval x y = f.a ↔ (x = 1 ∧ y = 0) ∨ (x = -1 ∧ y = 0)) ∧
       (f.eval x y = f.c ↔ (x = 0 ∧ y = 1) ∨ (x = 0 ∧ y = -1)) := by
-  sorry
+  exact reduced_strict_value_rigidity f hr h1 h2 x y hcop
 
 /-- **Exercise 2.8(b).** Uniqueness part of Theorem 2.8 (incl. the exceptional
 cases `|b| = a`, `a = c`): two properly equivalent reduced positive definite
