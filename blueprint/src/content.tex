@@ -699,7 +699,7 @@ $\gcd(a',B,aC)=1$; a prime dividing $aa'$, $B$, $C$ would then divide neither $a
 contradicting $p\mid aa'$ (Cox Exercise 3.6).
 \end{proof}
 
-\begin{theorem}[$C(D)$ is a finite abelian group; Cox Thm 3.9]
+\begin{theorem}[$C(D)$ is an abelian group; Cox Thm 3.9]
   \label{thm:form_class_group_is_group}
   \lean{PrimesX2NY2.Forms.isCommGroup}
   \leanok
@@ -709,8 +709,12 @@ contradicting $p\mid aa'$ (Cox Exercise 3.6).
   the earlier $\mathrm{Nonempty}(\mathrm{CommGroup}\,C(D))$, which holds for any
   nonempty type and was therefore vacuous.)
 \end{theorem}
-\begin{proof}
-  \uses{prop:p3_8, thm:reduction}
+\begin{proof}\leanok
+  \uses{prop:p3_8, thm:t3_9_inverse}
+Dirichlet's united-form construction proves associativity, while the direct
+composition formula proves commutativity and identifies the principal class as
+the identity. Taking the opposite form is well-defined on proper classes and,
+by the norm composition identity, gives an inverse for every class.
 \end{proof}
 
 \begin{theorem}[Inverse is the opposite class; Cox Thm 3.9]

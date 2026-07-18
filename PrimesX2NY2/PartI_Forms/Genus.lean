@@ -1248,20 +1248,36 @@ theorem class_group_mul_assoc (D : ℤ) (hD : D < 0) (x y z : FormClassGroup D) 
     compose_eq_of_directlyComposes D hD F' GH T h1_23 (by simpa only [T] using hdcRight)
   rw [hFGclass, hLeftclass, hGHclass, hRightclass]
 
-/-- **Theorem 3.9** (Cox §3). For `D < 0`, Dirichlet composition makes `C(D)` a
-finite abelian group: it is associative and commutative, the principal class is a
-right identity, and every class has an inverse. (Faithful replacement of the
-earlier vacuous `Nonempty (CommGroup …)`, which holds for any nonempty type.)
+/-- Taking opposite forms respects proper equivalence. The conjugated matrix
+`diag(1,-1) M diag(1,-1)` still has determinant one and acts on the opposite forms. -/
+theorem opposite_properlyEquivalent {f g : BinaryQF}
+    (h : ProperlyEquivalent f g) : ProperlyEquivalent f.opposite g.opposite := by
+  obtain ⟨M, hM, rfl⟩ := h
+  refine ⟨!![M 0 0, -M 0 1; -M 1 0, M 1 1], ?_, ?_⟩
+  · rw [Matrix.det_fin_two_of]
+    have hM' : M 0 0 * M 1 1 - M 0 1 * M 1 0 = 1 := by
+      rw [← Matrix.det_fin_two]
+      exact hM
+    simpa only [neg_mul, mul_neg, neg_neg] using hM'
+  · simp only [action, BinaryQF.opposite, BinaryQF.mk.injEq,
+      Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.of_apply, Matrix.cons_val',
+      Matrix.empty_val', Matrix.cons_val_fin_one]
+    refine ⟨?_, ?_, ?_⟩ <;> ring
 
-Commutativity and the identity are discharged (`compose_comm`, `compose_principalClass`);
-associativity is `class_group_mul_assoc` (stubbed, route pinned) and the inverse is
-`thm_3_9_inverse` (stubbed). -/
-theorem isCommGroup (D : ℤ) (hD : D < 0) (hD4 : D % 4 = 0 ∨ D % 4 = 1) :
-    (∀ x y z : FormClassGroup D, compose D (compose D x y) z = compose D x (compose D y z))
-      ∧ (∀ x y : FormClassGroup D, compose D x y = compose D y x)
-      ∧ (∀ x : FormClassGroup D, compose D x (principalClass D hD4) = x)
-      ∧ (∀ x : FormClassGroup D, ∃ y : FormClassGroup D, compose D x y = principalClass D hD4) := by
-  sorry
+/-- The opposite of a positive primitive discriminant-`D` form, packaged with its invariants. -/
+def oppositeDiscrForm (D : ℤ) (F : DiscrForms D) : DiscrForms D :=
+  ⟨F.1.opposite,
+    (opposite_discr F.1).trans F.2.1,
+    (opposite_primitive F.1).2 F.2.2.1,
+    (opposite_pos F.1).2 F.2.2.2⟩
+
+/-- Inversion on form classes, induced by taking the opposite form. -/
+def classInverse (D : ℤ) : FormClassGroup D → FormClassGroup D :=
+  Quotient.map (oppositeDiscrForm D) (fun _ _ h ↦ opposite_properlyEquivalent h)
+
+@[simp] theorem classInverse_mk (D : ℤ) (F : DiscrForms D) :
+    classInverse D (Quotient.mk (properSetoid D) F) =
+      Quotient.mk (properSetoid D) (oppositeDiscrForm D F) := rfl
 
 /-- **Theorem 3.9, inverse** (Cox §3). The inverse of the class of `f` is the class
 of the opposite form `a x² − b x y + c y²`. -/
@@ -1293,6 +1309,53 @@ theorem thm_3_9_inverse (D : ℤ) (hD : D < 0) (f : BinaryQF) (hd : f.discr = D)
   rw [compose_eq_of_directlyComposes D hD F G P
     (Int.isCoprime_iff_gcd_eq_one.mpr hc.choose_spec.2.2.2.2) hDC]
   exact Quotient.sound (principal_of_a_one D Q hQd rfl)
+
+/-- The class induced by the opposite form is a left inverse for every class. -/
+theorem classInverse_mul (D : ℤ) (hD : D < 0)
+    (hD4 : D % 4 = 0 ∨ D % 4 = 1) (x : FormClassGroup D) :
+    compose D (classInverse D x) x = principalClass D hD4 := by
+  induction x using Quotient.inductionOn with
+  | _ F =>
+    rw [compose_comm D hD]
+    exact thm_3_9_inverse D hD F.1 F.2.1 F.2.2.1 F.2.2.2
+      ((opposite_discr F.1).trans F.2.1)
+      ((opposite_primitive F.1).2 F.2.2.1)
+      ((opposite_pos F.1).2 F.2.2.2)
+
+/-- **Theorem 3.9** (Cox §3). For `D < 0`, Dirichlet composition is associative
+and commutative, the principal class is an identity, and every class has an inverse. -/
+theorem isCommGroup (D : ℤ) (hD : D < 0) (hD4 : D % 4 = 0 ∨ D % 4 = 1) :
+    (∀ x y z : FormClassGroup D, compose D (compose D x y) z = compose D x (compose D y z))
+      ∧ (∀ x y : FormClassGroup D, compose D x y = compose D y x)
+      ∧ (∀ x : FormClassGroup D, compose D x (principalClass D hD4) = x)
+      ∧ (∀ x : FormClassGroup D, ∃ y : FormClassGroup D,
+          compose D x y = principalClass D hD4) := by
+  refine ⟨class_group_mul_assoc D hD, compose_comm D hD,
+    compose_principalClass D hD hD4, ?_⟩
+  intro x
+  refine ⟨classInverse D x, ?_⟩
+  rw [compose_comm D hD]
+  exact classInverse_mul D hD hD4 x
+
+/-- The commutative group structure on proper classes of positive primitive forms. -/
+@[reducible] noncomputable def formClassCommGroup (D : ℤ) (hD : D < 0)
+    (hD4 : D % 4 = 0 ∨ D % 4 = 1) : CommGroup (FormClassGroup D) where
+  mul := compose D
+  mul_assoc := class_group_mul_assoc D hD
+  one := principalClass D hD4
+  one_mul x := by
+    change compose D (principalClass D hD4) x = x
+    rw [compose_comm D hD]
+    exact compose_principalClass D hD hD4 x
+  mul_one := compose_principalClass D hD hD4
+  inv := classInverse D
+  inv_mul_cancel := classInverse_mul D hD hD4
+  mul_comm := compose_comm D hD
+
+/-- The class group instance is available exactly in the intended negative-discriminant context. -/
+noncomputable instance (D : ℤ) [hneg : Fact (D < 0)]
+    [hdisc : Fact (D % 4 = 0 ∨ D % 4 = 1)] : CommGroup (FormClassGroup D) :=
+  formClassCommGroup D hneg.out hdisc.out
 
 /-- **Lemma 3.10** (Cox §3). A reduced primitive form `f = a x²+ b x y + c y²` of
 discriminant `D` has order `≤ 2` in `C(D)` (its class squares to the principal
