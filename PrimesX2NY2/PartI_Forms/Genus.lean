@@ -1365,7 +1365,107 @@ theorem lemma_3_10 (D : ℤ) (f : BinaryQF) (hd : f.discr = D) (hp : f.Primitive
     compose D (classOf D f ⟨hd, hp, ha⟩) (classOf D f ⟨hd, hp, ha⟩)
       = principalClass D (by rw [← hd]; exact discr_mod_four f)
       ↔ (f.b = 0 ∨ f.a = f.b ∨ f.a = f.c) := by
-  sorry
+  have hb_sq : f.b ^ 2 ≤ f.a ^ 2 := by
+    rw [← sq_abs]
+    exact (sq_le_sq₀ (abs_nonneg f.b) ha.le).2 hr.1
+  have hac_sq : f.a ^ 2 ≤ f.a * f.c := by
+    simpa only [pow_two] using mul_le_mul_of_nonneg_left hr.2.1 ha.le
+  have hD : D < 0 := by
+    rw [← hd]
+    simp only [BinaryQF.discr]
+    nlinarith [hb_sq, hac_sq, sq_pos_of_pos ha]
+  have hD4 : D % 4 = 0 ∨ D % 4 = 1 := by
+    rw [← hd]
+    exact discr_mod_four f
+  have hd' : f.opposite.discr = D := (opposite_discr f).trans hd
+  have hp' : f.opposite.Primitive := (opposite_primitive f).2 hp
+  have ha' : 0 < f.opposite.a := (opposite_pos f).2 ha
+
+  let F : DiscrForms D := ⟨f, hd, hp, ha⟩
+  let O : DiscrForms D := ⟨f.opposite, hd', hp', ha'⟩
+  let x : FormClassGroup D := Quotient.mk (properSetoid D) F
+  let y : FormClassGroup D := Quotient.mk (properSetoid D) O
+  let e : FormClassGroup D := principalClass D hD4
+  have hinv : compose D x y = e := by
+    simpa only [x, y, e, F, O, classOf] using
+      thm_3_9_inverse D hD f hd hp ha hd' hp' ha'
+
+  constructor
+  · intro hsquare
+    change compose D x x = e at hsquare
+    have hclass : x = y := by
+      calc
+        x = compose D x e := (compose_principalClass D hD hD4 x).symm
+        _ = compose D x (compose D x y) := congrArg (compose D x) hinv.symm
+        _ = compose D (compose D x x) y := (class_group_mul_assoc D hD x x y).symm
+        _ = compose D e y := congrArg (fun q => compose D q y) hsquare
+        _ = y := by
+          rw [compose_comm D hD]
+          exact compose_principalClass D hD hD4 y
+    have hfo : ProperlyEquivalent f f.opposite := by
+      have hrel : ProperlyEquivalent F.1 O.1 := Quotient.exact hclass
+      simpa only [F, O] using hrel
+
+    by_cases hb0 : f.b = 0
+    · exact Or.inl hb0
+    by_cases hac : f.a = f.c
+    · exact Or.inr (Or.inr hac)
+    have hba : |f.b| = f.a := by
+      by_contra hba
+      have hro : f.opposite.Reduced := by
+        refine ⟨?_, ?_, ?_⟩
+        · simpa only [BinaryQF.opposite, abs_neg] using hr.1
+        · simpa only [BinaryQF.opposite] using hr.2.1
+        · intro hboundary
+          rcases hboundary with hboundary | hboundary
+          · exfalso
+            exact hba (by
+              simpa only [BinaryQF.opposite, abs_neg] using hboundary)
+          · exfalso
+            exact hac (by simpa only [BinaryQF.opposite] using hboundary)
+      have hpos : f.PosDef := ⟨ha, by rw [hd]; exact hD⟩
+      have heq : f = f.opposite :=
+        reduced_eq_of_properlyEquivalent f f.opposite hr hro hpos hfo
+      have hbneg : f.b = -f.b := by
+        simpa only [BinaryQF.opposite] using congrArg BinaryQF.b heq
+      exact hb0 (by linarith)
+    have hbnonneg : 0 ≤ f.b := hr.2.2 (Or.inl hba)
+    exact Or.inr (Or.inl (hba.symm.trans (abs_of_nonneg hbnonneg)))
+
+  · intro hspecial
+    have hfo : ProperlyEquivalent f f.opposite := by
+      rcases hspecial with hb0 | hab | hac
+      · refine ⟨1, Matrix.det_one, ?_⟩
+        rw [action_one]
+        exact binaryQF_ext f f.opposite (by rfl)
+          (by simp [BinaryQF.opposite, hb0])
+          (by rfl)
+      · refine ⟨!![1, -1; 0, 1], ?_, ?_⟩
+        · rw [Matrix.det_fin_two_of]
+          norm_num
+        · simp only [action, BinaryQF.opposite, BinaryQF.mk.injEq,
+            Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.of_apply,
+            Matrix.cons_val', Matrix.empty_val', Matrix.cons_val_fin_one]
+          refine ⟨by ring, ?_, ?_⟩
+          · linear_combination -2 * hab
+          · linear_combination hab
+      · refine ⟨!![0, -1; 1, 0], ?_, ?_⟩
+        · rw [Matrix.det_fin_two_of]
+          norm_num
+        · simp only [action, BinaryQF.opposite, BinaryQF.mk.injEq,
+            Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.of_apply,
+            Matrix.cons_val', Matrix.empty_val', Matrix.cons_val_fin_one]
+          refine ⟨?_, by ring, ?_⟩
+          · linear_combination -hac
+          · linear_combination hac
+    have hclass : x = y := by
+      apply Quotient.sound
+      change ProperlyEquivalent F.1 O.1
+      simpa only [F, O] using hfo
+    change compose D x x = e
+    calc
+      compose D x x = compose D x y := congrArg (compose D x) hclass
+      _ = e := hinv
 
 /-- **Proposition 3.11** (Cox §3). For `D ≡ 0,1 (mod 4)` negative, the class group
 `C(D)` has exactly `2^{μ−1}` elements of order `≤ 2`, where `μ = mu D`. -/

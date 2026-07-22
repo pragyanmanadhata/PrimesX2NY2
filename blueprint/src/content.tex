@@ -739,6 +739,15 @@ product; its leading coefficient $1$ identifies it with the principal class.
   \uses{thm:form_class_group_is_group, def:reduced}
   A reduced form has order $\le 2$ in $C(D)$ iff $b=0$, $a=b$, or $a=c$.
 \end{lemma}
+\begin{proof}\leanok
+If the class squares to the principal class, cancellation with the opposite-form
+inverse shows that the class equals its opposite. Away from the three stated
+boundaries, the opposite is also reduced, so uniqueness of reduced representatives
+would force $b=-b$ and hence $b=0$. Conversely, in the three boundary cases the
+form is properly equivalent to its opposite via the identity, a translation, or
+a quarter-turn matrix, respectively; the opposite-form inverse then gives the
+square of the class as the principal class.
+\end{proof}
 
 \begin{definition}[The exponent $\mu$; Cox Prop 3.11]
   \label{def:mu}
