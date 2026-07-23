@@ -456,7 +456,48 @@ theorem exists_unique_reduced (f : BinaryQF) (hf : f.PosDef) :
 there are only finitely many reduced forms, hence finitely many proper
 equivalence classes. -/
 theorem finite_reduced_of_discr (D : ℤ) (hD : D < 0) :
-    {f : BinaryQF | f.discr = D ∧ f.Reduced}.Finite := sorry
+    {f : BinaryQF | f.discr = D ∧ f.Reduced}.Finite := by
+  set N : ℤ := -D with hN
+  refine Set.Finite.of_finite_image (f := fun f : BinaryQF => (f.a, f.b)) ?_ ?_
+  · -- the image lands in a finite box `1 ≤ a ≤ N`, `-N ≤ b ≤ N`
+    apply Set.Finite.subset (Finset.Icc ((1 : ℤ), (-N)) (N, N)).finite_toSet
+    rintro y ⟨f, ⟨hfd, hfr⟩, rfl⟩
+    obtain ⟨hb, hac, _⟩ := hfr
+    obtain ⟨hb1, hb2⟩ := abs_le.mp hb            -- -f.a ≤ f.b ≤ f.a
+    have ha0 : 0 ≤ f.a := le_trans (abs_nonneg f.b) hb
+    have hane : f.a ≠ 0 := by
+      rintro h0
+      have hb0 : f.b = 0 := by rw [h0] at hb; exact abs_nonpos_iff.mp hb
+      have hD0 : D = 0 := by rw [← hfd]; simp [BinaryQF.discr, h0, hb0]
+      omega
+    have ha1 : 1 ≤ f.a := by omega
+    have hdd : 4 * f.a * f.c - f.b ^ 2 = N := by
+      have : f.b ^ 2 - 4 * f.a * f.c = D := hfd
+      omega
+    have hbsq : f.b ^ 2 ≤ f.a ^ 2 := by nlinarith [hb1, hb2]
+    have h3a2 : 3 * f.a ^ 2 ≤ N := by nlinarith [hdd, hac, ha0, hbsq]
+    have haN : f.a ≤ N := by nlinarith [h3a2, ha1]
+    simp only [Finset.coe_Icc, Set.mem_Icc, Prod.mk_le_mk]
+    exact ⟨⟨ha1, by omega⟩, ⟨haN, by omega⟩⟩
+  · -- injective on the set: `(a, b)` and `discr = D` determine `c`, hence `f`
+    rintro f ⟨hfd, hfr⟩ g ⟨hgd, hgr⟩ hfg
+    have haeq : f.a = g.a := congrArg Prod.fst hfg
+    have hbeq : f.b = g.b := congrArg Prod.snd hfg
+    obtain ⟨hb, _, _⟩ := hfr
+    have ha0 : 0 ≤ f.a := le_trans (abs_nonneg f.b) hb
+    have hane : f.a ≠ 0 := by
+      rintro h0
+      have hb0 : f.b = 0 := by rw [h0] at hb; exact abs_nonpos_iff.mp hb
+      have hD0 : D = 0 := by rw [← hfd]; simp [BinaryQF.discr, h0, hb0]
+      omega
+    have hapos : 0 < f.a := lt_of_le_of_ne ha0 (Ne.symm hane)
+    have hceq : f.c = g.c := by
+      have e1 : f.b ^ 2 - 4 * f.a * f.c = D := hfd
+      have e2 : g.b ^ 2 - 4 * g.a * g.c = D := hgd
+      rw [← haeq, ← hbeq] at e2
+      have h4 : (4 * f.a) * f.c = (4 * f.a) * g.c := by linear_combination e2 - e1
+      exact mul_left_cancel₀ (by positivity) h4
+    exact binaryQF_eq_of_coeff_eq f g haeq hbeq hceq
 
 /-- **Full equivalence** (`GL₂(ℤ)`; Cox §2, (2.2)). Two forms are equivalent when
 related by an integer change of variables of determinant `±1`. -/

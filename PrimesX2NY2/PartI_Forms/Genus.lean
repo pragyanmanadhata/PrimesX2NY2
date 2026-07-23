@@ -343,25 +343,12 @@ theorem principal_of_a_one (D : ℤ) (f : BinaryQF) (hd : f.discr = D) (ha : f.a
   · rw [ha]; simpa using hpar
   · rw [hd, hpd]
 
-/-- **(3i) — concordant-choice invariance** — *STATED, NOT PROVED* (this is the single deferred
-fact unlocking class-level respect + the form-level inverse and associativity; only the
-form-level identity escapes it, see `composeForm_principal_left`). The Dirichlet composite
-`dirichletForm F.1 g'` is independent, up to proper equivalence, of which concordant
-representative `g'` of the second class is chosen. Cox (Thm 3.9 proof) routes well-definedness
-through the §7 ideal class group correspondence; the elementary direct route is Cox Exercise
-3.5(c) (representative-invariance of *direct* composition), whose parts (a) `translation_equiv`
-and (b) `dirichlet_compose_repr` are already in hand. -/
-theorem concordant_choice_invariant (D : ℤ) (F : DiscrForms D) (g₁ g₂ : BinaryQF)
-    (he : ProperlyEquivalent g₁ g₂)
-    (hd₁ : g₁.discr = D) (ha₁ : 0 < g₁.a) (hc₁ : Int.gcd F.1.a g₁.a = 1)
-    (hd₂ : g₂.discr = D) (ha₂ : 0 < g₂.a) (hc₂ : Int.gcd F.1.a g₂.a = 1) :
-    ProperlyEquivalent (dirichletForm F.1 g₁) (dirichletForm F.1 g₂) := sorry
--- FLAG (Wave 20): under-hypothesized — missing `hD : D < 0`. The proof needs `D ≠ 0` (the minor
--- machinery of Cox Ex 3.1; see the `⟨1,0,0⟩` counterexample at `directlyComposes_minors`), and
--- `F.Primitive ∧ 0 < F.a` does not supply it. Cox's Thm 3.9 states the ambient explicitly:
--- "Let `D ≡ 0,1 mod 4` be **negative**". The fully-proved form is
--- `concordant_choice_invariant_of_neg`; restating this one with `hD` is a one-line change,
--- deliberately not made unilaterally.
+-- **(3i) — concordant-choice invariance.** The Dirichlet composite `dirichletForm F.1 g'` is
+-- independent (up to proper equivalence) of which concordant representative `g'` is chosen. This
+-- is proved below as `concordant_choice_invariant_of_neg`, which carries the `hD : D < 0` that
+-- Cox's Thm 3.9 ambient supplies; the hypothesis is genuinely needed (the minor machinery of Cox
+-- Ex 3.1 requires `D ≠ 0`, cf. the `⟨1,0,0⟩` counterexample at `directlyComposes_minors`). The
+-- earlier under-hypothesized `sorry` stub (Wave 20 FLAG) has been removed in favour of that form.
 
 /-- **Direct composition** (Cox §3.A, (3.1)). `F` is the *direct composition* of `f` and `g`
 if there is an integral bilinear substitution `Bᵢ = aᵢxz+bᵢxw+cᵢyz+dᵢyw` with
@@ -899,8 +886,8 @@ theorem composeForm_directlyComposes (D : ℤ) (hD : D < 0) (F G : DiscrForms D)
     (by rw [F.2.1, hE]) (by rw [hE]; exact ne_of_lt hD)
 
 /-- **(3i) Concordant-choice invariance** — the Dirichlet composite does not depend (up to `~`) on
-which concordant representative is chosen. Carries the `hD : D < 0` that the bare
-`concordant_choice_invariant` lacks (see the FLAG there). -/
+which concordant representative is chosen. This is the canonical form of `(3i)`, carrying the
+`hD : D < 0` that Cox's Thm 3.9 ambient supplies and that the minor machinery genuinely requires. -/
 theorem concordant_choice_invariant_of_neg (D : ℤ) (hD : D < 0) (F : DiscrForms D)
     (g₁ g₂ : BinaryQF) (he : ProperlyEquivalent g₁ g₂)
     (hd₁ : g₁.discr = D) (ha₁ : 0 < g₁.a) (hc₁ : Int.gcd F.1.a g₁.a = 1)
