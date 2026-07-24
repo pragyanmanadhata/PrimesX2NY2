@@ -107,8 +107,82 @@ theorem descent_lemma (N a b x y : ℤ) (q : ℕ) (hq : q.Prime)
     (hN : N = a ^ 2 + b ^ 2) (hcop : IsCoprime a b)
     (hqf : (q : ℤ) = x ^ 2 + y ^ 2) (hdvd : (q : ℤ) ∣ N) :
     ∃ c d : ℤ, N = (q : ℤ) * (c ^ 2 + d ^ 2) ∧ IsCoprime c d := by
-  sorry
-
+  have hqprime : Prime (q : ℤ) := Nat.prime_iff_prime_int.mp hq
+  have hq0 : (q : ℤ) ≠ 0 := by exact_mod_cast hq.pos.ne'
+  have hkey : (q : ℤ) ∣ (x * b - a * y) * (x * b + a * y) := by
+    have e : (x * b - a * y) * (x * b + a * y) = x ^ 2 * N - a ^ 2 * (q : ℤ) := by
+      rw [hN, hqf]; ring
+    rw [e]
+    exact dvd_sub (hdvd.mul_left (x ^ 2)) (dvd_mul_left (q : ℤ) (a ^ 2))
+  rcases hqprime.dvd_or_dvd hkey with h1 | h1
+  · obtain ⟨d, hd⟩ : (q : ℤ) ∣ a * y - b * x := by
+      have e : a * y - b * x = -(x * b - a * y) := by ring
+      rw [e]; exact (dvd_neg).mpr h1
+    have hdiv2 : (q : ℤ) ∣ (a * x + b * y) ^ 2 := by
+      refine ⟨N - (q : ℤ) * d ^ 2, ?_⟩
+      have hNq : N * (q : ℤ) = (a * x + b * y) ^ 2 + (a * y - b * x) ^ 2 := by
+        rw [hN, hqf]; ring
+      have e : (a * x + b * y) ^ 2 = N * (q : ℤ) - (a * y - b * x) ^ 2 := by
+        rw [hNq]; ring
+      rw [e, hd]; ring
+    obtain ⟨c, hc⟩ := hqprime.dvd_of_dvd_pow hdiv2
+    have ha_eq : a = c * x + d * y := by
+      have h2 : a * (q : ℤ) = (c * x + d * y) * (q : ℤ) := by
+        have e1 : a * (q : ℤ) = x * (a * x + b * y) + y * (a * y - b * x) := by
+          rw [hqf]; ring
+        rw [e1, hc, hd]; ring
+      exact mul_right_cancel₀ hq0 h2
+    have hb_eq : b = c * y - d * x := by
+      have h2 : b * (q : ℤ) = (c * y - d * x) * (q : ℤ) := by
+        have e1 : b * (q : ℤ) = y * (a * x + b * y) - x * (a * y - b * x) := by
+          rw [hqf]; ring
+        rw [e1, hc, hd]; ring
+      exact mul_right_cancel₀ hq0 h2
+    refine ⟨c, d, ?_, ?_⟩
+    · have hNq : N * (q : ℤ) = (a * x + b * y) ^ 2 + (a * y - b * x) ^ 2 := by
+        rw [hN, hqf]; ring
+      have hcancel : N * (q : ℤ) = ((q : ℤ) * (c ^ 2 + d ^ 2)) * (q : ℤ) := by
+        rw [hNq, hc, hd]; ring
+      exact mul_right_cancel₀ hq0 hcancel
+    · obtain ⟨u, v, huv⟩ := hcop
+      refine ⟨u * x + v * y, u * y - v * x, ?_⟩
+      have e : (u * x + v * y) * c + (u * y - v * x) * d
+          = u * (c * x + d * y) + v * (c * y - d * x) := by ring
+      rw [e, ← ha_eq, ← hb_eq]; exact huv
+  · obtain ⟨d, hd⟩ : (q : ℤ) ∣ a * y + b * x := by
+      have e : a * y + b * x = x * b + a * y := by ring
+      rw [e]; exact h1
+    have hdiv2 : (q : ℤ) ∣ (a * x - b * y) ^ 2 := by
+      refine ⟨N - (q : ℤ) * d ^ 2, ?_⟩
+      have hNq : N * (q : ℤ) = (a * x - b * y) ^ 2 + (a * y + b * x) ^ 2 := by
+        rw [hN, hqf]; ring
+      have e : (a * x - b * y) ^ 2 = N * (q : ℤ) - (a * y + b * x) ^ 2 := by
+        rw [hNq]; ring
+      rw [e, hd]; ring
+    obtain ⟨c, hc⟩ := hqprime.dvd_of_dvd_pow hdiv2
+    have ha_eq : a = c * x + d * y := by
+      have h2 : a * (q : ℤ) = (c * x + d * y) * (q : ℤ) := by
+        have e1 : a * (q : ℤ) = x * (a * x - b * y) + y * (a * y + b * x) := by
+          rw [hqf]; ring
+        rw [e1, hc, hd]; ring
+      exact mul_right_cancel₀ hq0 h2
+    have hb_eq : b = d * x - c * y := by
+      have h2 : b * (q : ℤ) = (d * x - c * y) * (q : ℤ) := by
+        have e1 : b * (q : ℤ) = x * (a * y + b * x) - y * (a * x - b * y) := by
+          rw [hqf]; ring
+        rw [e1, hc, hd]; ring
+      exact mul_right_cancel₀ hq0 h2
+    refine ⟨c, d, ?_, ?_⟩
+    · have hNq : N * (q : ℤ) = (a * x - b * y) ^ 2 + (a * y + b * x) ^ 2 := by
+        rw [hN, hqf]; ring
+      have hcancel : N * (q : ℤ) = ((q : ℤ) * (c ^ 2 + d ^ 2)) * (q : ℤ) := by
+        rw [hNq, hc, hd]; ring
+      exact mul_right_cancel₀ hq0 hcancel
+    · obtain ⟨u, v, huv⟩ := hcop
+      refine ⟨u * x - v * y, u * y + v * x, ?_⟩
+      have e : (u * x - v * y) * c + (u * y + v * x) * d
+          = u * (c * x + d * y) + v * (d * x - c * y) := by ring
+      rw [e, ← ha_eq, ← hb_eq]; exact huv
 /-- **Lemma 1.7.** For nonzero `n` and an odd prime `p ∤ n`, `p` divides a
 primitively represented value `x²+ny²` iff `−n` is a quadratic residue mod `p`,
 i.e. `(−n/p) = 1`. -/
@@ -116,8 +190,42 @@ theorem dvd_sq_add_nsq_iff_isSquare (n : ℤ) (p : ℕ) (hp : p.Prime) (hodd : O
     (hpn : ¬ (p : ℤ) ∣ n) :
     (∃ x y : ℤ, IsCoprime x y ∧ (p : ℤ) ∣ x ^ 2 + n * y ^ 2)
       ↔ IsSquare ((-n : ℤ) : ZMod p) := by
-  sorry
-
+  haveI : Fact p.Prime := ⟨hp⟩
+  constructor
+  · rintro ⟨x, y, hcop, hdvd⟩
+    have hpy : ¬ (p : ℤ) ∣ y := by
+      intro hdy
+      have hy2 : (p : ℤ) ∣ n * y ^ 2 :=
+        (hdy.trans (dvd_pow_self y two_ne_zero)).mul_left n
+      have hdx2 : (p : ℤ) ∣ x ^ 2 := by
+        have h := dvd_sub hdvd hy2
+        rwa [show x ^ 2 + n * y ^ 2 - n * y ^ 2 = x ^ 2 from by ring] at h
+      have hdx : (p : ℤ) ∣ x := (Nat.prime_iff_prime_int.mp hp).dvd_of_dvd_pow hdx2
+      have hu : IsUnit (p : ℤ) := hcop.isUnit_of_dvd' hdx hdy
+      have h2 : (2 : ℤ) ≤ p := by exact_mod_cast hp.two_le
+      rcases Int.isUnit_iff.mp hu with h | h <;> omega
+    have hy0 : (y : ZMod p) ≠ 0 := by
+      rwa [Ne, ZMod.intCast_zmod_eq_zero_iff_dvd]
+    have hxy : (x : ZMod p) ^ 2 + (n : ZMod p) * (y : ZMod p) ^ 2 = 0 := by
+      have h0 : ((x ^ 2 + n * y ^ 2 : ℤ) : ZMod p) = 0 :=
+        (ZMod.intCast_zmod_eq_zero_iff_dvd _ _).mpr hdvd
+      push_cast at h0; exact h0
+    refine ⟨(x : ZMod p) * (y : ZMod p)⁻¹, ?_⟩
+    have hz : ((x : ZMod p) * (y : ZMod p)⁻¹) ^ 2 = ((-n : ℤ) : ZMod p) := by
+      have hX : (x : ZMod p) ^ 2 = -(n : ZMod p) * (y : ZMod p) ^ 2 := by
+        linear_combination hxy
+      rw [mul_pow, inv_pow, hX, mul_assoc,
+          mul_inv_cancel₀ (pow_ne_zero 2 hy0), mul_one]
+      push_cast; ring
+    rw [← hz]; ring
+  · rintro ⟨r, hr⟩
+    obtain ⟨a, rfl⟩ := ZMod.intCast_surjective r
+    refine ⟨a, 1, isCoprime_one_right, ?_⟩
+    have hcast : ((a ^ 2 + n * 1 ^ 2 : ℤ) : ZMod p) = 0 := by
+      push_cast
+      push_cast at hr
+      linear_combination -hr
+    exact (ZMod.intCast_zmod_eq_zero_iff_dvd _ _).mp hcast
 /-- **Conjecture 1.9** (Euler's form of reciprocity). For distinct odd primes
 `p, q`, `(q/p) = 1` iff `p ≡ ±β² (mod 4q)` for some odd integer `β`. -/
 theorem euler_reciprocity (p q : ℕ) (hp : p.Prime) (hq : q.Prime)
