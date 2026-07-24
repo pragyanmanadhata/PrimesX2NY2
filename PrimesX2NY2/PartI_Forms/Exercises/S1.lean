@@ -26,14 +26,12 @@ def diff (g : ℤ → ℤ) : ℤ → ℤ := fun x => g (x + 1) - g x
 
 /-- **Exercise 1.1(a).** The identity `(1.3)`. -/
 theorem ex_1_1_a (x y z w : ℤ) :
-    (x ^ 2 + y ^ 2) * (z ^ 2 + w ^ 2) = (x * z - y * w) ^ 2 + (x * w + y * z) ^ 2 := by
-  sorry
+    (x ^ 2 + y ^ 2) * (z ^ 2 + w ^ 2) = (x * z - y * w) ^ 2 + (x * w + y * z) ^ 2 := by ring
 
 /-- **Exercise 1.1(b).** Euler's generalization to `(ax²+cy²)(az²+cw²)`. -/
 theorem ex_1_1_b (a c x y z w : ℤ) :
     (a * x ^ 2 + c * y ^ 2) * (a * z ^ 2 + c * w ^ 2)
-      = (a * x * z - c * y * w) ^ 2 + a * c * (x * w + y * z) ^ 2 := by
-  sorry
+      = (a * x * z - c * y * w) ^ 2 + a * c * (x * w + y * z) ^ 2 := by ring
 
 /-- **Exercise 1.2(a).** For `k ≥ 1`, `Δᵏg` is an integral linear combination of
 `g(x), g(x+1), …, g(x+k)`. -/
@@ -113,13 +111,27 @@ supplementary laws for `(−1/p)` and `(2/p)`. -/
 theorem ex_1_9_b (p : ℕ) [Fact p.Prime] (hp : p ≠ 2) :
     legendreSym p (-1) = (-1) ^ ((p - 1) / 2) ∧
       legendreSym p 2 = (-1) ^ ((p ^ 2 - 1) / 8) := by
-  sorry
+  refine ⟨?_, ?_⟩
+  · have hp2 : p % 2 = 1 := ((Fact.out : p.Prime).eq_two_or_odd).resolve_left hp
+    rw [legendreSym.at_neg_one hp, ZMod.χ₄_eq_neg_one_pow hp2]; congr 1; omega
+  · rw [legendreSym.at_two hp, ZMod.χ₈_nat_eq_if_mod_eight]
+    rcases Nat.even_or_odd' p with ⟨k, rfl | rfl⟩ <;> norm_num at *
+    · exact absurd (Nat.Prime.eq_two_or_odd (Fact.out : Nat.Prime (2 * k))) (by omega)
+    · rcases Nat.even_or_odd' k with ⟨k, rfl | rfl⟩ <;> ring_nf <;> norm_num [Nat.add_mod, Nat.mul_mod]
+      · norm_num [add_assoc, Nat.add_div]
+        rcases Nat.even_or_odd' k with ⟨k, rfl | rfl⟩ <;> ring_nf <;> norm_num [Nat.add_mod, Nat.mul_mod]
+        · norm_num [show k ^ 2 * 64 / 8 = k ^ 2 * 8 by rw [Nat.div_eq_of_eq_mul_left] <;> linarith]
+        · norm_num [Nat.add_div, Nat.mul_div_assoc, Nat.mul_mod, Nat.add_mod, Nat.pow_mod]
+          norm_num [pow_add, pow_mul']
+      · norm_num [show 9 + k * 24 + k ^ 2 * 16 - 1 = 8 * (1 + k * 3 + k ^ 2 * 2) by
+          rw [Nat.sub_eq_of_eq_add]; ring]
+        rcases Nat.even_or_odd' k with ⟨k, rfl | rfl⟩ <;> ring_nf <;> norm_num [Nat.add_mod, Nat.mul_mod]
 
 /-- **Exercise 1.10(a).** The Jacobi symbol depends only on the numerator mod the
 denominator. -/
 theorem ex_1_10_a (M N : ℤ) (m : ℕ) (h : M ≡ N [ZMOD m]) :
-    jacobiSym M m = jacobiSym N m := by
-  sorry
+    jacobiSym M m = jacobiSym N m :=
+  jacobiSym.mod_left' h
 
 /-- **Exercise 1.10(b).** Multiplicativity of the Jacobi symbol `(1.15)`. -/
 theorem ex_1_10_b (M N : ℤ) (m n : ℕ) :
@@ -131,7 +143,21 @@ theorem ex_1_10_b (M N : ℤ) (m n : ℕ) :
 theorem ex_1_10_c (m : ℕ) (hm : Odd m) :
     jacobiSym (-1) m = (-1) ^ ((m - 1) / 2) ∧
       jacobiSym 2 m = (-1) ^ ((m ^ 2 - 1) / 8) := by
-  sorry
+  have hm2 : m % 2 = 1 := Nat.odd_iff.mp hm
+  refine ⟨?_, ?_⟩
+  · rw [jacobiSym.at_neg_one hm, ZMod.χ₄_eq_neg_one_pow hm2]; congr 1; omega
+  · rw [jacobiSym.at_two hm, ZMod.χ₈_nat_eq_if_mod_eight]
+    rcases Nat.even_or_odd' m with ⟨k, rfl | rfl⟩
+    · simp at hm2
+    · rcases Nat.even_or_odd' k with ⟨k, rfl | rfl⟩ <;> ring_nf <;> norm_num [Nat.add_mod, Nat.mul_mod]
+      · norm_num [add_assoc, Nat.add_div]
+        rcases Nat.even_or_odd' k with ⟨k, rfl | rfl⟩ <;> ring_nf <;> norm_num [Nat.add_mod, Nat.mul_mod]
+        · norm_num [show k ^ 2 * 64 / 8 = k ^ 2 * 8 by rw [Nat.div_eq_of_eq_mul_left] <;> linarith]
+        · norm_num [Nat.add_div, Nat.mul_div_assoc, Nat.mul_mod, Nat.add_mod, Nat.pow_mod]
+          norm_num [pow_add, pow_mul']
+      · norm_num [show 9 + k * 24 + k ^ 2 * 16 - 1 = 8 * (1 + k * 3 + k ^ 2 * 2) by
+          rw [Nat.sub_eq_of_eq_add]; ring]
+        rcases Nat.even_or_odd' k with ⟨k, rfl | rfl⟩ <;> ring_nf <;> norm_num [Nat.add_mod, Nat.mul_mod]
 
 /-- **Exercise 1.10(d).** If `M` is a quadratic residue mod `m` (and prime to it)
 then `(M/m) = 1` (the converse fails). -/

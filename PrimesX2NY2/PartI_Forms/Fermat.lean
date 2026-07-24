@@ -74,7 +74,31 @@ with `gcd(x,y)=1`, then `p` is itself a sum of two squares. -/
 theorem descent_step (p : ℕ) (hp : p.Prime) (hodd : Odd p) (x y : ℤ)
     (hcop : IsCoprime x y) (hdvd : (p : ℤ) ∣ x ^ 2 + y ^ 2) :
     ∃ a b : ℤ, (p : ℤ) = a ^ 2 + b ^ 2 := by
-  sorry
+  haveI : Fact p.Prime := ⟨hp⟩
+  have hpy : ¬ (p : ℤ) ∣ y := by
+    intro hdy
+    have hy2 : (p : ℤ) ∣ y ^ 2 := hdy.trans (dvd_pow_self y two_ne_zero)
+    have hdx2 : (p : ℤ) ∣ x ^ 2 := by
+      have h := dvd_sub hdvd hy2
+      rwa [show x ^ 2 + y ^ 2 - y ^ 2 = x ^ 2 from by ring] at h
+    have hdx : (p : ℤ) ∣ x := (Nat.prime_iff_prime_int.mp hp).dvd_of_dvd_pow hdx2
+    have hu : IsUnit (p : ℤ) := hcop.isUnit_of_dvd' hdx hdy
+    have h2 : (2 : ℤ) ≤ p := by exact_mod_cast hp.two_le
+    rcases Int.isUnit_iff.mp hu with h | h <;> omega
+  have hy0 : (y : ZMod p) ≠ 0 := by
+    rwa [Ne, ZMod.intCast_zmod_eq_zero_iff_dvd]
+  have hxy : (x : ZMod p) ^ 2 + (y : ZMod p) ^ 2 = 0 := by
+    have h0 : ((x ^ 2 + y ^ 2 : ℤ) : ZMod p) = 0 := (ZMod.intCast_zmod_eq_zero_iff_dvd _ _).mpr hdvd
+    push_cast at h0; exact h0
+  have hX : (x : ZMod p) ^ 2 = -(y : ZMod p) ^ 2 := by linear_combination hxy
+  have hsq : IsSquare (-1 : ZMod p) := by
+    refine ⟨(x : ZMod p) * (y : ZMod p)⁻¹, ?_⟩
+    have hz : ((x : ZMod p) * (y : ZMod p)⁻¹) ^ 2 = -1 := by
+      rw [mul_pow, inv_pow, hX, neg_mul, mul_inv_cancel₀ (pow_ne_zero 2 hy0)]
+    rw [← hz]; ring
+  rw [ZMod.exists_sq_eq_neg_one_iff] at hsq
+  obtain ⟨a, b, hab⟩ := Nat.Prime.sq_add_sq hsq
+  exact ⟨a, b, by exact_mod_cast hab.symm⟩
 
 /-- **Lemma 1.4.** If `N` is a sum of two relatively prime squares and the prime
 `q = x²+y²` divides `N`, then `N/q` is again a sum of two relatively prime
