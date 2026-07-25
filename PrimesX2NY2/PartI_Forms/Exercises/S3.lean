@@ -89,7 +89,20 @@ form of its discriminant. -/
 theorem ex_3_7 (a b c : ℤ) :
     ProperlyEquivalent (⟨a * c, b, 1⟩ : BinaryQF)
       (principalForm ((⟨a * c, b, 1⟩ : BinaryQF).discr)) := by
-  sorry
+  have hdiscr : (⟨a * c, b, 1⟩ : BinaryQF).discr = (⟨1, -b, a * c⟩ : BinaryQF).discr := by
+    simp only [BinaryQF.discr]; ring
+  have hinv : ProperlyEquivalent (⟨a * c, b, 1⟩ : BinaryQF) (⟨1, -b, a * c⟩ : BinaryQF) := by
+    refine ⟨!![0, -1; 1, 0], ?_, ?_⟩
+    · rw [Matrix.det_fin_two_of]; ring
+    · simp only [action, BinaryQF.mk.injEq, Matrix.cons_val_zero, Matrix.cons_val_one,
+        Matrix.of_apply, Matrix.cons_val', Matrix.empty_val', Matrix.cons_val_fin_one,
+        Matrix.head_cons, Matrix.head_fin_const]
+      refine ⟨by ring, by ring, by ring⟩
+  have hprin : ProperlyEquivalent (⟨1, -b, a * c⟩ : BinaryQF)
+      (principalForm ((⟨1, -b, a * c⟩ : BinaryQF).discr)) :=
+    principal_of_a_one _ (⟨1, -b, a * c⟩ : BinaryQF) rfl rfl
+  rw [hdiscr]
+  exact properlyEquivalent_equivalence.trans hinv hprin
 
 /-- **Exercise 3.8(a).** The Lagrangian (full-equivalence) class of `f` is the union
 of the proper class of `f` and the proper class of its opposite. -/
