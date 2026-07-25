@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Pragyan Manadhata
 -/
 import Mathlib
+import PrimesX2NY2.PartI_Forms.Fermat
 
 /-!
 # Part I, §1 - Exercises
@@ -83,8 +84,8 @@ theorem ex_1_5 (p : ℕ) (hp : p.Prime) (k : ℕ) (hk : p = 3 * k + 1) :
 /-- **Exercise 1.6.** Prove Lemma 1.7. -/
 theorem ex_1_6 (n : ℤ) (p : ℕ) (hp : p.Prime) (hodd : Odd p) (hpn : ¬ (p : ℤ) ∣ n) :
     (∃ x y : ℤ, IsCoprime x y ∧ (p : ℤ) ∣ x ^ 2 + n * y ^ 2)
-      ↔ IsSquare ((-n : ℤ) : ZMod p) := by
-  sorry
+      ↔ IsSquare ((-n : ℤ) : ZMod p) :=
+  PrimesX2NY2.Fermat.dvd_sq_add_nsq_iff_isSquare n p hp hodd hpn
 
 /-- **Exercise 1.7.** Quadratic reciprocity in the form `(1.12)`:
 `(p*/q) = (q/p)` with `p* = (−1)^((p−1)/2)·p`. -/
@@ -183,13 +184,15 @@ theorem ex_1_12_a (D : ℤ) (hD0 : D ≠ 0) (hD4 : D % 4 = 0 ∨ D % 4 = 1) :
 /-- **Exercise 1.13(a).** Quadratic reciprocity, assuming Lemma 1.14. -/
 theorem ex_1_13_a (p q : ℕ) [Fact p.Prime] [Fact q.Prime] (hp : p ≠ 2) (hq : q ≠ 2) :
     legendreSym p (q : ℤ) * legendreSym q (p : ℤ) = (-1) ^ (p / 2 * (q / 2)) := by
+  -- FLAG (under-hypothesized): FALSE for p = q, since legendreSym p p = 0 while the RHS is +/-1.
+  -- Mathlib's legendreSym.quadratic_reciprocity requires the missing hypothesis `p != q`.
   sorry
 
 /-- **Exercise 1.13(b).** The supplementary laws, assuming Lemma 1.14. -/
 theorem ex_1_13_b (p : ℕ) [Fact p.Prime] (hp : p ≠ 2) :
     legendreSym p (-1) = (-1) ^ ((p - 1) / 2) ∧
-      legendreSym p 2 = (-1) ^ ((p ^ 2 - 1) / 8) := by
-  sorry
+      legendreSym p 2 = (-1) ^ ((p ^ 2 - 1) / 8) :=
+  ex_1_9_b p hp
 
 /-- **Exercise 1.14.** When `n ≡ 3 (mod 4)` the congruence characterizing the
 Reciprocity Step can be taken modulo `n` (rather than `4n`). -/
