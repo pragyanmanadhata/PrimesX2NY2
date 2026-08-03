@@ -447,10 +447,118 @@ theorem reduced_eq_of_properlyEquivalent (f g : BinaryQF)
       have hgb' : g.b = 0 := by omega
       exact binaryQF_eq_of_coeff_eq f g haeq (by omega) (by omega)
 
-/-- **Reduction theorem** (Cox, Thm 2.8). Every positive definite form is
-properly equivalent to a unique reduced form. -/
+/-- Translation by `t`: `⟨a,b,c⟩ ~ ⟨a, b+2at, at²+bt+c⟩` (the `SL₂` matrix `!![1,t;0,1]`). -/
+theorem translate_equiv (a b c t : ℤ) :
+    ProperlyEquivalent (⟨a, b, c⟩ : BinaryQF) ⟨a, b + 2 * a * t, a * t ^ 2 + b * t + c⟩ := by
+  refine ⟨!![1, t; 0, 1], ?_, ?_⟩
+  · rw [Matrix.det_fin_two_of]; ring
+  · simp only [action, BinaryQF.mk.injEq, Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.of_apply, Matrix.cons_val', Matrix.empty_val', Matrix.cons_val_fin_one,
+      Matrix.head_cons, Matrix.head_fin_const]
+    refine ⟨by ring, by ring, by ring⟩
+
+/-- The quarter-turn `⟨a,b,c⟩ ~ ⟨c,-b,a⟩` (the `SL₂` matrix `!![0,-1;1,0]`). -/
+theorem swap_equiv (a b c : ℤ) :
+    ProperlyEquivalent (⟨a, b, c⟩ : BinaryQF) ⟨c, -b, a⟩ := by
+  refine ⟨!![0, -1; 1, 0], ?_, ?_⟩
+  · rw [Matrix.det_fin_two_of]; ring
+  · simp only [action, BinaryQF.mk.injEq, Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.of_apply, Matrix.cons_val', Matrix.empty_val', Matrix.cons_val_fin_one,
+      Matrix.head_cons, Matrix.head_fin_const]
+    refine ⟨by ring, by ring, by ring⟩
+
+/-- Reduce the middle coefficient into `(-a, a]` by a translation. -/
+theorem normalize_b (a b c : ℤ) (ha : 0 < a) :
+    ∃ B C : ℤ, ProperlyEquivalent (⟨a, b, c⟩ : BinaryQF) ⟨a, B, C⟩ ∧ |B| ≤ a := by
+  have h2a : (0 : ℤ) < 2 * a := by positivity
+  have hmod : 0 ≤ b % (2 * a) ∧ b % (2 * a) < 2 * a :=
+    ⟨Int.emod_nonneg b (by positivity), Int.emod_lt_of_pos b h2a⟩
+  have hid : b % (2 * a) + (2 * a) * (b / (2 * a)) = b := Int.emod_add_ediv b (2 * a)
+  set k := if b % (2 * a) ≤ a then -(b / (2 * a)) else -(b / (2 * a)) - 1 with hkdef
+  have hBle : |b + 2 * a * k| ≤ a := by
+    by_cases h : b % (2 * a) ≤ a
+    · have hB : b + 2 * a * k = b % (2 * a) := by rw [hkdef, if_pos h]; linear_combination -hid
+      rw [hB, abs_le]; exact ⟨by linarith [hmod.1], h⟩
+    · have hB : b + 2 * a * k = b % (2 * a) - 2 * a := by rw [hkdef, if_neg h]; linear_combination -hid
+      rw [hB, abs_le]; have h' := not_le.mp h; exact ⟨by linarith, by linarith [hmod.2]⟩
+  exact ⟨b + 2 * a * k, a * k ^ 2 + b * k + c, translate_equiv a b c k, hBle⟩
+
+/-- **Reduction theorem** (Cox, Thm 2.8). Every positive definite form is properly
+equivalent to a unique reduced form. Existence is the reduction algorithm (translate the
+middle coefficient into `(-a,a]`, then swap when `c < a`, strong induction on `a.natAbs`);
+uniqueness is `reduced_eq_of_properlyEquivalent`. -/
 theorem exists_unique_reduced (f : BinaryQF) (hf : f.PosDef) :
-    ∃! g : BinaryQF, g.Reduced ∧ ProperlyEquivalent f g := sorry
+    ∃! g : BinaryQF, g.Reduced ∧ ProperlyEquivalent f g := by
+  -- existence via strong induction on the leading coefficient
+  have exred : ∀ (n : ℕ) (g : BinaryQF), g.PosDef → g.a.natAbs = n →
+      ∃ h, h.Reduced ∧ ProperlyEquivalent g h := by
+    intro n
+    induction n using Nat.strong_induction_on with
+    | _ n ih =>
+      intro g hg hn
+      have hga : 0 < g.a := hg.1
+      have hgd : g.discr < 0 := hg.2
+      obtain ⟨B, C, hBC, hBle⟩ := normalize_b g.a g.b g.c hga
+      have hd1 : (⟨g.a, B, C⟩ : BinaryQF).discr = g.discr :=
+        (discr_eq_of_properlyEquivalent hBC).symm
+      have hCpos : 0 < C := by
+        have hlt : (⟨g.a, B, C⟩ : BinaryQF).discr < 0 := by rw [hd1]; exact hgd
+        simp only [BinaryQF.discr] at hlt; nlinarith [sq_nonneg B, hga]
+      by_cases hca : g.a ≤ C
+      · by_cases hred : (⟨g.a, B, C⟩ : BinaryQF).Reduced
+        · exact ⟨_, hred, hBC⟩
+        · have hbnd : ¬ ((|B| = g.a ∨ g.a = C) → 0 ≤ B) := fun h => hred ⟨hBle, hca, h⟩
+          push_neg at hbnd
+          obtain ⟨hbound, hBneg⟩ := hbnd
+          rcases hbound with hBa | haC
+          · -- |B| = g.a with B < 0 ⇒ B = -g.a; translate to ⟨a, a, C⟩
+            have hBeq : B = -g.a := by
+              have := abs_of_neg hBneg; rw [this] at hBa; linarith
+            have htr : ProperlyEquivalent (⟨g.a, B, C⟩ : BinaryQF) ⟨g.a, g.a, C⟩ := by
+              have h := translate_equiv g.a B C 1
+              rw [hBeq] at h ⊢
+              convert h using 2 <;> ring
+            have hredF : (⟨g.a, g.a, C⟩ : BinaryQF).Reduced :=
+              ⟨by rw [abs_of_nonneg hga.le], hca, fun _ => hga.le⟩
+            exact ⟨_, hredF, properlyEquivalent_equivalence.trans hBC htr⟩
+          · -- g.a = C with B < 0 ⇒ swap ⟨a,B,a⟩ → ⟨a,-B,a⟩
+            have hswap : ProperlyEquivalent (⟨g.a, B, C⟩ : BinaryQF) ⟨C, -B, g.a⟩ :=
+              swap_equiv g.a B C
+            have hredF : (⟨C, -B, g.a⟩ : BinaryQF).Reduced := by
+              rw [← haC]
+              exact ⟨by rw [abs_neg]; exact hBle, le_refl _, fun _ => by linarith⟩
+            exact ⟨_, hredF, properlyEquivalent_equivalence.trans hBC hswap⟩
+      · -- C < g.a : swap and recurse on the smaller leading coefficient
+        push_neg at hca
+        have hswap : ProperlyEquivalent (⟨g.a, B, C⟩ : BinaryQF) ⟨C, -B, g.a⟩ :=
+          swap_equiv g.a B C
+        have hdsw : (⟨C, -B, g.a⟩ : BinaryQF).discr = g.discr := by
+          have : (⟨C, -B, g.a⟩ : BinaryQF).discr = (⟨g.a, B, C⟩ : BinaryQF).discr := by
+            simp only [BinaryQF.discr]; ring
+          rw [this, hd1]
+        have hposC : (⟨C, -B, g.a⟩ : BinaryQF).PosDef := ⟨hCpos, by rw [hdsw]; exact hgd⟩
+        have hlt : (⟨C, -B, g.a⟩ : BinaryQF).a.natAbs < n := by
+          rw [← hn]; show C.natAbs < g.a.natAbs; omega
+        obtain ⟨h, hred, hh⟩ := ih _ hlt ⟨C, -B, g.a⟩ hposC rfl
+        exact ⟨h, hred, properlyEquivalent_equivalence.trans hBC
+          (properlyEquivalent_equivalence.trans hswap hh)⟩
+  obtain ⟨g0, hg0red, hg0eq⟩ := exred f.a.natAbs f hf rfl
+  refine ⟨g0, ⟨hg0red, hg0eq⟩, ?_⟩
+  rintro g' ⟨hg'red, hg'eq⟩
+  have hgg : ProperlyEquivalent g' g0 :=
+    properlyEquivalent_equivalence.trans (properlyEquivalent_equivalence.symm hg'eq) hg0eq
+  have hg'pos : g'.PosDef := by
+    have hb := hg'red.1
+    have ha0 : 0 ≤ g'.a := le_trans (abs_nonneg _) hb
+    have hdlt : g'.discr < 0 := by rw [← discr_eq_of_properlyEquivalent hg'eq]; exact hf.2
+    refine ⟨?_, hdlt⟩
+    rcases eq_or_lt_of_le ha0 with h | h
+    · exfalso
+      have hb0 : g'.b = 0 := by rw [← h] at hb; exact abs_nonpos_iff.mp hb
+      have hz : g'.discr = 0 := by simp only [BinaryQF.discr, ← h, hb0]; ring
+      rw [hz] at hdlt; exact absurd hdlt (lt_irrefl 0)
+    · exact h
+  exact reduced_eq_of_properlyEquivalent g' g0 hg'red hg0red hg'pos hgg
 
 /-- **Finiteness of class number** (Cox, Thm 2.13). For each discriminant `D < 0`
 there are only finitely many reduced forms, hence finitely many proper
