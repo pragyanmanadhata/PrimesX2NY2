@@ -80,7 +80,12 @@ theorem ex_2_5 (D : ℤ) (hD : D % 4 = 0 ∨ D % 4 = 1) (p : ℕ) (hp : p.Prime)
 /-- **Exercise 2.6.** There is a reduced form properly equivalent to
 `126x² + 74xy + 13y²`. -/
 theorem ex_2_6 : ∃ f : BinaryQF, f.Reduced ∧ ProperlyEquivalent ⟨126, 74, 13⟩ f := by
-  sorry
+  have hpd : (⟨126, 74, 13⟩ : BinaryQF).PosDef := by
+    refine ⟨by norm_num, ?_⟩
+    show (⟨126, 74, 13⟩ : BinaryQF).discr < 0
+    simp only [BinaryQF.discr]; norm_num
+  obtain ⟨g, ⟨hred, heq⟩, _⟩ := exists_unique_reduced ⟨126, 74, 13⟩ hpd
+  exact ⟨g, hred, heq⟩
 
 /-- **Exercise 2.7.** The bound (2.9): for `|b| ≤ a ≤ c`,
 `(a − |b| + c)·min(x², y²) ≤ f(x,y)`. -/
@@ -172,7 +177,17 @@ theorem ex_2_15 (p : ℕ) (hp : p.Prime) (hodd : Odd p) (hp7 : p ≠ 7) :
 discriminant `D` and is reduced when `D < 0`. -/
 theorem ex_2_16 (D : ℤ) (hD : D % 4 = 1) :
     (principalForm D).discr = D ∧ (D < 0 → (principalForm D).Reduced) := by
-  sorry
+  have hpf : principalForm D = ⟨1, 1, (1 - D) / 4⟩ := by
+    simp only [principalForm]; rw [if_neg (by omega)]
+  have h4 : (4 : ℤ) ∣ (1 - D) := by omega
+  have he : 4 * ((1 - D) / 4) = 1 - D := Int.mul_ediv_cancel' h4
+  refine ⟨?_, ?_⟩
+  · rw [hpf]; simp only [BinaryQF.discr]; linear_combination -he
+  · intro hDneg; rw [hpf]
+    refine ⟨?_, ?_, ?_⟩
+    · show |(1 : ℤ)| ≤ 1; norm_num
+    · show (1 : ℤ) ≤ (1 - D) / 4; omega
+    · intro _; show (0 : ℤ) ≤ 1; norm_num
 
 /-- **Exercise 2.17(a).** For `D ≡ 1 (mod 4)`, an even number properly represented
 by a form of discriminant `D` forces `D ≡ 1 (mod 8)`. -/
