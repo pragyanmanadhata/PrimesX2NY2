@@ -237,7 +237,22 @@ theorem ex_2_17_c (D : ℤ) (hD : D % 4 = 1) (hDneg : D < 0) (u : (ZMod D.natAbs
 `f(1,0), f(0,1), f(1,1)` is prime to `p`. -/
 theorem ex_2_18_a (f : BinaryQF) (hf : f.Primitive) (p : ℕ) (hp : p.Prime) :
     ¬ (p : ℤ) ∣ f.eval 1 0 ∨ ¬ (p : ℤ) ∣ f.eval 0 1 ∨ ¬ (p : ℤ) ∣ f.eval 1 1 := by
-  sorry
+  by_contra hc
+  push_neg at hc
+  obtain ⟨h1, h2, h3⟩ := hc
+  have e1 : f.eval 1 0 = f.a := by simp [BinaryQF.eval]
+  have e2 : f.eval 0 1 = f.c := by simp [BinaryQF.eval]
+  have e3 : f.eval 1 1 = f.a + f.b + f.c := by simp only [BinaryQF.eval]; ring
+  rw [e1] at h1; rw [e2] at h2; rw [e3] at h3
+  have hpb : (p : ℤ) ∣ f.b := by
+    have hrw : f.b = (f.a + f.b + f.c) - f.a - f.c := by ring
+    rw [hrw]; exact dvd_sub (dvd_sub h3 h1) h2
+  have d1 : p ∣ f.a.natAbs := by simpa using Int.natAbs_dvd_natAbs.mpr h1
+  have d2 : p ∣ f.b.natAbs := by simpa using Int.natAbs_dvd_natAbs.mpr hpb
+  have d3 : p ∣ f.c.natAbs := by simpa using Int.natAbs_dvd_natAbs.mpr h2
+  have dgg : p ∣ Int.gcd (Int.gcd f.a f.b) f.c := Nat.dvd_gcd (Nat.dvd_gcd d1 d2) d3
+  rw [hf] at dgg
+  exact hp.ne_one (Nat.dvd_one.mp dgg)
 
 /-- **Exercise 2.18(b).** Proof of Lemma 2.25. -/
 theorem ex_2_18_b (f : BinaryQF) (M : ℤ) :
