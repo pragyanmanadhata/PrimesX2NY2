@@ -43,7 +43,11 @@ theorem ex_2_2_b :
 /-- **Exercise 2.2(c).** Equivalent forms represent the same numbers. -/
 theorem ex_2_2_c (f g : BinaryQF) (h : Equivalent f g) (m : ℤ) :
     Represents f m ↔ Represents g m := by
-  sorry
+  have fwd : ∀ f' g' : BinaryQF, Equivalent f' g' → Represents g' m → Represents f' m := by
+    rintro f' g' ⟨M, _, rfl⟩ ⟨x, y, hxy⟩
+    rw [eval_action] at hxy
+    exact ⟨_, _, hxy⟩
+  exact ⟨fwd g f (equivalent_equivalence.symm h), fwd f g h⟩
 
 /-- **Exercise 2.2(d).** Any form equivalent to a primitive form is primitive. -/
 theorem ex_2_2_d (f g : BinaryQF) (h : Equivalent f g) (hf : f.Primitive) :
@@ -235,21 +239,6 @@ theorem ex_2_22 (a b c x y z w : ℤ) :
         + (a * c - b ^ 2) * (x * w - y * z) ^ 2 := by
   ring
 
-/-- **Exercise 2.23(a).** `p ≡ 1 (mod 8)` implies `(−2/p) = 1`. -/
-theorem ex_2_23_a (p : ℕ) (hp : p.Prime) (h : p % 8 = 1) :
-    IsSquare ((-2 : ℤ) : ZMod p) := by
-  haveI := Fact.mk hp
-  have h2 : p ≠ 2 := by omega
-  have hsq : IsSquare (-2 : ZMod p) := (ZMod.exists_sq_eq_neg_two_iff h2).mpr (Or.inl h)
-  simpa using hsq
-
-/-- **Exercise 2.23(b).** For `p ≡ 3 (mod 8)` with `(−2/p) = −1`, `(2/p) = 1` and
-`p` is represented by a form of discriminant `8`. -/
-theorem ex_2_23_b (p : ℕ) (hp : p.Prime) (h : p % 8 = 3)
-    (hn2 : ¬ IsSquare ((-2 : ℤ) : ZMod p)) :
-    IsSquare ((2 : ℤ) : ZMod p) ∧ ∃ f : BinaryQF, f.discr = 8 ∧ Represents f (p : ℤ) := by
-  sorry
-
 /-- **Exercise 2.23(c).** Any form of discriminant `8` is properly equivalent to
 `±(x² − 2y²)`. -/
 theorem ex_2_23_c (f : BinaryQF) (hf : f.discr = 8) :
@@ -293,8 +282,26 @@ theorem ex_2_24_b (p q : ℕ) (hp : p % 4 = 1) (hq : q % 4 = 3) :
 /-- **Exercise 2.25.** Two forms are properly equivalent iff their opposites
 (`ax² − bxy + cy²`) are. -/
 theorem ex_2_25 (f g : BinaryQF) :
-    ProperlyEquivalent f g ↔ ProperlyEquivalent ⟨f.a, -f.b, f.c⟩ ⟨g.a, -g.b, g.c⟩ := by
-  sorry
+    ProperlyEquivalent f g ↔
+      ProperlyEquivalent ⟨f.a, -f.b, f.c⟩ ⟨g.a, -g.b, g.c⟩ := by
+  have key : ∀ (p : BinaryQF) (M : Matrix (Fin 2) (Fin 2) ℤ),
+      action (!![M 0 0, -(M 0 1); -(M 1 0), M 1 1]) ⟨p.a, -p.b, p.c⟩
+        = ⟨(action M p).a, -(action M p).b, (action M p).c⟩ := by
+    intro p M
+    simp only [action, BinaryQF.mk.injEq, Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.of_apply, Matrix.cons_val', Matrix.empty_val', Matrix.cons_val_fin_one,
+      Matrix.head_cons, Matrix.head_fin_const]
+    refine ⟨by ring, by ring, by ring⟩
+  have opp : ∀ (p q : BinaryQF), ProperlyEquivalent p q →
+      ProperlyEquivalent ⟨p.a, -p.b, p.c⟩ ⟨q.a, -q.b, q.c⟩ := by
+    rintro p q ⟨M, hdet, rfl⟩
+    refine ⟨!![M 0 0, -(M 0 1); -(M 1 0), M 1 1], ?_, key p M⟩
+    rw [Matrix.det_fin_two_of]
+    have hd : M 0 0 * M 1 1 - M 0 1 * M 1 0 = 1 := by rw [← Matrix.det_fin_two]; exact hdet
+    linear_combination hd
+  refine ⟨opp f g, fun h => ?_⟩
+  have := opp _ _ h
+  simpa using this
 
 /-- **Exercise 2.26.** The four compositions `126x² ± 74xy + 13y²`,
 `126x² ± 38xy + 5y²` lie in distinct classes (pairwise non-properly-equivalent). -/
