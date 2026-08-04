@@ -26,7 +26,20 @@ open PrimesX2NY2.Forms PrimesX2NY2.Genus
 representing `m'`. -/
 theorem ex_2_1 (f : BinaryQF) (m : ℤ) (h : Represents f m) :
     ∃ d m' : ℤ, m = d ^ 2 * m' ∧ ProperlyRepresents f m' := by
-  sorry
+  obtain ⟨x, y, hxy⟩ := h
+  by_cases hxy0 : x = 0 ∧ y = 0
+  · obtain ⟨hx0, hy0⟩ := hxy0
+    subst hx0; subst hy0
+    have hm : m = 0 := by rw [← hxy]; simp [BinaryQF.eval]
+    exact ⟨0, f.eval 1 0, by rw [hm]; ring, 1, 0, rfl, isCoprime_one_left⟩
+  · have hg : 0 < Int.gcd x y :=
+      Nat.pos_of_ne_zero (fun hz => hxy0 (Int.gcd_eq_zero_iff.mp hz))
+    obtain ⟨x', y', hcop, hx, hy⟩ := Int.exists_gcd_one hg
+    set g : ℤ := (Int.gcd x y : ℤ) with hgdef
+    refine ⟨g, f.eval x' y', ?_, x', y', rfl, ?_⟩
+    · have hme : m = f.eval (x' * g) (y' * g) := by rw [← hx, ← hy]; exact hxy.symm
+      rw [hme]; simp only [BinaryQF.eval]; ring
+    · exact Int.isCoprime_iff_gcd_eq_one.mpr hcop
 
 /-- **Exercise 2.2(a).** Equivalence and proper equivalence are equivalence
 relations. -/
