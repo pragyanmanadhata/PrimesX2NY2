@@ -52,7 +52,21 @@ theorem ex_2_2_c (f g : BinaryQF) (h : Equivalent f g) (m : ℤ) :
 /-- **Exercise 2.2(d).** Any form equivalent to a primitive form is primitive. -/
 theorem ex_2_2_d (f g : BinaryQF) (h : Equivalent f g) (hf : f.Primitive) :
     g.Primitive := by
-  sorry
+  obtain ⟨M, hdet, rfl⟩ := h
+  rcases hdet with hd | hd
+  · exact (primitive_action_iff M f hd).mpr hf
+  · have hMD : (M * !![1, 0; 0, -1]).det = 1 := by
+      rw [Matrix.det_mul, hd, Matrix.det_fin_two_of]; ring
+    have hact : action (M * !![1, 0; 0, -1]) f
+        = ⟨(action M f).a, -(action M f).b, (action M f).c⟩ := by
+      rw [← action_mul]
+      simp only [action, BinaryQF.mk.injEq, Matrix.cons_val_zero, Matrix.cons_val_one,
+        Matrix.of_apply, Matrix.cons_val', Matrix.empty_val', Matrix.cons_val_fin_one,
+        Matrix.head_cons, Matrix.head_fin_const]
+      refine ⟨by ring, by ring, by ring⟩
+    have hprim := (primitive_action_iff (M * !![1, 0; 0, -1]) f hMD).mpr hf
+    rw [hact] at hprim
+    simpa [BinaryQF.Primitive, Int.gcd, Int.natAbs_neg] using hprim
 
 /-- **Exercise 2.3.** Under `f = g(px+qy, rx+sy)`, `D_f = (ps−qr)² D_g`. -/
 theorem ex_2_3 (M : Matrix (Fin 2) (Fin 2) ℤ) (g : BinaryQF) :
@@ -70,7 +84,12 @@ theorem ex_2_4_a (f : BinaryQF) (h : 0 < f.discr) :
 theorem ex_2_4_b (f : BinaryQF) (h : f.discr < 0) :
     (0 < f.a → ∀ x y : ℤ, (x ≠ 0 ∨ y ≠ 0) → 0 < f.eval x y) ∧
       (f.a < 0 → ∀ x y : ℤ, (x ≠ 0 ∨ y ≠ 0) → f.eval x y < 0) := by
-  sorry
+  refine ⟨fun ha x y hxy => eval_pos_of_posDef f ⟨ha, h⟩ x y hxy, fun ha x y hxy => ?_⟩
+  have hgd : (⟨-f.a, -f.b, -f.c⟩ : BinaryQF).discr = f.discr := by simp only [BinaryQF.discr]; ring
+  have hg : (⟨-f.a, -f.b, -f.c⟩ : BinaryQF).PosDef := ⟨by linarith, by rw [hgd]; exact h⟩
+  have hp := eval_pos_of_posDef ⟨-f.a, -f.b, -f.c⟩ hg x y hxy
+  simp only [BinaryQF.eval] at hp ⊢
+  linarith
 
 /-- **Exercise 2.5.** Corollary 2.6 for arbitrary discriminant: for `D ≡ 0,1
 (mod 4)` and an odd prime `p ∤ D`, `(D/p) = 1` iff `p` is represented by a
