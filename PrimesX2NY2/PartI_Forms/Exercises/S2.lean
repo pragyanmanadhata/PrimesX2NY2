@@ -285,7 +285,64 @@ theorem ex_2_23_d (p : ℕ) (hp : p.Prime) (hodd : Odd p)
     (h : (∃ x y : ℤ, (p : ℤ) = x ^ 2 - 2 * y ^ 2)
         ∨ (∃ x y : ℤ, (p : ℤ) = -(x ^ 2 - 2 * y ^ 2))) :
     p % 8 = 1 ∨ p % 8 = 7 := by
-  sorry
+  haveI : Fact p.Prime := ⟨hp⟩
+  haveI : NeZero p := ⟨hp.ne_zero⟩
+  have hp2 : p ≠ 2 := by rintro rfl; exact (by decide : ¬ Odd 2) hodd
+  rw [← ZMod.exists_sq_eq_two_iff hp2]
+  have hpne : (p : ℤ) ≠ 0 := by exact_mod_cast hp.ne_zero
+  have hpZ : Prime (p : ℤ) := Nat.prime_iff_prime_int.1 hp
+  -- Key: from  x² − 2y² = ±p  derive that 2 is a square mod p.
+  have key : ∀ (x y : ℤ), x ^ 2 - 2 * y ^ 2 = (p : ℤ) ∨ x ^ 2 - 2 * y ^ 2 = -(p : ℤ) →
+      IsSquare (2 : ZMod p) := by
+    intro x y hpm
+    -- Step 1: p ∤ y.
+    have hydvd : ¬ (p : ℤ) ∣ y := by
+      intro hy
+      have hx2 : (p : ℤ) ∣ x ^ 2 := by
+        rcases hpm with hpm | hpm
+        · have he : x ^ 2 = 2 * y ^ 2 + (p : ℤ) := by linarith
+          rw [he]; exact dvd_add (Dvd.dvd.mul_left (dvd_pow hy two_ne_zero) 2) (dvd_refl _)
+        · have he : x ^ 2 = 2 * y ^ 2 - (p : ℤ) := by linarith
+          rw [he]; exact dvd_sub (Dvd.dvd.mul_left (dvd_pow hy two_ne_zero) 2) (dvd_refl _)
+      have hpx : (p : ℤ) ∣ x := hpZ.dvd_of_dvd_pow hx2
+      obtain ⟨a, ha⟩ := hpx
+      obtain ⟨b, hb⟩ := hy
+      have hpK : (p : ℤ) ∣ 1 := by
+        rcases hpm with hpm | hpm
+        · have key2 : (p : ℤ) ^ 2 * (a ^ 2 - 2 * b ^ 2) = (p : ℤ) := by
+            rw [ha, hb] at hpm; linear_combination hpm
+          have h2 : (p : ℤ) * ((p : ℤ) * (a ^ 2 - 2 * b ^ 2)) = (p : ℤ) * 1 := by
+            linear_combination key2
+          exact ⟨a ^ 2 - 2 * b ^ 2, (mul_left_cancel₀ hpne h2).symm⟩
+        · have key2 : (p : ℤ) ^ 2 * (a ^ 2 - 2 * b ^ 2) = -(p : ℤ) := by
+            rw [ha, hb] at hpm; linear_combination hpm
+          have h2 : (p : ℤ) * ((p : ℤ) * (a ^ 2 - 2 * b ^ 2)) = (p : ℤ) * (-1) := by
+            linear_combination key2
+          have h3 := mul_left_cancel₀ hpne h2
+          exact dvd_neg.mp ⟨a ^ 2 - 2 * b ^ 2, h3.symm⟩
+      have hle := Int.le_of_dvd one_pos hpK
+      have hge : (2 : ℤ) ≤ p := by exact_mod_cast hp.two_le
+      omega
+    -- Step 2: x² = 2 y² in ZMod p, with y ≠ 0.
+    have hY : (y : ZMod p) ≠ 0 := fun hy0 =>
+      hydvd ((ZMod.intCast_zmod_eq_zero_iff_dvd y p).mp hy0)
+    have hcast : (x : ZMod p) ^ 2 - 2 * (y : ZMod p) ^ 2 = 0 := by
+      rcases hpm with hpm | hpm <;>
+        · have hc := congrArg (fun t : ℤ => (t : ZMod p)) hpm
+          push_cast at hc
+          simpa [ZMod.natCast_self] using hc
+    have hXY : (x : ZMod p) ^ 2 = 2 * (y : ZMod p) ^ 2 := by linear_combination hcast
+    -- Step 3: 2 = (x·y⁻¹)².
+    refine ⟨(x : ZMod p) * (y : ZMod p)⁻¹, ?_⟩
+    have hYinv : (y : ZMod p) * (y : ZMod p)⁻¹ = 1 := mul_inv_cancel₀ hY
+    calc (2 : ZMod p)
+        = 2 * ((y : ZMod p) * (y : ZMod p)⁻¹) ^ 2 := by rw [hYinv]; ring
+      _ = (2 * (y : ZMod p) ^ 2) * ((y : ZMod p)⁻¹) ^ 2 := by ring
+      _ = (x : ZMod p) ^ 2 * ((y : ZMod p)⁻¹) ^ 2 := by rw [← hXY]
+      _ = ((x : ZMod p) * (y : ZMod p)⁻¹) * ((x : ZMod p) * (y : ZMod p)⁻¹) := by ring
+  rcases h with ⟨x, y, hxy⟩ | ⟨x, y, hxy⟩
+  · exact key x y (Or.inl hxy.symm)
+  · exact key x y (Or.inr (by linarith))
 
 /-- **Exercise 2.24.** Legendre's theorem: for nonzero `a,b,c` with `abc`
 squarefree, `ax²+by²+cz² = 0` has a nontrivial solution iff `a,b,c` are not all
