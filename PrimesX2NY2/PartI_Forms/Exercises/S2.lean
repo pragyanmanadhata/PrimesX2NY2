@@ -77,7 +77,27 @@ theorem ex_2_3 (M : Matrix (Fin 2) (Fin 2) ℤ) (g : BinaryQF) :
 and negative integers. -/
 theorem ex_2_4_a (f : BinaryQF) (h : 0 < f.discr) :
     (∃ x y : ℤ, 0 < f.eval x y) ∧ (∃ x y : ℤ, f.eval x y < 0) := by
-  sorry
+  obtain ⟨a, b, c⟩ := f
+  simp only [BinaryQF.discr] at h
+  simp only [BinaryQF.eval]
+  by_cases ha : a = 0
+  · subst ha
+    by_cases hc : c = 0
+    · subst hc
+      have hb : b ≠ 0 := by rintro rfl; norm_num at h
+      rcases lt_or_gt_of_ne hb with hb' | hb'
+      · exact ⟨⟨1, -1, by nlinarith [hb']⟩, ⟨1, 1, by nlinarith [hb']⟩⟩
+      · exact ⟨⟨1, 1, by nlinarith [hb']⟩, ⟨1, -1, by nlinarith [hb']⟩⟩
+    · rcases lt_or_gt_of_ne hc with hc' | hc'
+      · exact ⟨⟨-2 * c, b, by nlinarith [mul_pos (neg_pos.mpr hc') h]⟩,
+              ⟨0, 1, by nlinarith [hc']⟩⟩
+      · exact ⟨⟨0, 1, by nlinarith [hc']⟩,
+              ⟨-2 * c, b, by nlinarith [mul_pos hc' h]⟩⟩
+  · rcases lt_or_gt_of_ne ha with ha' | ha'
+    · exact ⟨⟨b, -2 * a, by nlinarith [mul_pos (neg_pos.mpr ha') h]⟩,
+            ⟨1, 0, by nlinarith [ha']⟩⟩
+    · exact ⟨⟨1, 0, by nlinarith [ha']⟩,
+            ⟨b, -2 * a, by nlinarith [mul_pos ha' h]⟩⟩
 
 /-- **Exercise 2.4(b).** A form of negative discriminant represents only positive
 (resp. only negative) values according to the sign of `a`. -/
