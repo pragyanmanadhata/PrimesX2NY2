@@ -178,7 +178,33 @@ theorem ex_2_10_a (g : BinaryQF) (h : 0 < g.discr) (hns : ¬ IsSquare g.discr) :
 /-- **Exercise 2.10(b).** Such a form satisfies `4a² ≤ D` (i.e. `|a| ≤ √D/2`). -/
 theorem ex_2_10_b (f : BinaryQF) (h1 : |f.b| ≤ |f.a|) (h2 : |f.a| ≤ |f.c|)
     (hD : 0 < f.discr) (hns : ¬ IsSquare f.discr) : 4 * f.a ^ 2 ≤ f.discr := by
-  sorry
+  simp only [BinaryQF.discr] at hD ⊢
+  have hb2 : f.b ^ 2 ≤ f.a ^ 2 := by
+    nlinarith [mul_le_mul h1 h1 (abs_nonneg f.b) (abs_nonneg f.a), sq_abs f.b, sq_abs f.a]
+  have habs : f.a ^ 2 ≤ |f.a| * |f.c| := by
+    nlinarith [mul_le_mul_of_nonneg_left h2 (abs_nonneg f.a), sq_abs f.a]
+  rcases lt_trichotomy (f.a * f.c) 0 with hlt | heq | hgt
+  · have hle : f.a ^ 2 ≤ -(f.a * f.c) := by
+      calc f.a ^ 2 ≤ |f.a| * |f.c| := habs
+        _ = |f.a * f.c| := (abs_mul _ _).symm
+        _ = -(f.a * f.c) := abs_of_neg hlt
+    nlinarith [hle, sq_nonneg f.b]
+  · exfalso
+    have ha : f.a = 0 := by
+      rcases mul_eq_zero.mp heq with h | h
+      · exact h
+      · have hle0 : |f.a| ≤ 0 := by rw [h] at h2; simpa using h2
+        exact abs_eq_zero.mp (le_antisymm hle0 (abs_nonneg _))
+    have hb : f.b = 0 := by
+      have hle0 : |f.b| ≤ 0 := by rw [ha] at h1; simpa using h1
+      exact abs_eq_zero.mp (le_antisymm hle0 (abs_nonneg _))
+    rw [ha, hb] at hD; norm_num at hD
+  · exfalso
+    have hle : f.a ^ 2 ≤ f.a * f.c := by
+      calc f.a ^ 2 ≤ |f.a| * |f.c| := habs
+        _ = |f.a * f.c| := (abs_mul _ _).symm
+        _ = f.a * f.c := abs_of_pos hgt
+    nlinarith [hle, hb2, hD, hgt]
 
 /-- **Exercise 2.10(c).** Hence there are finitely many such reduced forms, so the
 class number `h(D)` is finite for indefinite `D`. -/
