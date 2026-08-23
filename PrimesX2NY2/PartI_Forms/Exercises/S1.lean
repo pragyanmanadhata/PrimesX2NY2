@@ -25,6 +25,34 @@ namespace PrimesX2NY2.PartI.S1
 /-- Forward difference operator `Δg(x) = g(x+1) − g(x)`, used in Exercise 1.2. -/
 def diff (g : ℤ → ℤ) : ℤ → ℤ := fun x => g (x + 1) - g x
 
+/-- `diff` is Mathlib's forward difference at step `1`, definitionally. -/
+lemma diff_eq_fwdDiff : diff = fwdDiff (1 : ℤ) := rfl
+
+/-- The core descent step of Cox's Lemma 1.4, in the branch where `q ∣ ay − bx`. -/
+theorem key13a (n N a b x y : ℤ) (q : ℕ) (hq : q.Prime)
+    (hN : N = a ^ 2 + n * b ^ 2) (hcop : IsCoprime a b)
+    (hqf : (q : ℤ) = x ^ 2 + n * y ^ 2)
+    (h1 : (q : ℤ) ∣ a * y - b * x) :
+    ∃ c d : ℤ, N = (q : ℤ) * (c ^ 2 + n * d ^ 2) ∧ IsCoprime c d := by
+  have hqp : Prime (q : ℤ) := Nat.prime_iff_prime_int.mp hq
+  have hq0 : (q : ℤ) ≠ 0 := hqp.ne_zero
+  obtain ⟨d, hd⟩ := h1
+  have hsq : (a * x + n * b * y) ^ 2 = (q : ℤ) * (N - n * (q : ℤ) * d ^ 2) := by
+    linear_combination (-(x ^ 2 + n * y ^ 2)) * hN + (-N) * hqf
+      + (-(n * ((a * y - b * x) + (q : ℤ) * d))) * hd
+  obtain ⟨c, hc⟩ := hqp.dvd_of_dvd_pow (n := 2) ⟨_, hsq⟩
+  have ha : c * x + n * d * y = a := by
+    refine mul_left_cancel₀ hq0 ?_
+    linear_combination (-x) * hc + (-(n * y)) * hd + (-a) * hqf
+  have hb : c * y - d * x = b := by
+    refine mul_left_cancel₀ hq0 ?_
+    linear_combination (-y) * hc + x * hd + (-b) * hqf
+  refine ⟨c, d, ?_, ?_⟩
+  · refine (mul_left_cancel₀ hq0 ?_).symm
+    linear_combination hsq - ((a * x + n * b * y) + (q : ℤ) * c) * hc
+  · obtain ⟨u, v, huv⟩ := hcop
+    exact ⟨u * x + v * y, u * n * y - v * x, by linear_combination huv + u * ha + v * hb⟩
+
 /-- **Exercise 1.1(a).** The identity `(1.3)`. -/
 theorem ex_1_1_a (x y z w : ℤ) :
     (x ^ 2 + y ^ 2) * (z ^ 2 + w ^ 2) = (x * z - y * w) ^ 2 + (x * w + y * z) ^ 2 := by ring
@@ -39,31 +67,77 @@ theorem ex_1_1_b (a c x y z w : ℤ) :
 theorem ex_1_2_a (k : ℕ) (g : ℤ → ℤ) :
     ∃ c : ℕ → ℤ, ∀ x : ℤ,
       diff^[k] g x = ∑ i ∈ Finset.range (k + 1), c i * g (x + (i : ℤ)) := by
-  sorry
+  refine ⟨fun i => (-1 : ℤ) ^ (k - i) * (k.choose i : ℤ), fun x => ?_⟩
+  rw [diff_eq_fwdDiff, fwdDiff_iter_eq_sum_shift]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  simp
 
 /-- **Exercise 1.2(b).** For a monic `f` of degree `d`, `Δᵈf = d!`. -/
 theorem ex_1_2_b (f : Polynomial ℤ) (hf : f.Monic) :
     ∀ x : ℤ, diff^[f.natDegree] (fun n => f.eval n) x = (Nat.factorial f.natDegree : ℤ) := by
-  sorry
+  intro x
+  have h := congrFun (Polynomial.fwdDiff_iter_degree_eq_factorial (R := ℤ) f) x
+  rw [hf.leadingCoeff] at h
+  rw [diff_eq_fwdDiff]
+  simpa using h
 
 /-- **Exercise 1.2(c).** Euler's lemma: a monic integer polynomial of degree
 `< p` is not identically zero modulo a prime `p`. -/
 theorem ex_1_2_c (p : ℕ) (hp : p.Prime) (f : Polynomial ℤ) (hf : f.Monic)
     (hd : f.natDegree < p) : ∃ x : ℤ, ¬ (p : ℤ) ∣ f.eval x := by
-  sorry
+  by_contra hcon
+  simp only [not_exists, not_not] at hcon
+  have key : (p : ℤ) ∣ (Nat.factorial f.natDegree : ℤ) := by
+    rw [← ex_1_2_b f hf 0, diff_eq_fwdDiff, fwdDiff_iter_eq_sum_shift]
+    refine Finset.dvd_sum fun i _ => ?_
+    rw [smul_eq_mul]
+    exact Dvd.dvd.mul_left (hcon _) _
+  have hpd : p ∣ Nat.factorial f.natDegree := by exact_mod_cast key
+  have := (Nat.Prime.dvd_factorial hp).mp hpd
+  omega
 
 /-- **Exercise 1.3(a).** Lemma 1.4 for the form `x²+ny²`. -/
 theorem ex_1_3_a (n N a b x y : ℤ) (q : ℕ) (hq : q.Prime)
     (hN : N = a ^ 2 + n * b ^ 2) (hcop : IsCoprime a b)
     (hqf : (q : ℤ) = x ^ 2 + n * y ^ 2) (hdvd : (q : ℤ) ∣ N) :
     ∃ c d : ℤ, N = (q : ℤ) * (c ^ 2 + n * d ^ 2) ∧ IsCoprime c d := by
-  sorry
+  have hqp : Prime (q : ℤ) := Nat.prime_iff_prime_int.mp hq
+  obtain ⟨m, hm⟩ := hdvd
+  have key : (q : ℤ) ∣ (a * y - b * x) * (a * y + b * x) :=
+    ⟨y ^ 2 * m - b ^ 2, by linear_combination (y ^ 2) * hm - (y ^ 2) * hN + (b ^ 2) * hqf⟩
+  rcases hqp.dvd_mul.mp key with h | h
+  · exact key13a n N a b x y q hq hN hcop hqf h
+  · refine key13a n N a b (-x) y q hq hN hcop (by linear_combination hqf) ?_
+    rw [show a * y - b * (-x) = a * y + b * x by ring]
+    exact h
 
 /-- **Exercise 1.3(b).** The same descent works for `n = 3` and `q = 4 = 1²+3·1²`. -/
 theorem ex_1_3_b (N a b : ℤ) (hN : N = a ^ 2 + 3 * b ^ 2) (hcop : IsCoprime a b)
     (hdvd : (4 : ℤ) ∣ N) :
     ∃ c d : ℤ, N = 4 * (c ^ 2 + 3 * d ^ 2) ∧ IsCoprime c d := by
-  sorry
+  obtain ⟨m, hm⟩ := hdvd
+  obtain ⟨s, hs⟩ := Int.even_or_odd' a
+  obtain ⟨t, ht⟩ := Int.even_or_odd' b
+  rcases hs with hs | hs <;> rcases ht with ht | ht <;> subst hs <;> subst ht
+  · exfalso
+    have hu : IsUnit (2 : ℤ) := hcop.isUnit_of_dvd' ⟨s, rfl⟩ ⟨t, rfl⟩
+    rw [Int.isUnit_iff] at hu
+    omega
+  · exfalso
+    have h : 4 * m = 4 * (s ^ 2) + 12 * (t ^ 2 + t) + 3 := by rw [← hm, hN]; ring
+    have hq : ∀ u v w : ℤ, 4 * w ≠ 4 * u + 12 * v + 3 := by intro u v w; omega
+    exact hq _ _ _ h
+  · exfalso
+    have h : 4 * m = 4 * (s ^ 2 + s) + 12 * (t ^ 2) + 1 := by rw [← hm, hN]; ring
+    have hq : ∀ u v w : ℤ, 4 * w ≠ 4 * u + 12 * v + 1 := by intro u v w; omega
+    exact hq _ _ _ h
+  · obtain ⟨u, v, huv⟩ := hcop
+    obtain ⟨k, hk⟩ := Int.even_or_odd' (s - t)
+    rcases hk with hk | hk
+    · exact ⟨2 * t + k + 1, k, by linear_combination hN + (4 * (s + t + 2 * k) + 4) * hk,
+        u + v, 3 * u - v, by linear_combination huv - 2 * u * hk⟩
+    · exact ⟨k - t, k + t + 1, by linear_combination hN + (4 * (s + t + 2 * k + 1) + 4) * hk,
+        u - v, 3 * u + v, by linear_combination huv - 2 * u * hk⟩
 
 /-- **Exercise 1.4(a).** Descent Step for `x²+2y²`. -/
 theorem ex_1_4_a (p : ℕ) (hp : p.Prime) (x y : ℤ) (hcop : IsCoprime x y)
@@ -76,56 +150,11 @@ theorem ex_1_4_b (p : ℕ) (hp : p.Prime) (hodd : Odd p) (x y : ℤ)
     ∃ a b : ℤ, (p : ℤ) = a ^ 2 + 3 * b ^ 2 := by
   sorry
 
-/-- Helper: `−3` is a quadratic residue mod an odd prime `p ≠ 3` iff `p ≡ 1 (mod 3)`. -/
+/-- Helper: `−3` is a quadratic residue mod an odd prime `p ≠ 3` iff `p ≡ 1 (mod 3)`.
+Proved in `PrimesX2NY2.Fermat`; Mathlib has only the `−1`, `2`, `−2` cases. -/
 theorem neg_three_isSquare_iff (p : ℕ) [Fact p.Prime] (hodd : Odd p) (hp3 : p ≠ 3) :
-    IsSquare ((-3 : ℤ) : ZMod p) ↔ p % 3 = 1 := by
-  have hp : p.Prime := Fact.out
-  have hp2 : p ≠ 2 := by
-    rintro rfl
-    exact absurd hodd (by decide)
-  -- `(-3 : ZMod p) ≠ 0` since `p ∤ 3`
-  have ha : ((-3 : ℤ) : ZMod p) ≠ 0 := by
-    rw [Ne, ZMod.intCast_zmod_eq_zero_iff_dvd]
-    intro h
-    have h3 : (p : ℤ) ∣ (3 : ℤ) := (dvd_neg).mp h
-    have h3' : p ∣ 3 := by exact_mod_cast h3
-    rcases (Nat.Prime.eq_one_or_self_of_dvd Nat.prime_three p h3') with h1 | h1
-    · exact hp.one_lt.ne' h1
-    · exact hp3 h1
-  rw [← legendreSym.eq_one_iff p ha]
-  -- `(−3/p) = (−1/p)(3/p) = (−1)^(p/2) · (−1)^(p/2) · (p/3) = (p/3)`
-  have hm1 : legendreSym p (-1) = (-1 : ℤ) ^ (p / 2) := by
-    rw [legendreSym.at_neg_one hp2, ZMod.χ₄_eq_neg_one_pow (hp.eq_two_or_odd.resolve_left hp2)]
-  have hQR : legendreSym p (3 : ℤ) = (-1 : ℤ) ^ (3 / 2 * (p / 2)) * legendreSym 3 (p : ℤ) := by
-    exact_mod_cast legendreSym.quadratic_reciprocity' (p := 3) (q := p) (by norm_num) hp2
-  have key : legendreSym p (-3) = legendreSym 3 (p : ℤ) := by
-    calc legendreSym p (-3) = legendreSym p (-1) * legendreSym p 3 := by
-          rw [← legendreSym.mul]; norm_num
-      _ = (-1 : ℤ) ^ (p / 2) * ((-1 : ℤ) ^ (3 / 2 * (p / 2)) * legendreSym 3 (p : ℤ)) := by
-          rw [hm1, hQR]
-      _ = legendreSym 3 (p : ℤ) := by
-          rw [show (3 : ℕ) / 2 = 1 from rfl, one_mul, ← mul_assoc, ← pow_add]
-          rw [Even.neg_one_pow ⟨p / 2, rfl⟩, one_mul]
-  rw [key]
-  -- Evaluate `(p/3)` by the residue of `p` mod 3
-  have hmod : p % 3 = 1 ∨ p % 3 = 2 := by
-    have h30 : ¬ (3 ∣ p) := by
-      intro h
-      exact hp3 ((Nat.prime_dvd_prime_iff_eq Nat.prime_three hp).mp h).symm
-    omega
-  rcases hmod with h1 | h2
-  · have hc : ((p : ℤ) : ZMod 3) = 1 := by
-      rw [Int.cast_natCast, ← ZMod.natCast_mod, h1, Nat.cast_one]
-    simp only [h1, iff_true]
-    exact (legendreSym.eq_one_iff 3 (by rw [hc]; exact one_ne_zero)).mpr
-      (by rw [hc]; decide)
-  · have hc : ((p : ℤ) : ZMod 3) = 2 := by
-      rw [Int.cast_natCast, ← ZMod.natCast_mod, h2]
-      norm_num
-    have hneg : legendreSym 3 ((p : ℕ) : ℤ) = -1 :=
-      (legendreSym.eq_neg_one_iff 3).mpr (by rw [hc]; decide)
-    rw [hneg]
-    omega
+    IsSquare ((-3 : ℤ) : ZMod p) ↔ p % 3 = 1 :=
+  PrimesX2NY2.Fermat.neg_three_isSquare_iff p hodd hp3
 
 /-- **Exercise 1.5.** If `p = 3k+1` is prime then `(−3/p) = 1`. -/
 theorem ex_1_5 (p : ℕ) (hp : p.Prime) (k : ℕ) (hk : p = 3 * k + 1) :

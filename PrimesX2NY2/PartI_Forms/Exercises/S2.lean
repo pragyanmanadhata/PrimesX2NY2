@@ -5,6 +5,7 @@ Authors: Pragyan Manadhata
 -/
 import Mathlib
 import PrimesX2NY2.PartI_Forms.Genus
+import PrimesX2NY2.PartI_Forms.Fermat
 
 /-!
 # Part I, §2 - Exercises
@@ -51,7 +52,30 @@ relation. -/
 theorem ex_2_2_b :
     ¬ Equivalence (fun f g : BinaryQF =>
       ∃ M : Matrix (Fin 2) (Fin 2) ℤ, M.det = -1 ∧ action M f = g) := by
-  sorry
+  intro h
+  obtain ⟨M, hM, hMf⟩ := h.refl (⟨3, 1, 5⟩ : BinaryQF)
+  have e00 : (!![(1 : ℤ), 0; 0, -1] : Matrix (Fin 2) (Fin 2) ℤ) 0 0 = 1 := by simp
+  have e01 : (!![(1 : ℤ), 0; 0, -1] : Matrix (Fin 2) (Fin 2) ℤ) 0 1 = 0 := by simp
+  have e10 : (!![(1 : ℤ), 0; 0, -1] : Matrix (Fin 2) (Fin 2) ℤ) 1 0 = 0 := by simp
+  have e11 : (!![(1 : ℤ), 0; 0, -1] : Matrix (Fin 2) (Fin 2) ℤ) 1 1 = -1 := by simp
+  have hJ : action (!![(1 : ℤ), 0; 0, -1] : Matrix (Fin 2) (Fin 2) ℤ) ⟨3, 1, 5⟩
+      = ⟨3, -1, 5⟩ := by
+    simp only [action, e00, e01, e10, e11, BinaryQF.mk.injEq]
+    refine ⟨by norm_num, by norm_num, by norm_num⟩
+  have hpe : ProperlyEquivalent (⟨3, 1, 5⟩ : BinaryQF) ⟨3, -1, 5⟩ := by
+    refine ⟨M * !![(1 : ℤ), 0; 0, -1], ?_, ?_⟩
+    · rw [Matrix.det_mul, hM, Matrix.det_fin_two_of]; ring
+    · rw [← action_mul, hMf, hJ]
+  have hr1 : (⟨3, 1, 5⟩ : BinaryQF).Reduced := by
+    refine ⟨by norm_num, by norm_num, ?_⟩
+    intro hh; norm_num at hh
+  have hr2 : (⟨3, -1, 5⟩ : BinaryQF).Reduced := by
+    refine ⟨by norm_num, by norm_num, ?_⟩
+    intro hh; norm_num at hh
+  have hp : (⟨3, 1, 5⟩ : BinaryQF).PosDef := ⟨by norm_num, by norm_num [BinaryQF.discr]⟩
+  have heq := reduced_eq_of_properlyEquivalent _ _ hr1 hr2 hp hpe
+  have hb := congrArg BinaryQF.b heq
+  norm_num at hb
 
 /-- **Exercise 2.2(c).** Equivalent forms represent the same numbers. -/
 theorem ex_2_2_c (f g : BinaryQF) (h : Equivalent f g) (m : ℤ) :
@@ -131,7 +155,41 @@ theorem ex_2_5 (D : ℤ) (hD : D % 4 = 0 ∨ D % 4 = 1) (p : ℕ) (hp : p.Prime)
     (hodd : Odd p) (hpD : ¬ (p : ℤ) ∣ D) :
     IsSquare (D : ZMod p)
       ↔ ∃ f : BinaryQF, f.discr = D ∧ f.Primitive ∧ Represents f (p : ℤ) := by
-  sorry
+  haveI : Fact p.Prime := ⟨hp⟩
+  constructor
+  · intro hsq
+    obtain ⟨b, c, hdiscr, hprim⟩ :=
+      PrimesX2NY2.Fermat.exists_form_of_isSquare D hD p hp hodd hpD hsq
+    exact ⟨⟨(p : ℤ), b, c⟩, hdiscr, hprim, 1, 0, by simp [BinaryQF.eval]⟩
+  · rintro ⟨f, hdiscr, hprim, hrep⟩
+    obtain ⟨d, m', hm', hpr⟩ := ex_2_1 f (p : ℤ) hrep
+    have hdvd : d ^ 2 ∣ (p : ℤ) := ⟨m', hm'⟩
+    have hdn : d.natAbs ^ 2 ∣ p := by
+      have h := Int.natAbs_dvd_natAbs.mpr hdvd
+      rwa [Int.natAbs_pow, Int.natAbs_natCast] at h
+    have hd1 : d.natAbs = 1 := by
+      rcases hp.eq_one_or_self_of_dvd d.natAbs
+          ((dvd_pow_self d.natAbs two_ne_zero).trans hdn) with h | h
+      · exact h
+      · exfalso
+        rw [h] at hdn
+        have hle := Nat.le_of_dvd hp.pos hdn
+        nlinarith [hp.two_le]
+    have hd2 : d ^ 2 = 1 := by
+      rcases Int.natAbs_eq d with he | he <;> rw [he, hd1] <;> norm_num
+    have hm'p : m' = (p : ℤ) := by
+      rw [hm', hd2, one_mul]
+    rw [hm'p] at hpr
+    obtain ⟨B, C, hBC⟩ := (properlyRepresents_iff_properlyEquivalent f (p : ℤ)).mp hpr
+    have hdBC := discr_eq_of_properlyEquivalent hBC
+    rw [hdiscr] at hdBC
+    simp only [BinaryQF.discr] at hdBC
+    refine ⟨(B : ZMod p), ?_⟩
+    have hcast := congrArg (fun t : ℤ => (t : ZMod p)) hdBC
+    push_cast at hcast
+    rw [ZMod.natCast_self] at hcast
+    rw [hcast]
+    ring
 
 /-- **Exercise 2.6.** There is a reduced form properly equivalent to
 `126x² + 74xy + 13y²`. -/
@@ -265,12 +323,57 @@ theorem ex_2_13 (p : ℕ) (hp : p.Prime) (hodd : Odd p) (hp5 : ¬ (p : ℤ) ∣ 
       ↔ IsSquare ((-5 : ℤ) : ZMod p) := by
   sorry
 
+-- The values of `x² + 5y²` on units of `ℤ/20ℤ` are exactly `1, 9`.
+set_option maxRecDepth 40000 in
+private theorem key1 : ∀ X Y : ZMod 20, (∃ w : ZMod 20, (X * X + 5 * (Y * Y)) * w = 1) →
+    X * X + 5 * (Y * Y) = 1 ∨ X * X + 5 * (Y * Y) = 9 := by decide
+
+-- The values of `2x² + 2xy + 3y²` on units of `ℤ/20ℤ` are exactly `3, 7`.
+set_option maxRecDepth 40000 in
+private theorem key2 : ∀ X Y : ZMod 20,
+    (∃ w : ZMod 20, (2 * (X * X) + 2 * (X * Y) + 3 * (Y * Y)) * w = 1) →
+    2 * (X * X) + 2 * (X * Y) + 3 * (Y * Y) = 3 ∨
+      2 * (X * X) + 2 * (X * Y) + 3 * (Y * Y) = 7 := by decide
+
 /-- **Exercise 2.14.** The result (2.20): in `(ℤ/20ℤ)ˣ`, the form `x²+5y²`
 represents only `1, 9` and `2x²+2xy+3y²` represents only `3, 7`. -/
 theorem ex_2_14 (m : ℤ) (hco : IsCoprime m 20) :
     (Represents ⟨1, 0, 5⟩ m → (m : ZMod 20) = 1 ∨ (m : ZMod 20) = 9) ∧
       (Represents ⟨2, 2, 3⟩ m → (m : ZMod 20) = 3 ∨ (m : ZMod 20) = 7) := by
-  sorry
+  obtain ⟨u, v, huv⟩ := hco
+  have hdvd : ((20 : ℕ) : ℤ) ∣ (u * m - 1) := ⟨-v, by push_cast; linarith⟩
+  have hz : ((u * m - 1 : ℤ) : ZMod 20) = 0 :=
+    (ZMod.intCast_zmod_eq_zero_iff_dvd _ 20).mpr hdvd
+  push_cast at hz
+  have hu : (m : ZMod 20) * (u : ZMod 20) = 1 := by linear_combination hz
+  constructor
+  · rintro ⟨x, y, hxy⟩
+    have hm : (x : ZMod 20) * (x : ZMod 20) + 5 * ((y : ZMod 20) * (y : ZMod 20))
+        = (m : ZMod 20) := by
+      have hc := congrArg (fun z : ℤ => (z : ZMod 20)) hxy
+      simp only [BinaryQF.eval] at hc
+      push_cast at hc
+      linear_combination hc
+    have hw : ∃ w : ZMod 20,
+        ((x : ZMod 20) * (x : ZMod 20) + 5 * ((y : ZMod 20) * (y : ZMod 20))) * w = 1 :=
+      ⟨(u : ZMod 20), by rw [hm]; exact hu⟩
+    rcases key1 (x : ZMod 20) (y : ZMod 20) hw with h | h
+    · exact Or.inl (by rw [← hm]; exact h)
+    · exact Or.inr (by rw [← hm]; exact h)
+  · rintro ⟨x, y, hxy⟩
+    have hm : 2 * ((x : ZMod 20) * (x : ZMod 20)) + 2 * ((x : ZMod 20) * (y : ZMod 20))
+          + 3 * ((y : ZMod 20) * (y : ZMod 20)) = (m : ZMod 20) := by
+      have hc := congrArg (fun z : ℤ => (z : ZMod 20)) hxy
+      simp only [BinaryQF.eval] at hc
+      push_cast at hc
+      linear_combination hc
+    have hw : ∃ w : ZMod 20,
+        (2 * ((x : ZMod 20) * (x : ZMod 20)) + 2 * ((x : ZMod 20) * (y : ZMod 20))
+          + 3 * ((y : ZMod 20) * (y : ZMod 20))) * w = 1 :=
+      ⟨(u : ZMod 20), by rw [hm]; exact hu⟩
+    rcases key2 (x : ZMod 20) (y : ZMod 20) hw with h | h
+    · exact Or.inl (by rw [← hm]; exact h)
+    · exact Or.inr (by rw [← hm]; exact h)
 
 /-- **Exercise 2.15.** The result (2.23): for a prime `p ≠ 7`, `p = x²+14y²` or
 `2x²+7y²` iff `p ≡ 1,9,15,23,25,39 (mod 56)`. -/
@@ -342,7 +445,47 @@ theorem ex_2_18_a (f : BinaryQF) (hf : f.Primitive) (p : ℕ) (hp : p.Prime) :
 /-- **Exercise 2.18(b).** Proof of Lemma 2.25. -/
 theorem ex_2_18_b (f : BinaryQF) (M : ℤ) :
     ∃ x y : ℤ, IsCoprime x y ∧ IsCoprime (f.eval x y) M := by
+  -- FLAG (under-hypothesized): FALSE as stated — Cox's Lemma 2.25 assumes `f` primitive
+  -- and `M ≠ 0`. See `ex_2_18_b_FALSE` for a proof that the unrestricted statement fails
+  -- (take `f = ⟨2,0,2⟩`, `M = 2`: every value `2(x²+y²)` is even), and
+  -- `ex_2_18_b_correct` for the faithful version.
   sorry
+
+/-- The unrestricted form of Exercise 2.18(b) is false: without primitivity of `f`
+(and `M ≠ 0`) no value of `f` need be coprime to `M`. -/
+theorem ex_2_18_b_FALSE :
+    ¬ (∀ (f : BinaryQF) (M : ℤ), ∃ x y : ℤ, IsCoprime x y ∧ IsCoprime (f.eval x y) M) := by
+  intro h
+  obtain ⟨x, y, -, hcop⟩ := h ⟨2, 0, 2⟩ 2
+  obtain ⟨u, v, huv⟩ := hcop
+  have hval : (⟨2, 0, 2⟩ : BinaryQF).eval x y = 2 * (x ^ 2 + y ^ 2) := by
+    simp only [BinaryQF.eval]; ring
+  rw [hval] at huv
+  have : (2 : ℤ) ∣ 1 := ⟨u * (x ^ 2 + y ^ 2) + v, by linarith⟩
+  norm_num at this
+
+/-- **Exercise 2.18(b)**, faithful form (Cox, Lemma 2.25): a *primitive* form properly
+represents some value coprime to a *nonzero* `M`. -/
+theorem ex_2_18_b_correct (f : BinaryQF) (hf : f.Primitive) (M : ℤ) (hM : M ≠ 0) :
+    ∃ x y : ℤ, IsCoprime x y ∧ IsCoprime (f.eval x y) M := by
+  obtain ⟨x, y, hcop⟩ := exists_eval_coprime f hf M hM
+  by_cases hxy0 : x = 0 ∧ y = 0
+  · obtain ⟨hx0, hy0⟩ := hxy0
+    subst hx0; subst hy0
+    have hz : f.eval 0 0 = 0 := by simp [BinaryQF.eval]
+    rw [hz] at hcop
+    have hMu : IsUnit M := isCoprime_zero_left.mp hcop
+    obtain ⟨w, hw⟩ := hMu
+    exact ⟨1, 0, isCoprime_one_left, 0, (↑w⁻¹ : ℤ), by rw [← hw]; simp⟩
+  · have hg : 0 < Int.gcd x y :=
+      Nat.pos_of_ne_zero (fun hz => hxy0 (Int.gcd_eq_zero_iff.mp hz))
+    obtain ⟨x', y', hcop', hx, hy⟩ := Int.exists_gcd_one hg
+    set g : ℤ := (Int.gcd x y : ℤ) with hgdef
+    refine ⟨x', y', Int.isCoprime_iff_gcd_eq_one.mpr hcop', ?_⟩
+    have hval : f.eval x y = g ^ 2 * f.eval x' y' := by
+      rw [hx, hy]; simp only [BinaryQF.eval]; ring
+    rw [hval] at hcop
+    exact IsCoprime.of_isCoprime_of_dvd_left hcop ⟨g ^ 2, by ring⟩
 
 /-- **Exercise 2.21.** The first theorem of (2.28): for a prime `p ≠ 3`,
 `p = x² + 6y²` iff `p ≡ 1, 7 (mod 24)`. -/
@@ -479,13 +622,86 @@ theorem ex_2_25 (f g : BinaryQF) :
   have := opp _ _ h
   simpa using this
 
+/-- Package a unimodular substitution as a proper equivalence, given the three
+transformed coefficients. -/
+private theorem pe_of_matrix (f : BinaryQF) (a' b' c' p q r s : ℤ) (hdet : p * s - q * r = 1)
+    (h1 : f.a * p ^ 2 + f.b * p * r + f.c * r ^ 2 = a')
+    (h2 : 2 * f.a * p * q + f.b * (p * s + q * r) + 2 * f.c * r * s = b')
+    (h3 : f.a * q ^ 2 + f.b * q * s + f.c * s ^ 2 = c') :
+    ProperlyEquivalent f ⟨a', b', c'⟩ := by
+  refine ⟨!![p, q; r, s], ?_, ?_⟩
+  · rw [Matrix.det_fin_two_of]; linarith
+  · have e00 : (!![p, q; r, s] : Matrix (Fin 2) (Fin 2) ℤ) 0 0 = p := by simp
+    have e01 : (!![p, q; r, s] : Matrix (Fin 2) (Fin 2) ℤ) 0 1 = q := by simp
+    have e10 : (!![p, q; r, s] : Matrix (Fin 2) (Fin 2) ℤ) 1 0 = r := by simp
+    have e11 : (!![p, q; r, s] : Matrix (Fin 2) (Fin 2) ℤ) 1 1 = s := by simp
+    simp only [action, e00, e01, e10, e11, BinaryQF.mk.injEq]
+    exact ⟨h1, h2, h3⟩
+
+private theorem red1 : ProperlyEquivalent (⟨126, 74, 13⟩ : BinaryQF) ⟨13, 4, 21⟩ :=
+  pe_of_matrix ⟨126, 74, 13⟩ 13 4 21 0 (-1) 1 3 (by norm_num) (by norm_num) (by norm_num)
+    (by norm_num)
+
+private theorem red2 : ProperlyEquivalent (⟨126, -74, 13⟩ : BinaryQF) ⟨13, -4, 21⟩ :=
+  pe_of_matrix ⟨126, -74, 13⟩ 13 (-4) 21 0 (-1) 1 (-3) (by norm_num) (by norm_num) (by norm_num)
+    (by norm_num)
+
+private theorem red3 : ProperlyEquivalent (⟨126, 38, 5⟩ : BinaryQF) ⟨5, 2, 54⟩ :=
+  pe_of_matrix ⟨126, 38, 5⟩ 5 2 54 0 (-1) 1 4 (by norm_num) (by norm_num) (by norm_num)
+    (by norm_num)
+
+private theorem red4 : ProperlyEquivalent (⟨126, -38, 5⟩ : BinaryQF) ⟨5, -2, 54⟩ :=
+  pe_of_matrix ⟨126, -38, 5⟩ 5 (-2) 54 0 (-1) 1 (-4) (by norm_num) (by norm_num) (by norm_num)
+    (by norm_num)
+
+private theorem rd1 : (⟨13, 4, 21⟩ : BinaryQF).Reduced := by
+  refine ⟨by norm_num, by norm_num, ?_⟩
+  intro h; norm_num at h
+
+private theorem rd2 : (⟨13, -4, 21⟩ : BinaryQF).Reduced := by
+  refine ⟨by norm_num, by norm_num, ?_⟩
+  intro h; norm_num at h
+
+private theorem rd3 : (⟨5, 2, 54⟩ : BinaryQF).Reduced := by
+  refine ⟨by norm_num, by norm_num, ?_⟩
+  intro h; norm_num at h
+
+private theorem rd4 : (⟨5, -2, 54⟩ : BinaryQF).Reduced := by
+  refine ⟨by norm_num, by norm_num, ?_⟩
+  intro h; norm_num at h
+
+private theorem pd1 : (⟨13, 4, 21⟩ : BinaryQF).PosDef := ⟨by norm_num, by norm_num [BinaryQF.discr]⟩
+
+private theorem pd3 : (⟨5, 2, 54⟩ : BinaryQF).PosDef := ⟨by norm_num, by norm_num [BinaryQF.discr]⟩
+
 /-- **Exercise 2.26.** The four compositions `126x² ± 74xy + 13y²`,
 `126x² ± 38xy + 5y²` lie in distinct classes (pairwise non-properly-equivalent). -/
 theorem ex_2_26 :
     ¬ ProperlyEquivalent ⟨126, 74, 13⟩ ⟨126, -74, 13⟩ ∧
       ¬ ProperlyEquivalent ⟨126, 74, 13⟩ ⟨126, 38, 5⟩ ∧
         ¬ ProperlyEquivalent ⟨126, 38, 5⟩ ⟨126, -38, 5⟩ := by
-  sorry
+  refine ⟨?_, ?_, ?_⟩
+  · intro h
+    have h' : ProperlyEquivalent (⟨13, 4, 21⟩ : BinaryQF) ⟨13, -4, 21⟩ :=
+      properlyEquivalent_equivalence.trans (properlyEquivalent_equivalence.symm red1)
+        (properlyEquivalent_equivalence.trans h red2)
+    have heq := reduced_eq_of_properlyEquivalent _ _ rd1 rd2 pd1 h'
+    have hb := congrArg BinaryQF.b heq
+    norm_num at hb
+  · intro h
+    have h' : ProperlyEquivalent (⟨13, 4, 21⟩ : BinaryQF) ⟨5, 2, 54⟩ :=
+      properlyEquivalent_equivalence.trans (properlyEquivalent_equivalence.symm red1)
+        (properlyEquivalent_equivalence.trans h red3)
+    have heq := reduced_eq_of_properlyEquivalent _ _ rd1 rd3 pd1 h'
+    have ha := congrArg BinaryQF.a heq
+    norm_num at ha
+  · intro h
+    have h' : ProperlyEquivalent (⟨5, 2, 54⟩ : BinaryQF) ⟨5, -2, 54⟩ :=
+      properlyEquivalent_equivalence.trans (properlyEquivalent_equivalence.symm red3)
+        (properlyEquivalent_equivalence.trans h red4)
+    have heq := reduced_eq_of_properlyEquivalent _ _ rd3 rd4 pd3 h'
+    have hb := congrArg BinaryQF.b heq
+    norm_num at hb
 
 /-- **Exercise 2.27(a).** An odd prime represented by two forms `f, g` of the same
 discriminant forces `f` and `g` to be equivalent.
@@ -501,6 +717,29 @@ theorem ex_2_27_a (f g : BinaryQF) (hfg : f.discr = g.discr) (p : ℕ) (hp : p.P
 /-- **Exercise 2.27(b).** A reduced form equivalent to `x² + ny²` equals it. -/
 theorem ex_2_27_b (n : ℤ) (g : BinaryQF) (hg : g.Reduced) (h : Equivalent ⟨1, 0, n⟩ g) :
     g = ⟨1, 0, n⟩ := by
+  -- FLAG (under-hypothesized): FALSE as stated for `n = 0`, where `⟨0,0,1⟩` is reduced and
+  -- equivalent to `⟨1,0,0⟩` (via the determinant `−1` swap) yet different from it; see
+  -- `ex_2_27_b_FALSE`. Cox's context supplies `n > 0`, i.e. positive definiteness.
   sorry
+
+/-- Exercise 2.27(b) fails without positivity of `n`: at `n = 0` the reduced form
+`⟨0,0,1⟩` is equivalent to `⟨1,0,0⟩` but not equal to it. -/
+theorem ex_2_27_b_FALSE :
+    ¬ (∀ (n : ℤ) (g : BinaryQF), g.Reduced → Equivalent ⟨1, 0, n⟩ g → g = ⟨1, 0, n⟩) := by
+  intro h
+  have hred : (⟨0, 0, 1⟩ : BinaryQF).Reduced := by
+    refine ⟨by norm_num, by norm_num, ?_⟩
+    intro _
+    norm_num
+  have hequiv : Equivalent (⟨1, 0, 0⟩ : BinaryQF) ⟨0, 0, 1⟩ := by
+    refine ⟨!![0, 1; 1, 0], Or.inr ?_, ?_⟩
+    · rw [Matrix.det_fin_two_of]; ring
+    · simp only [action, BinaryQF.mk.injEq, Matrix.cons_val_zero, Matrix.cons_val_one,
+        Matrix.of_apply, Matrix.cons_val', Matrix.empty_val', Matrix.cons_val_fin_one,
+        Matrix.head_fin_const]
+      refine ⟨by ring, by ring, by ring⟩
+  have := h 0 ⟨0, 0, 1⟩ hred hequiv
+  simp only [BinaryQF.mk.injEq] at this
+  norm_num at this
 
 end PrimesX2NY2.PartI.S2
