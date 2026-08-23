@@ -76,10 +76,66 @@ theorem ex_1_4_b (p : ℕ) (hp : p.Prime) (hodd : Odd p) (x y : ℤ)
     ∃ a b : ℤ, (p : ℤ) = a ^ 2 + 3 * b ^ 2 := by
   sorry
 
+/-- Helper: `−3` is a quadratic residue mod an odd prime `p ≠ 3` iff `p ≡ 1 (mod 3)`. -/
+theorem neg_three_isSquare_iff (p : ℕ) [Fact p.Prime] (hodd : Odd p) (hp3 : p ≠ 3) :
+    IsSquare ((-3 : ℤ) : ZMod p) ↔ p % 3 = 1 := by
+  have hp : p.Prime := Fact.out
+  have hp2 : p ≠ 2 := by
+    rintro rfl
+    exact absurd hodd (by decide)
+  -- `(-3 : ZMod p) ≠ 0` since `p ∤ 3`
+  have ha : ((-3 : ℤ) : ZMod p) ≠ 0 := by
+    rw [Ne, ZMod.intCast_zmod_eq_zero_iff_dvd]
+    intro h
+    have h3 : (p : ℤ) ∣ (3 : ℤ) := (dvd_neg).mp h
+    have h3' : p ∣ 3 := by exact_mod_cast h3
+    rcases (Nat.Prime.eq_one_or_self_of_dvd Nat.prime_three p h3') with h1 | h1
+    · exact hp.one_lt.ne' h1
+    · exact hp3 h1
+  rw [← legendreSym.eq_one_iff p ha]
+  -- `(−3/p) = (−1/p)(3/p) = (−1)^(p/2) · (−1)^(p/2) · (p/3) = (p/3)`
+  have hm1 : legendreSym p (-1) = (-1 : ℤ) ^ (p / 2) := by
+    rw [legendreSym.at_neg_one hp2, ZMod.χ₄_eq_neg_one_pow (hp.eq_two_or_odd.resolve_left hp2)]
+  have hQR : legendreSym p (3 : ℤ) = (-1 : ℤ) ^ (3 / 2 * (p / 2)) * legendreSym 3 (p : ℤ) := by
+    exact_mod_cast legendreSym.quadratic_reciprocity' (p := 3) (q := p) (by norm_num) hp2
+  have key : legendreSym p (-3) = legendreSym 3 (p : ℤ) := by
+    calc legendreSym p (-3) = legendreSym p (-1) * legendreSym p 3 := by
+          rw [← legendreSym.mul]; norm_num
+      _ = (-1 : ℤ) ^ (p / 2) * ((-1 : ℤ) ^ (3 / 2 * (p / 2)) * legendreSym 3 (p : ℤ)) := by
+          rw [hm1, hQR]
+      _ = legendreSym 3 (p : ℤ) := by
+          rw [show (3 : ℕ) / 2 = 1 from rfl, one_mul, ← mul_assoc, ← pow_add]
+          rw [Even.neg_one_pow ⟨p / 2, rfl⟩, one_mul]
+  rw [key]
+  -- Evaluate `(p/3)` by the residue of `p` mod 3
+  have hmod : p % 3 = 1 ∨ p % 3 = 2 := by
+    have h30 : ¬ (3 ∣ p) := by
+      intro h
+      exact hp3 ((Nat.prime_dvd_prime_iff_eq Nat.prime_three hp).mp h).symm
+    omega
+  rcases hmod with h1 | h2
+  · have hc : ((p : ℤ) : ZMod 3) = 1 := by
+      rw [Int.cast_natCast, ← ZMod.natCast_mod, h1, Nat.cast_one]
+    simp only [h1, iff_true]
+    exact (legendreSym.eq_one_iff 3 (by rw [hc]; exact one_ne_zero)).mpr
+      (by rw [hc]; decide)
+  · have hc : ((p : ℤ) : ZMod 3) = 2 := by
+      rw [Int.cast_natCast, ← ZMod.natCast_mod, h2]
+      norm_num
+    have hneg : legendreSym 3 ((p : ℕ) : ℤ) = -1 :=
+      (legendreSym.eq_neg_one_iff 3).mpr (by rw [hc]; decide)
+    rw [hneg]
+    omega
+
 /-- **Exercise 1.5.** If `p = 3k+1` is prime then `(−3/p) = 1`. -/
 theorem ex_1_5 (p : ℕ) (hp : p.Prime) (k : ℕ) (hk : p = 3 * k + 1) :
     IsSquare ((-3 : ℤ) : ZMod p) := by
-  sorry
+  haveI : Fact p.Prime := ⟨hp⟩
+  have hodd : Odd p := by
+    rcases hp.eq_two_or_odd' with rfl | h
+    · exact absurd hk (by omega)
+    · exact h
+  exact (neg_three_isSquare_iff p hodd (by omega)).mpr (by omega)
 
 /-- **Exercise 1.6.** Prove Lemma 1.7. -/
 theorem ex_1_6 (n : ℤ) (p : ℕ) (hp : p.Prime) (hodd : Odd p) (hpn : ¬ (p : ℤ) ∣ n) :
@@ -91,7 +147,18 @@ theorem ex_1_6 (n : ℤ) (p : ℕ) (hp : p.Prime) (hodd : Odd p) (hpn : ¬ (p : 
 `(p*/q) = (q/p)` with `p* = (−1)^((p−1)/2)·p`. -/
 theorem ex_1_7 (p q : ℕ) [Fact p.Prime] [Fact q.Prime] (hp : p ≠ 2) (hq : q ≠ 2) :
     legendreSym q ((-1) ^ ((p - 1) / 2) * (p : ℤ)) = legendreSym p (q : ℤ) := by
-  sorry
+  have hp1 : p % 2 = 1 := Nat.odd_iff.mp ((Fact.out : p.Prime).odd_of_ne_two hp)
+  have hq1 : q % 2 = 1 := Nat.odd_iff.mp ((Fact.out : q.Prime).odd_of_ne_two hq)
+  have hpow : ∀ k : ℕ, legendreSym q ((-1 : ℤ) ^ k) = (legendreSym q (-1)) ^ k := by
+    intro k
+    induction k with
+    | zero => simp [legendreSym.at_one]
+    | succ n ih => rw [pow_succ, pow_succ, legendreSym.mul, ih]
+  rw [legendreSym.mul, hpow, legendreSym.at_neg_one hq, ZMod.χ₄_eq_neg_one_pow hq1,
+    legendreSym.quadratic_reciprocity' hp hq, ← pow_mul, ← mul_assoc, ← pow_add]
+  have hdiv : (p - 1) / 2 = p / 2 := by omega
+  rw [hdiv, show q / 2 * (p / 2) + p / 2 * (q / 2) = 2 * (p / 2 * (q / 2)) by ring,
+    pow_mul, neg_one_sq, one_pow, one_mul]
 
 /-- **Exercise 1.8.** The reciprocity statement `(1.13)`:
 `(p*/q) = 1 ↔ p ≡ ±β² (mod 4q)` for some odd `β`. -/
@@ -105,7 +172,8 @@ theorem ex_1_8 (p q : ℕ) (hp : p.Prime) [Fact q.Prime] (hq : q ≠ 2) :
 the reciprocity instance `(−3/p) = (p/3)`. -/
 theorem ex_1_9_a (p : ℕ) (hp : p.Prime) (hp3 : 3 < p) :
     IsSquare ((-3 : ℤ) : ZMod p) ↔ p % 3 = 1 := by
-  sorry
+  haveI : Fact p.Prime := ⟨hp⟩
+  exact neg_three_isSquare_iff p (hp.odd_of_ne_two (by omega)) (by omega)
 
 /-- **Exercise 1.9(b).** The cases `x²+y²`, `x²+2y²` correspond to the
 supplementary laws for `(−1/p)` and `(2/p)`. -/
@@ -138,7 +206,24 @@ theorem ex_1_10_a (M N : ℤ) (m : ℕ) (h : M ≡ N [ZMOD m]) :
 theorem ex_1_10_b (M N : ℤ) (m n : ℕ) :
     jacobiSym (M * N) m = jacobiSym M m * jacobiSym N m ∧
       jacobiSym M (m * n) = jacobiSym M m * jacobiSym M n := by
+  -- FLAG (under-hypothesized): the second conjunct is FALSE for m = 0 or n = 0, since
+  -- Mathlib defines `jacobiSym a 0 = 1`: with M = N = 2, m = 3, n = 0 the LHS is
+  -- `jacobiSym 2 0 = 1` while the RHS is `jacobiSym 2 3 * jacobiSym 2 0 = -1`.
+  -- Cox implicitly takes the moduli positive (indeed odd). The salvageable statements
+  -- are `ex_1_10_b_left` and `ex_1_10_b_right` below.
   sorry
+
+/-- The first conjunct of Exercise 1.10(b), which holds unconditionally
+(`jacobiSym.mul_left`). -/
+theorem ex_1_10_b_left (M N : ℤ) (m : ℕ) :
+    jacobiSym (M * N) m = jacobiSym M m * jacobiSym N m :=
+  jacobiSym.mul_left M N m
+
+/-- The second conjunct of Exercise 1.10(b), under the (implicit in Cox) hypothesis
+that the moduli are nonzero. -/
+theorem ex_1_10_b_right (M : ℤ) {m n : ℕ} (hm : m ≠ 0) (hn : n ≠ 0) :
+    jacobiSym M (m * n) = jacobiSym M m * jacobiSym M n :=
+  jacobiSym.mul_right' M hm hn
 
 /-- **Exercise 1.10(c).** The supplementary laws for the Jacobi symbol `(1.16)`. -/
 theorem ex_1_10_c (m : ℕ) (hm : Odd m) :
@@ -164,7 +249,27 @@ theorem ex_1_10_c (m : ℕ) (hm : Odd m) :
 then `(M/m) = 1` (the converse fails). -/
 theorem ex_1_10_d (M : ℤ) (m : ℕ) (hm : Odd m) (hco : IsCoprime M (m : ℤ))
     (h : IsSquare (M : ZMod m)) : jacobiSym M m = 1 := by
-  sorry
+  have hm0 : m ≠ 0 := by rcases hm with ⟨k, hk⟩; omega
+  haveI : NeZero m := ⟨hm0⟩
+  obtain ⟨x, hx⟩ := h
+  have hbx : ((x.val : ℕ) : ZMod m) = x := ZMod.natCast_rightInverse x
+  have hcong : (M : ZMod m) = (((x.val : ℤ) ^ 2 : ℤ) : ZMod m) := by
+    push_cast
+    rw [hbx, hx]
+    ring
+  have hmod : jacobiSym M m = jacobiSym ((x.val : ℤ)) m ^ 2 := by
+    rw [jacobiSym.mod_left' ((ZMod.intCast_eq_intCast_iff _ _ _).mp hcong),
+      jacobiSym.pow_left]
+  have hMne : jacobiSym M m ≠ 0 :=
+    jacobiSym.ne_zero (Int.isCoprime_iff_gcd_eq_one.mp hco)
+  rcases jacobiSym.trichotomy (x.val : ℤ) m with h0 | h1 | h1
+  · rw [h0] at hmod
+    norm_num at hmod
+    exact absurd hmod hMne
+  · rw [h1] at hmod
+    simpa using hmod
+  · rw [h1] at hmod
+    simpa using hmod
 
 /-- **Exercise 1.11.** Completion of `(1.17)`: for `D ≡ 0,1 (mod 4)` and odd
 `m ≡ n (mod D)`, `(D/m) = (D/n)`. -/

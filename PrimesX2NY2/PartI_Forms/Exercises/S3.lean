@@ -104,13 +104,48 @@ theorem ex_3_7 (a b c : ℤ) :
   rw [hdiscr]
   exact properlyEquivalent_equivalence.trans hinv hprin
 
+/-- The reflection matrix `S = diag(1, −1)`; it has determinant `−1` and sends a
+form to its opposite. -/
+private def refl2 : Matrix (Fin 2) (Fin 2) ℤ := !![1, 0; 0, -1]
+
+private theorem refl2_det : refl2.det = -1 := by
+  simp [refl2, Matrix.det_fin_two_of]
+
+private theorem refl2_mul_refl2 : refl2 * refl2 = 1 := by
+  rw [refl2, Matrix.mul_fin_two, Matrix.one_fin_two]
+  norm_num
+
+private theorem action_refl2 (f : BinaryQF) : action refl2 f = f.opposite := by
+  obtain ⟨a, b, c⟩ := f
+  have e00 : refl2 0 0 = 1 := rfl
+  have e01 : refl2 0 1 = 0 := rfl
+  have e10 : refl2 1 0 = 0 := rfl
+  have e11 : refl2 1 1 = -1 := rfl
+  simp only [action, BinaryQF.opposite, e00, e01, e10, e11, BinaryQF.mk.injEq]
+  refine ⟨by ring, by ring, by ring⟩
+
+private theorem opposite_opposite (f : BinaryQF) : f.opposite.opposite = f := by
+  simp [BinaryQF.opposite]
+
 /-- **Exercise 3.8(a).** The Lagrangian (full-equivalence) class of `f` is the union
 of the proper class of `f` and the proper class of its opposite. -/
 theorem ex_3_8_a (f : BinaryQF) :
     {g : BinaryQF | Equivalent f g}
       = {g : BinaryQF | ProperlyEquivalent f g}
         ∪ {g : BinaryQF | ProperlyEquivalent f.opposite g} := by
-  sorry
+  ext g
+  simp only [Set.mem_setOf_eq, Set.mem_union]
+  constructor
+  · rintro ⟨M, hdet | hdet, rfl⟩
+    · exact Or.inl ⟨M, hdet, rfl⟩
+    · refine Or.inr ⟨refl2 * M, ?_, ?_⟩
+      · rw [Matrix.det_mul, refl2_det, hdet]; ring
+      · rw [← action_refl2, action_mul, ← Matrix.mul_assoc, refl2_mul_refl2, Matrix.one_mul]
+  · rintro (⟨M, hdet, rfl⟩ | ⟨M, hdet, rfl⟩)
+    · exact ⟨M, Or.inl hdet, rfl⟩
+    · refine ⟨refl2 * M, Or.inr ?_, ?_⟩
+      · rw [Matrix.det_mul, refl2_det, hdet]; ring
+      · rw [← action_mul, action_refl2]
 
 /-- **Exercise 3.8(b).** Equivalence of: the Lagrangian class equals the proper
 class; `f` is properly equivalent to its opposite; `f` is (properly and) improperly
@@ -119,7 +154,28 @@ theorem ex_3_8_b (f : BinaryQF) :
     [ {g : BinaryQF | Equivalent f g} = {g : BinaryQF | ProperlyEquivalent f g},
       ProperlyEquivalent f f.opposite,
       ∃ M : Matrix (Fin 2) (Fin 2) ℤ, M.det = -1 ∧ action M f = f ].TFAE := by
-  sorry
+  tfae_have 1 → 2 := by
+    intro h
+    have hmem : f.opposite ∈ {g : BinaryQF | Equivalent f g} :=
+      ⟨refl2, Or.inr refl2_det, action_refl2 f⟩
+    rw [h] at hmem
+    exact hmem
+  tfae_have 2 → 3 := by
+    rintro ⟨N, hN, hact⟩
+    refine ⟨N * refl2, by rw [Matrix.det_mul, hN, refl2_det]; ring, ?_⟩
+    rw [← action_mul, hact, action_refl2, opposite_opposite]
+  tfae_have 3 → 1 := by
+    rintro ⟨M, hM, hMf⟩
+    ext g
+    simp only [Set.mem_setOf_eq]
+    constructor
+    · rintro ⟨N, hdet | hdet, rfl⟩
+      · exact ⟨N, hdet, rfl⟩
+      · refine ⟨M * N, by rw [Matrix.det_mul, hM, hdet]; ring, ?_⟩
+        rw [← action_mul, hMf]
+    · rintro ⟨N, hdet, rfl⟩
+      exact ⟨N, Or.inl hdet, rfl⟩
+  tfae_finish
 
 /-- **Exercise 3.12(b).** The number of genera of forms of a negative discriminant
 `D` is at most `2^{μ−1}` (the bound preceding the equality of Theorem 3.15). -/
