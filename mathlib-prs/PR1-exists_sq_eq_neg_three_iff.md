@@ -1,7 +1,10 @@
 # Mathlib PR draft #1 — `ZMod.exists_sq_eq_neg_three_iff`
 
 **Status:** DRAFT — not submitted. Statement is proved and axiom-clean in this project
-(`PrimesX2NY2.PartI.S1.neg_three_isSquare_iff`, `PrimesX2NY2/PartI_Forms/Exercises/S1.lean`).
+as `PrimesX2NY2.Fermat.neg_three_isSquare_iff` (`PrimesX2NY2/PartI_Forms/Fermat.lean`);
+`PrimesX2NY2.PartI.S1.neg_three_isSquare_iff` re-exports it. Downstream it closes
+`prime_sq_add_three_sq` (`p = x² + 3y²` iff `p ≡ 1 mod 3`) and Cox Exercises 1.5,
+1.9(a), 1.4(b) — i.e. it is genuinely load-bearing, not an isolated curiosity.
 
 ## Title
 
