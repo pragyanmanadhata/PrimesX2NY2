@@ -142,13 +142,43 @@ theorem ex_1_3_b (N a b : ℤ) (hN : N = a ^ 2 + 3 * b ^ 2) (hcop : IsCoprime a 
 /-- **Exercise 1.4(a).** Descent Step for `x²+2y²`. -/
 theorem ex_1_4_a (p : ℕ) (hp : p.Prime) (x y : ℤ) (hcop : IsCoprime x y)
     (hdvd : (p : ℤ) ∣ x ^ 2 + 2 * y ^ 2) : ∃ a b : ℤ, (p : ℤ) = a ^ 2 + 2 * b ^ 2 := by
-  sorry
+  haveI : Fact p.Prime := ⟨hp⟩
+  rcases eq_or_ne p 2 with rfl | hp2
+  · exact ⟨0, 1, by norm_num⟩
+  · have hodd : Odd p := hp.odd_of_ne_two hp2
+    have hp3 : 3 ≤ p := by have := hp.two_le; omega
+    have hpn : ¬ (p : ℤ) ∣ (2 : ℤ) := by
+      intro hd
+      have h2 : p ∣ 2 := by exact_mod_cast hd
+      have := Nat.le_of_dvd (by norm_num) h2
+      omega
+    have hsq : IsSquare ((-2 : ℤ) : ZMod p) :=
+      (PrimesX2NY2.Fermat.dvd_sq_add_nsq_iff_isSquare 2 p hp hodd hpn).mp ⟨x, y, hcop, hdvd⟩
+    have hsq2 : IsSquare (-2 : ZMod p) := by
+      have h := hsq; push_cast at h; exact h
+    have hmod : p % 8 = 1 ∨ p % 8 = 3 := (ZMod.exists_sq_eq_neg_two_iff hp2).mp hsq2
+    exact (PrimesX2NY2.Fermat.prime_sq_add_two_sq p hp hodd).mpr hmod
 
 /-- **Exercise 1.4(b).** Descent Step for `x²+3y²` (odd `p`). -/
 theorem ex_1_4_b (p : ℕ) (hp : p.Prime) (hodd : Odd p) (x y : ℤ)
     (hcop : IsCoprime x y) (hdvd : (p : ℤ) ∣ x ^ 2 + 3 * y ^ 2) :
     ∃ a b : ℤ, (p : ℤ) = a ^ 2 + 3 * b ^ 2 := by
-  sorry
+  haveI : Fact p.Prime := ⟨hp⟩
+  rcases eq_or_ne p 3 with rfl | hp3
+  · exact ⟨0, 1, by norm_num⟩
+  · have hp2 : p ≠ 2 := by
+      rintro rfl
+      rcases hodd with ⟨k, hk⟩; omega
+    have hlt : 3 < p := by have := hp.two_le; omega
+    have hpn : ¬ (p : ℤ) ∣ (3 : ℤ) := by
+      intro hd
+      have h3 : p ∣ 3 := by exact_mod_cast hd
+      have := Nat.le_of_dvd (by norm_num) h3
+      omega
+    have hsq : IsSquare ((-3 : ℤ) : ZMod p) :=
+      (PrimesX2NY2.Fermat.dvd_sq_add_nsq_iff_isSquare 3 p hp hodd hpn).mp ⟨x, y, hcop, hdvd⟩
+    have hmod : p % 3 = 1 := (PrimesX2NY2.Fermat.neg_three_isSquare_iff p hodd hp3).mp hsq
+    exact (PrimesX2NY2.Fermat.prime_sq_add_three_sq p hp hlt).mpr hmod
 
 /-- Helper: `−3` is a quadratic residue mod an odd prime `p ≠ 3` iff `p ≡ 1 (mod 3)`.
 Proved in `PrimesX2NY2.Fermat`; Mathlib has only the `−1`, `2`, `−2` cases. -/
