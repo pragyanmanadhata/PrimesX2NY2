@@ -224,7 +224,33 @@ theorem ex_2_11 (p : ℕ) (hp : p.Prime) (hodd : Odd p) (hp7 : p ≠ 7) :
 `m = ac` with `1 < a < c` and `gcd(a,c) = 1`. -/
 theorem ex_2_12_a (m : ℕ) (hm : 1 < m) (hnp : ¬ ∃ p k : ℕ, p.Prime ∧ m = p ^ k) :
     ∃ a c : ℕ, 1 < a ∧ a < c ∧ m = a * c ∧ Nat.Coprime a c := by
-  sorry
+  have hm0 : m ≠ 0 := by omega
+  have hm1 : m ≠ 1 := by omega
+  set p := m.minFac with hpdef
+  have hp : p.Prime := Nat.minFac_prime hm1
+  have hpm : p ∣ m := Nat.minFac_dvd m
+  obtain ⟨e, n', hnd, hme⟩ := Nat.exists_eq_pow_mul_and_not_dvd hm0 p hp.ne_one
+  have hcop_p : Nat.Coprime p n' := (Nat.Prime.coprime_iff_not_dvd hp).mpr hnd
+  have hcop : Nat.Coprime (p ^ e) n' := hcop_p.pow_left e
+  have he : 1 ≤ e := by
+    rcases Nat.eq_zero_or_pos e with h0 | h0
+    · exfalso; rw [h0, pow_zero, one_mul] at hme; rw [hme] at hpm; exact hnd hpm
+    · exact h0
+  have ha1 : 1 < p ^ e := Nat.one_lt_pow (by omega) hp.one_lt
+  have hn'pos : 0 < n' := Nat.pos_of_ne_zero (by rintro rfl; rw [mul_zero] at hme; omega)
+  have hc1 : 1 < n' := by
+    rcases Nat.lt_or_ge n' 2 with h | h
+    · have hn1 : n' = 1 := by omega
+      exfalso; rw [hn1, mul_one] at hme; exact hnp ⟨p, e, hp, hme⟩
+    · exact h
+  have hne : p ^ e ≠ n' := by
+    intro heq
+    have hcc : Nat.Coprime n' n' := heq ▸ hcop
+    have hn1 : n' = 1 := by unfold Nat.Coprime at hcc; rwa [Nat.gcd_self] at hcc
+    omega
+  rcases lt_or_gt_of_ne hne with hlt | hgt
+  · exact ⟨p ^ e, n', ha1, hlt, hme, hcop⟩
+  · exact ⟨n', p ^ e, hc1, hgt, by rw [hme]; ring, hcop.symm⟩
 
 /-- **Exercise 2.12(b).** `h(−32) = 2` and `h(−124) = 3`. -/
 theorem ex_2_12_b :
