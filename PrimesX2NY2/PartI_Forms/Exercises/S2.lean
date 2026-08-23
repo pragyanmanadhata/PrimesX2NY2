@@ -227,11 +227,101 @@ theorem ex_2_8_b (f g : BinaryQF) (hf : f.Reduced) (hg : g.Reduced) (hfp : f.Pos
     (h : ProperlyEquivalent f g) : f = g := by
   exact reduced_eq_of_properlyEquivalent f g hf hg hfp h
 
+private theorem qf_ext {f g : BinaryQF} (ha : f.a = g.a) (hb : f.b = g.b) (hc : f.c = g.c) :
+    f = g := by
+  cases f; cases g; simp_all
+
+private theorem not_all_even {a b c : ℤ} (hp : Int.gcd (Int.gcd a b) c = 1) :
+    ¬ ((2:ℤ) ∣ a ∧ (2:ℤ) ∣ b ∧ (2:ℤ) ∣ c) := by
+  rintro ⟨d1, d2, d3⟩
+  have e1 : 2 ∣ a.natAbs := by
+    have h := Int.natAbs_dvd_natAbs.mpr d1
+    simpa using h
+  have e2 : 2 ∣ b.natAbs := by
+    have h := Int.natAbs_dvd_natAbs.mpr d2
+    simpa using h
+  have e3 : 2 ∣ c.natAbs := by
+    have h := Int.natAbs_dvd_natAbs.mpr d3
+    simpa using h
+  have g1 : 2 ∣ Int.gcd a b := Nat.dvd_gcd e1 e2
+  have g2 : 2 ∣ Int.gcd ((Int.gcd a b : ℕ) : ℤ) c := Nat.dvd_gcd (by simpa using g1) e3
+  rw [hp] at g2
+  omega
+
+private theorem not_isSquare_eight : ¬ IsSquare (8 : ℤ) := by
+  rintro ⟨r, hr⟩
+  have h1 : r * r = 8 := hr.symm
+  have h2 : r ≤ 3 := by nlinarith [sq_nonneg (r - 3)]
+  have h3 : -3 ≤ r := by nlinarith [sq_nonneg (r + 3)]
+  interval_cases r <;> omega
+
+/-- Translate the middle coefficient into `|B| ≤ |a|` (the indefinite normalization). -/
+private theorem normalize_b' (a b c : ℤ) (ha : a ≠ 0) :
+    ∃ B C : ℤ, ProperlyEquivalent (⟨a, b, c⟩ : BinaryQF) ⟨a, B, C⟩ ∧ |B| ≤ |a| := by
+  have hA : 0 < |a| := abs_pos.mpr ha
+  obtain ⟨m, hm, hmpos⟩ : ∃ m : ℤ, m = 2 * |a| ∧ 0 < m := ⟨2 * |a|, rfl, by linarith⟩
+  obtain ⟨u, hu⟩ : ∃ u : ℤ, 2 * a * u = -m := by
+    rcases lt_or_gt_of_ne ha with h | h
+    · exact ⟨1, by rw [hm, abs_of_neg h]; ring⟩
+    · exact ⟨-1, by rw [hm, abs_of_pos h]; ring⟩
+  have hr1 : 0 ≤ b % m := Int.emod_nonneg b (ne_of_gt hmpos)
+  have hr2 : b % m < m := Int.emod_lt_of_pos b hmpos
+  have hid : b % m + m * (b / m) = b := Int.emod_add_ediv b m
+  by_cases hcase : b % m ≤ |a|
+  · refine ⟨b + 2 * a * (u * (b / m)), a * (u * (b / m)) ^ 2 + b * (u * (b / m)) + c,
+      translate_equiv a b c (u * (b / m)), ?_⟩
+    have hB : b + 2 * a * (u * (b / m)) = b % m := by
+      have h2 : 2 * a * (u * (b / m)) = -(m * (b / m)) := by
+        linear_combination (b / m) * hu
+      rw [h2]; linarith [hid]
+    rw [hB, abs_of_nonneg hr1]
+    exact hcase
+  · replace hcase : |a| < b % m := not_le.mp hcase
+    refine ⟨b + 2 * a * (u * (b / m + 1)), a * (u * (b / m + 1)) ^ 2 + b * (u * (b / m + 1)) + c,
+      translate_equiv a b c (u * (b / m + 1)), ?_⟩
+    have hB : b + 2 * a * (u * (b / m + 1)) = b % m - m := by
+      have h2 : 2 * a * (u * (b / m + 1)) = -(m * (b / m)) - m := by
+        linear_combination (b / m + 1) * hu
+      rw [h2]; linarith [hid]
+    rw [hB, abs_of_nonpos (by linarith)]
+    linarith
+
 /-- **Exercise 2.10(a).** For indefinite nonsquare discriminant, every form is
 properly equivalent to one with `|b| ≤ |a| ≤ |c|`. -/
 theorem ex_2_10_a (g : BinaryQF) (h : 0 < g.discr) (hns : ¬ IsSquare g.discr) :
     ∃ f : BinaryQF, ProperlyEquivalent g f ∧ |f.b| ≤ |f.a| ∧ |f.a| ≤ |f.c| := by
-  sorry
+  have key : ∀ (n : ℕ) (q : BinaryQF), ¬ IsSquare q.discr → q.a.natAbs = n →
+      ∃ f : BinaryQF, ProperlyEquivalent q f ∧ |f.b| ≤ |f.a| ∧ |f.a| ≤ |f.c| := by
+    intro n
+    induction n using Nat.strong_induction_on with
+    | _ n ih =>
+      intro q hq hn
+      have ha : q.a ≠ 0 := by
+        intro h0
+        refine hq ⟨q.b, ?_⟩
+        simp only [BinaryQF.discr, h0]; ring
+      obtain ⟨B, C, hBC, hBle⟩ := normalize_b' q.a q.b q.c ha
+      have hBC' : ProperlyEquivalent q ⟨q.a, B, C⟩ := hBC
+      have hdBC : (⟨q.a, B, C⟩ : BinaryQF).discr = q.discr :=
+        (discr_eq_of_properlyEquivalent hBC').symm
+      by_cases hle : |q.a| ≤ |C|
+      · exact ⟨⟨q.a, B, C⟩, hBC', hBle, hle⟩
+      · replace hle : |C| < |q.a| := not_le.mp hle
+        have hswap : ProperlyEquivalent (⟨q.a, B, C⟩ : BinaryQF) ⟨C, -B, q.a⟩ :=
+          swap_equiv q.a B C
+        have hchain : ProperlyEquivalent q (⟨C, -B, q.a⟩ : BinaryQF) :=
+          properlyEquivalent_equivalence.trans hBC' hswap
+        have hd2 : (⟨C, -B, q.a⟩ : BinaryQF).discr = q.discr :=
+          (discr_eq_of_properlyEquivalent hchain).symm
+        have hlt : (⟨C, -B, q.a⟩ : BinaryQF).a.natAbs < n := by
+          rw [← hn]
+          show C.natAbs < q.a.natAbs
+          rcases abs_cases C with ⟨e1, s1⟩ | ⟨e1, s1⟩ <;>
+            rcases abs_cases q.a with ⟨e2, s2⟩ | ⟨e2, s2⟩ <;>
+              rw [e1, e2] at hle <;> omega
+        obtain ⟨f, hf1, hf2, hf3⟩ := ih _ hlt ⟨C, -B, q.a⟩ (by rw [hd2]; exact hq) rfl
+        exact ⟨f, properlyEquivalent_equivalence.trans hchain hf1, hf2, hf3⟩
+  exact key g.a.natAbs g hns rfl
 
 /-- **Exercise 2.10(b).** Such a form satisfies `4a² ≤ D` (i.e. `|a| ≤ √D/2`). -/
 theorem ex_2_10_b (f : BinaryQF) (h1 : |f.b| ≤ |f.a|) (h2 : |f.a| ≤ |f.c|)
@@ -268,7 +358,40 @@ theorem ex_2_10_b (f : BinaryQF) (h1 : |f.b| ≤ |f.a|) (h2 : |f.a| ≤ |f.c|)
 class number `h(D)` is finite for indefinite `D`. -/
 theorem ex_2_10_c (D : ℤ) (hD : 0 < D) (hns : ¬ IsSquare D) :
     {f : BinaryQF | f.discr = D ∧ |f.b| ≤ |f.a| ∧ |f.a| ≤ |f.c|}.Finite := by
-  sorry
+  have hane : ∀ f : BinaryQF, f.discr = D → |f.b| ≤ |f.a| → f.a ≠ 0 := by
+    intro f hfd h1 h0
+    have hb0 : f.b = 0 := by
+      have hle : |f.b| ≤ 0 := by rw [h0] at h1; simpa using h1
+      exact abs_eq_zero.mp (le_antisymm hle (abs_nonneg _))
+    have hz : D = 0 := by rw [← hfd]; simp only [BinaryQF.discr, h0, hb0]; ring
+    omega
+  refine Set.Finite.of_finite_image (f := fun f : BinaryQF => (f.a, f.b)) ?_ ?_
+  · apply Set.Finite.subset (Finset.Icc ((-D : ℤ), (-D : ℤ)) ((D : ℤ), (D : ℤ))).finite_toSet
+    rintro y ⟨f, ⟨hfd, h1, h2⟩, rfl⟩
+    have hb := ex_2_10_b f h1 h2 (by rw [hfd]; exact hD) (by rw [hfd]; exact hns)
+    rw [hfd] at hb
+    have h0 := hane f hfd h1
+    have hA1 : 1 ≤ |f.a| := by
+      rcases abs_cases f.a with ⟨e, s⟩ | ⟨e, s⟩ <;> rw [e] <;> omega
+    have hAD : |f.a| ≤ D := by
+      nlinarith [sq_abs f.a, sq_nonneg f.a, abs_nonneg f.a,
+        mul_le_mul_of_nonneg_left hA1 (abs_nonneg f.a)]
+    have hBD : |f.b| ≤ D := le_trans h1 hAD
+    obtain ⟨hb1, hb2⟩ := abs_le.mp hBD
+    obtain ⟨ha1, ha2⟩ := abs_le.mp hAD
+    simp only [Finset.coe_Icc, Set.mem_Icc, Prod.mk_le_mk]
+    exact ⟨⟨ha1, hb1⟩, ⟨ha2, hb2⟩⟩
+  · rintro f ⟨hfd, h1, h2⟩ g ⟨hgd, hg1, hg2⟩ hfg
+    have ha : f.a = g.a := congrArg Prod.fst hfg
+    have hbq : f.b = g.b := congrArg Prod.snd hfg
+    have h0 := hane f hfd h1
+    have hc : f.c = g.c := by
+      have e1 : f.b ^ 2 - 4 * f.a * f.c = D := hfd
+      have e2 : g.b ^ 2 - 4 * g.a * g.c = D := hgd
+      rw [← ha, ← hbq] at e2
+      have h4 : (4 * f.a) * f.c = (4 * f.a) * g.c := by linear_combination e2 - e1
+      exact mul_left_cancel₀ (mul_ne_zero (by norm_num) h0) h4
+    exact qf_ext ha hbq hc
 
 /-- **Exercise 2.11.** The result (2.17): for a prime `p ≠ 7`, `p = x² + 7y²` iff
 `p ≡ 1,9,11,15,23,25 (mod 28)`. -/
@@ -310,11 +433,94 @@ theorem ex_2_12_a (m : ℕ) (hm : 1 < m) (hnp : ¬ ∃ p k : ℕ, p.Prime ∧ m 
   · exact ⟨p ^ e, n', ha1, hlt, hme, hcop⟩
   · exact ⟨n', p ^ e, hc1, hgt, by rw [hme]; ring, hcop.symm⟩
 
+private theorem set32 : {f : BinaryQF | f.discr = -32 ∧ f.Reduced ∧ f.Primitive}
+    = ({⟨1, 0, 8⟩, ⟨3, 2, 3⟩} : Set BinaryQF) := by
+  ext f
+  obtain ⟨a, b, c⟩ := f
+  simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff, BinaryQF.mk.injEq,
+    BinaryQF.discr, BinaryQF.Reduced, BinaryQF.Primitive]
+  constructor
+  · rintro ⟨hd, ⟨hr1, hr2, hr3⟩, hp⟩
+    have ha0 : 0 ≤ a := le_trans (abs_nonneg b) hr1
+    obtain ⟨hl, hu⟩ := abs_le.mp hr1
+    have hsign : (b ≠ a ∧ b ≠ -a ∧ a ≠ c) ∨ 0 ≤ b := by
+      by_cases hb0' : 0 ≤ b
+      · exact Or.inr hb0'
+      · have hb0 : b < 0 := not_le.mp hb0'
+        refine Or.inl ⟨by omega, ?_, ?_⟩
+        · intro heq
+          have hba : |b| = a := by rw [heq, abs_neg, abs_of_nonneg ha0]
+          linarith [hr3 (Or.inl hba)]
+        · intro heq
+          linarith [hr3 (Or.inr heq)]
+    have hev := not_all_even hp
+    have hd' : 4 * a * c = b * b + 32 := by linear_combination -hd
+    have hbb : b * b ≤ a * a := by
+      nlinarith [mul_nonneg (by linarith : (0:ℤ) ≤ a - b) (by linarith : (0:ℤ) ≤ a + b)]
+    have hac : a * a ≤ a * c := mul_le_mul_of_nonneg_left hr2 ha0
+    have ha1 : 1 ≤ a := by
+      rcases ha0.lt_or_eq with h | h
+      · omega
+      · exfalso
+        have hb0 : b = 0 := by omega
+        rw [hb0, ← h] at hd'
+        omega
+    have h3a : 3 * (a * a) ≤ 32 := by linarith
+    have ha3 : a ≤ 3 := by nlinarith [sq_nonneg (a - 4)]
+    clear hr1 hr3 hd hp hbb hac h3a
+    interval_cases a <;> interval_cases b <;> omega
+  · rintro (⟨rfl, rfl, rfl⟩ | ⟨rfl, rfl, rfl⟩) <;> norm_num
+
+private theorem set124 : {f : BinaryQF | f.discr = -124 ∧ f.Reduced ∧ f.Primitive}
+    = ({⟨1, 0, 31⟩, ⟨5, 4, 7⟩, ⟨5, -4, 7⟩} : Set BinaryQF) := by
+  ext f
+  obtain ⟨a, b, c⟩ := f
+  simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff, BinaryQF.mk.injEq,
+    BinaryQF.discr, BinaryQF.Reduced, BinaryQF.Primitive]
+  constructor
+  · rintro ⟨hd, ⟨hr1, hr2, hr3⟩, hp⟩
+    have ha0 : 0 ≤ a := le_trans (abs_nonneg b) hr1
+    obtain ⟨hl, hu⟩ := abs_le.mp hr1
+    have hsign : (b ≠ a ∧ b ≠ -a ∧ a ≠ c) ∨ 0 ≤ b := by
+      by_cases hb0' : 0 ≤ b
+      · exact Or.inr hb0'
+      · have hb0 : b < 0 := not_le.mp hb0'
+        refine Or.inl ⟨by omega, ?_, ?_⟩
+        · intro heq
+          have hba : |b| = a := by rw [heq, abs_neg, abs_of_nonneg ha0]
+          linarith [hr3 (Or.inl hba)]
+        · intro heq
+          linarith [hr3 (Or.inr heq)]
+    have hev := not_all_even hp
+    have hd' : 4 * a * c = b * b + 124 := by linear_combination -hd
+    have hbb : b * b ≤ a * a := by
+      nlinarith [mul_nonneg (by linarith : (0:ℤ) ≤ a - b) (by linarith : (0:ℤ) ≤ a + b)]
+    have hac : a * a ≤ a * c := mul_le_mul_of_nonneg_left hr2 ha0
+    have ha1 : 1 ≤ a := by
+      rcases ha0.lt_or_eq with h | h
+      · omega
+      · exfalso
+        have hb0 : b = 0 := by omega
+        rw [hb0, ← h] at hd'
+        omega
+    have h3a : 3 * (a * a) ≤ 124 := by linarith
+    have ha3 : a ≤ 6 := by nlinarith [sq_nonneg (a - 7)]
+    clear hr1 hr3 hd hp hbb hac h3a
+    interval_cases a <;> interval_cases b <;> omega
+  · rintro (⟨rfl, rfl, rfl⟩ | ⟨rfl, rfl, rfl⟩ | ⟨rfl, rfl, rfl⟩) <;> norm_num
+
 /-- **Exercise 2.12(b).** `h(−32) = 2` and `h(−124) = 3`. -/
 theorem ex_2_12_b :
     {f : BinaryQF | f.discr = -32 ∧ f.Reduced ∧ f.Primitive}.ncard = 2 ∧
       {f : BinaryQF | f.discr = -124 ∧ f.Reduced ∧ f.Primitive}.ncard = 3 := by
-  sorry
+  constructor
+  · rw [set32, Set.ncard_pair (by norm_num)]
+  · rw [set124]
+    have hfin : ({(⟨5, 4, 7⟩ : BinaryQF), (⟨5, -4, 7⟩ : BinaryQF)} : Set BinaryQF).Finite :=
+      (Set.finite_singleton _).insert _
+    have h : ({(⟨1, 0, 31⟩ : BinaryQF), ⟨5, 4, 7⟩, ⟨5, -4, 7⟩} : Set BinaryQF).ncard = 2 + 1 := by
+      rw [Set.ncard_insert_of_notMem (by norm_num) hfin, Set.ncard_pair (by norm_num)]
+    omega
 
 /-- **Exercise 2.13.** The result (2.19): for an odd prime `p ∤ 5`,
 `p ≡ 1,3,7,9 (mod 20)` iff `(−5/p) = 1`. -/
@@ -501,11 +707,36 @@ theorem ex_2_22 (a b c x y z w : ℤ) :
         + (a * c - b ^ 2) * (x * w - y * z) ^ 2 := by
   ring
 
+private theorem discr8_classify (a b c : ℤ) (hd : b ^ 2 - 4 * a * c = 8)
+    (h1 : |b| ≤ |a|) (hab : 4 * a ^ 2 ≤ 8) :
+    (a = 1 ∧ b = 0 ∧ c = -2) ∨ (a = -1 ∧ b = 0 ∧ c = 2) := by
+  have hd' : b * b - 4 * a * c = 8 := by linear_combination hd
+  have ha2 : a ≤ 1 := by nlinarith [sq_nonneg (a - 1)]
+  have ha1 : -1 ≤ a := by nlinarith [sq_nonneg (a + 1)]
+  have haa : |a| ≤ 1 := by
+    rcases abs_cases a with ⟨e, s⟩ | ⟨e, s⟩ <;> rw [e] <;> linarith
+  obtain ⟨hb1, hb2⟩ := abs_le.mp h1
+  have hbl : -1 ≤ b := by linarith
+  have hbu : b ≤ 1 := by linarith
+  clear h1 hb1 hb2 haa hd hab
+  interval_cases a <;> interval_cases b <;> omega
+
 /-- **Exercise 2.23(c).** Any form of discriminant `8` is properly equivalent to
 `±(x² − 2y²)`. -/
 theorem ex_2_23_c (f : BinaryQF) (hf : f.discr = 8) :
     ProperlyEquivalent f ⟨1, 0, -2⟩ ∨ ProperlyEquivalent f ⟨-1, 0, 2⟩ := by
-  sorry
+  have hns : ¬ IsSquare f.discr := by rw [hf]; exact not_isSquare_eight
+  obtain ⟨g, hg, h1, h2⟩ := ex_2_10_a f (by rw [hf]; norm_num) hns
+  have hgd : g.discr = 8 := by rw [← discr_eq_of_properlyEquivalent hg]; exact hf
+  have hbound := ex_2_10_b g h1 h2 (by rw [hgd]; norm_num)
+    (by rw [hgd]; exact not_isSquare_eight)
+  rw [hgd] at hbound
+  have hd : g.b ^ 2 - 4 * g.a * g.c = 8 := hgd
+  rcases discr8_classify g.a g.b g.c hd h1 hbound with ⟨e1, e2, e3⟩ | ⟨e1, e2, e3⟩
+  · have hge : g = (⟨1, 0, -2⟩ : BinaryQF) := qf_ext e1 e2 e3
+    exact Or.inl (hge ▸ hg)
+  · have hge : g = (⟨-1, 0, 2⟩ : BinaryQF) := qf_ext e1 e2 e3
+    exact Or.inr (hge ▸ hg)
 
 /-- **Exercise 2.23(d).** An odd prime `p = ±(x² − 2y²)` satisfies `p ≡ ±1
 (mod 8)`. -/
