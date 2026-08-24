@@ -37,9 +37,47 @@ def quarticChar (π α : GaussianInt) : GaussianInt := sorry
 def IsBiquadraticResidue (a : ℤ) (p : ℕ) : Prop := ∃ x : ZMod p, x ^ 4 = (a : ZMod p)
 
 /-- **Proposition 4.18(i).** For `p = 2`, `1 + i` is prime and `2 = i³(1 + i)²`. -/
+theorem dle : (-1 : ℤ) ≤ 0 := by norm_num
+
+/-- An element of `ℤ[i]` whose norm is a rational prime is prime. -/
+theorem prime_of_norm_prime {π : GaussianInt} {q : ℕ} (hq : q.Prime)
+    (h : Zsqrtd.norm π = (q : ℤ)) : Prime π := by
+  rw [← irreducible_iff_prime]
+  constructor
+  · intro hu
+    have h1 := (Zsqrtd.norm_eq_one_iff' dle π).mpr hu
+    rw [h] at h1
+    have : q = 1 := by exact_mod_cast h1
+    exact hq.one_lt.ne' this
+  · intro a b hab
+    have hn : Zsqrtd.norm a * Zsqrtd.norm b = (q : ℤ) := by
+      rw [← Zsqrtd.norm_mul, ← hab, h]
+    have ha := Zsqrtd.norm_nonneg dle a
+    have hb := Zsqrtd.norm_nonneg dle b
+    have hA : (Zsqrtd.norm a).toNat * (Zsqrtd.norm b).toNat = q := by
+      have := congrArg Int.toNat hn
+      rwa [Int.toNat_mul ha hb, Int.toNat_natCast] at this
+    rcases (Nat.Prime.eq_one_or_self_of_dvd hq (Zsqrtd.norm a).toNat
+      ⟨(Zsqrtd.norm b).toNat, hA.symm⟩) with h1 | h1
+    · left
+      refine (Zsqrtd.norm_eq_one_iff' dle a).mp ?_
+      omega
+    · right
+      refine (Zsqrtd.norm_eq_one_iff' dle b).mp ?_
+      have hqpos := hq.pos
+      have : (Zsqrtd.norm b).toNat = 1 := by
+        rw [h1] at hA
+        have : q * (Zsqrtd.norm b).toNat = q * 1 := by omega
+        exact Nat.eq_of_mul_eq_mul_left hqpos this
+      omega
+
+theorem norm_one_one : Zsqrtd.norm (⟨1, 1⟩ : GaussianInt) = 2 := by decide
+
+/-- **Proposition 4.18(i).** For `p = 2`, `1 + i` is prime and `2 = i³(1 + i)²`. -/
 theorem prop_4_18_ramified :
     Prime (⟨1, 1⟩ : GaussianInt) ∧ (2 : GaussianInt) = gaussI ^ 3 * (⟨1, 1⟩ : GaussianInt) ^ 2 := by
-  sorry
+  refine ⟨prime_of_norm_prime Nat.prime_two (by rw [norm_one_one]; norm_num), ?_⟩
+  decide
 
 /-- **Proposition 4.18(ii).** For `p ≡ 1 (mod 4)`, `p = π·π̄` splits into nonassociate
 primes. -/
@@ -51,7 +89,8 @@ theorem prop_4_18_split (p : ℕ) (hp : p.Prime) (h1 : p % 4 = 1) :
 /-- **Proposition 4.18(iii).** For `p ≡ 3 (mod 4)`, `p` remains prime in `ℤ[i]`. -/
 theorem prop_4_18_inert (p : ℕ) (hp : p.Prime) (h3 : p % 4 = 3) :
     Prime (p : GaussianInt) := by
-  sorry
+  haveI : Fact p.Prime := ⟨hp⟩
+  exact (GaussianInt.prime_iff_mod_four_eq_three_of_nat_prime p).mpr h3
 
 /-- **(4.19)** (Fermat's little theorem in `ℤ[i]`). If `π ∤ α` then
 `α^{N(π)−1} ≡ 1 (mod π)`. -/
