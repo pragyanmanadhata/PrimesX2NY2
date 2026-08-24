@@ -349,8 +349,30 @@ theorem ex_1_12_a (D : ℤ) (hD0 : D ≠ 0) (hD4 : D % 4 = 0 ∨ D % 4 = 1) :
 theorem ex_1_13_a (p q : ℕ) [Fact p.Prime] [Fact q.Prime] (hp : p ≠ 2) (hq : q ≠ 2) :
     legendreSym p (q : ℤ) * legendreSym q (p : ℤ) = (-1) ^ (p / 2 * (q / 2)) := by
   -- FLAG (under-hypothesized): FALSE for p = q, since legendreSym p p = 0 while the RHS is +/-1.
-  -- Mathlib's legendreSym.quadratic_reciprocity requires the missing hypothesis `p != q`.
+  -- Mathlib's legendreSym.quadratic_reciprocity requires the missing hypothesis `p ≠ q`.
+  -- See `ex_1_13_a_FALSE` for a proof that the stated form fails, and `ex_1_13_a_fixed`
+  -- for the faithful version.
   sorry
+
+/-- Exercise 1.13(a) as stated is false: at `p = q = 3` the left side is `0`. -/
+theorem ex_1_13_a_FALSE :
+    ¬ (∀ (p q : ℕ) (_ : Fact p.Prime) (_ : Fact q.Prime), p ≠ 2 → q ≠ 2 →
+      legendreSym p (q : ℤ) * legendreSym q (p : ℤ) = (-1) ^ (p / 2 * (q / 2))) := by
+  intro h
+  have h3 := h 3 3 ⟨Nat.prime_three⟩ ⟨Nat.prime_three⟩ (by norm_num) (by norm_num)
+  rw [show ((3 : ℕ) : ℤ) = 3 from rfl] at h3
+  have hz : legendreSym 3 (3 : ℤ) = 0 := by
+    rw [legendreSym.eq_zero_iff]
+    decide
+  rw [hz, mul_zero] at h3
+  norm_num at h3
+
+/-- **Exercise 1.13(a)**, faithful form: quadratic reciprocity for *distinct* odd primes. -/
+theorem ex_1_13_a_fixed (p q : ℕ) [Fact p.Prime] [Fact q.Prime] (hp : p ≠ 2) (hq : q ≠ 2)
+    (hpq : p ≠ q) :
+    legendreSym p (q : ℤ) * legendreSym q (p : ℤ) = (-1) ^ (p / 2 * (q / 2)) := by
+  rw [mul_comm]
+  exact legendreSym.quadratic_reciprocity hp hq hpq
 
 /-- **Exercise 1.13(b).** The supplementary laws, assuming Lemma 1.14. -/
 theorem ex_1_13_b (p : ℕ) [Fact p.Prime] (hp : p ≠ 2) :
