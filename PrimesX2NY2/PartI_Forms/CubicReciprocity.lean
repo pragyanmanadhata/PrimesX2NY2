@@ -107,9 +107,97 @@ elements coincide with primes. -/
 theorem cor_4_4 (x : EisensteinInt) (hx : x ≠ 0) : IsIrreducibleE x ↔ IsPrimeE x := by
   sorry
 
+/-- Componentwise formula for multiplication. -/
+theorem mul_def (x y : EisensteinInt) :
+    x * y = ⟨x.a * y.a - x.b * y.b, x.a * y.b + x.b * y.a - x.b * y.b⟩ := rfl
+
+/-- Componentwise formula for the norm. -/
+theorem norm_def (x : EisensteinInt) : norm x = x.a ^ 2 - x.a * x.b + x.b ^ 2 := rfl
+
+theorem mul_comm' (x y : EisensteinInt) : x * y = y * x := by
+  rw [mul_def, mul_def]; simp only [EisensteinInt.mk.injEq]; constructor <;> ring
+
+theorem mul_one' (x : EisensteinInt) : x * 1 = x := by
+  rw [mul_def]
+  have e1 : (1 : EisensteinInt).a = 1 := rfl
+  have e2 : (1 : EisensteinInt).b = 0 := rfl
+  rw [e1, e2]
+  obtain ⟨p, q⟩ := x
+  simp only [EisensteinInt.mk.injEq]
+  constructor <;> ring
+
+/-- The norm is nonnegative: `4·N(a+bω) = (2a−b)² + 3b²`. -/
+theorem norm_nonneg (x : EisensteinInt) : 0 ≤ norm x := by
+  rw [norm_def]; nlinarith [sq_nonneg (2 * x.a - x.b), sq_nonneg x.b]
+
+theorem eq_zero_of_norm_eq_zero (x : EisensteinInt) (h : norm x = 0) : x = 0 := by
+  obtain ⟨p, q⟩ := x
+  rw [norm_def] at h
+  simp only [] at h
+  have hq : q = 0 := by nlinarith [sq_nonneg (2 * p - q), sq_nonneg q]
+  have hp : p = 0 := by rw [hq] at h; nlinarith [h]
+  subst hp; subst hq; rfl
+
+theorem norm_ne_zero (x : EisensteinInt) (h : x ≠ 0) : norm x ≠ 0 :=
+  fun hz => h (eq_zero_of_norm_eq_zero x hz)
+
+theorem norm_one : norm (1 : EisensteinInt) = 1 := by decide
+
+theorem norm_one_sub_omega : norm (1 - omega) = 3 := by decide
+
+theorem mul_conj_self (x : EisensteinInt) : x * ⟨x.a - x.b, -x.b⟩ = ⟨norm x, 0⟩ := by
+  rw [mul_def, norm_def]
+  simp only [EisensteinInt.mk.injEq]
+  constructor <;> ring
+
+/-- `3 ∣ a² − ab + b²` exactly when `3 ∣ a + b`. -/
+theorem norm_zmod3 (u v : ℤ) :
+    ((3:ℤ) ∣ (u ^ 2 - u * v + v ^ 2)) ↔ ((3:ℤ) ∣ (u + v)) := by
+  have key : ∀ A B : ZMod 3, (A ^ 2 - A * B + B ^ 2 = 0 ↔ A + B = 0) := by decide
+  constructor
+  · intro hdvd
+    have h1 : ((u ^ 2 - u * v + v ^ 2 : ℤ) : ZMod 3) = 0 :=
+      (ZMod.intCast_zmod_eq_zero_iff_dvd _ 3).mpr (by exact_mod_cast hdvd)
+    push_cast at h1
+    have h2 := (key (u : ZMod 3) (v : ZMod 3)).mp h1
+    have h3 : ((u + v : ℤ) : ZMod 3) = 0 := by push_cast; exact h2
+    exact_mod_cast (ZMod.intCast_zmod_eq_zero_iff_dvd _ 3).mp h3
+  · intro hdvd
+    have h1 : ((u + v : ℤ) : ZMod 3) = 0 :=
+      (ZMod.intCast_zmod_eq_zero_iff_dvd _ 3).mpr (by exact_mod_cast hdvd)
+    push_cast at h1
+    have h2 := (key (u : ZMod 3) (v : ZMod 3)).mpr h1
+    have h3 : ((u ^ 2 - u * v + v ^ 2 : ℤ) : ZMod 3) = 0 := by push_cast; exact h2
+    exact_mod_cast (ZMod.intCast_zmod_eq_zero_iff_dvd _ 3).mp h3
+
+/-- A norm not divisible by `3` is congruent to `1` mod `3`. -/
+theorem norm_mod3_cases (u v : ℤ) (h : ¬ ((3:ℤ) ∣ (u ^ 2 - u * v + v ^ 2))) :
+    (3:ℤ) ∣ (u ^ 2 - u * v + v ^ 2 - 1) := by
+  have key : ∀ A B : ZMod 3,
+      ¬ (A ^ 2 - A * B + B ^ 2 = 0) → A ^ 2 - A * B + B ^ 2 - 1 = 0 := by decide
+  have h1 : ¬ (((u ^ 2 - u * v + v ^ 2 : ℤ) : ZMod 3) = 0) := by
+    intro hc
+    exact h (by exact_mod_cast (ZMod.intCast_zmod_eq_zero_iff_dvd _ 3).mp hc)
+  push_cast at h1
+  have h2 := key (u : ZMod 3) (v : ZMod 3) h1
+  have h3 : ((u ^ 2 - u * v + v ^ 2 - 1 : ℤ) : ZMod 3) = 0 := by push_cast; exact h2
+  exact_mod_cast (ZMod.intCast_zmod_eq_zero_iff_dvd _ 3).mp h3
+
 /-- **Lemma 4.5(i).** `x` is a unit iff `N(x) = 1`. -/
 theorem lemma_4_5_i (x : EisensteinInt) : IsUnitE x ↔ norm x = 1 := by
-  sorry
+  constructor
+  · rintro ⟨y, hy⟩
+    have h : norm x * norm y = 1 := by rw [← EisensteinInt.norm_mul, hy, norm_one]
+    have hd : norm x ∣ 1 := ⟨norm y, h.symm⟩
+    have hle : norm x ≤ 1 := Int.le_of_dvd one_pos hd
+    have hx := norm_nonneg x
+    rcases (by omega : norm x = 0 ∨ norm x = 1) with h0 | h1
+    · rw [h0, zero_mul] at h; omega
+    · exact h1
+  · intro h
+    refine ⟨⟨x.a - x.b, -x.b⟩, ?_⟩
+    rw [mul_conj_self, h]
+    rfl
 
 /-- **Lemma 4.5(ii).** The units of `ℤ[ω]` are `{±1, ±ω, ±ω²}`. -/
 theorem lemma_4_5_ii (x : EisensteinInt) :

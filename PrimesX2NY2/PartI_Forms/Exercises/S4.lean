@@ -192,7 +192,52 @@ theorem ex_4_6_c :
 theorem ex_4_9_a (π : EisensteinInt) (hπ : EisensteinInt.IsPrimeE π)
     (h : ¬ EisensteinInt.AssociatedE π (1 - EisensteinInt.omega)) :
     (3 : ℤ) ∣ (EisensteinInt.norm π - 1) := by
-  sorry
+  open EisensteinInt in
+  obtain ⟨hnu, hne, hprime⟩ := hπ
+  have hnπ : norm π ≠ 0 := norm_ne_zero π hne
+  have h3 : ¬ ((3 : ℤ) ∣ norm π) := by
+    intro hdvd
+    rw [norm_def] at hdvd
+    obtain ⟨w, hw⟩ := (norm_zmod3 π.a π.b).mp hdvd
+    have hdvd' : (1 - omega) ∣ π := by
+      refine ⟨⟨π.a - w, w⟩, ?_⟩
+      rw [mul_def]
+      have e1 : (1 - omega : EisensteinInt).a = 1 := rfl
+      have e2 : (1 - omega : EisensteinInt).b = -1 := rfl
+      rw [e1, e2]
+      obtain ⟨pa, pb⟩ := π
+      simp only [] at hw ⊢
+      simp only [EisensteinInt.mk.injEq]
+      constructor <;> omega
+    obtain ⟨γ, hγ⟩ := hdvd'
+    have hpd : π ∣ (1 - omega) * γ := ⟨1, by rw [← hγ]; exact (mul_one' π).symm⟩
+    have hnn := norm_nonneg π
+    rcases hprime _ _ hpd with hc | hc
+    · obtain ⟨u, hu⟩ := hc
+      have hnorms : (3 : ℤ) = norm π * norm u := by
+        rw [← norm_one_sub_omega, hu, EisensteinInt.norm_mul]
+      have hπ1 : norm π ≠ 1 := fun hh => hnu ((lemma_4_5_i π).mpr hh)
+      have hdvd3 : norm π ∣ (3:ℤ) := ⟨norm u, hnorms⟩
+      have hle : norm π ≤ 3 := Int.le_of_dvd (by norm_num) hdvd3
+      have hcases : norm π = 0 ∨ norm π = 1 ∨ norm π = 2 ∨ norm π = 3 := by omega
+      have hnu' : norm u = 1 := by
+        rcases hcases with h0 | h1 | h2 | h3'
+        · exact absurd h0 hnπ
+        · exact absurd h1 hπ1
+        · rw [h2] at hnorms; omega
+        · rw [h3'] at hnorms; omega
+      exact h ⟨u, (lemma_4_5_i u).mpr hnu', hu.trans (mul_comm' π u)⟩
+    · obtain ⟨w2, hw2⟩ := hc
+      have he : norm π = 3 * (norm π * norm w2) := by
+        conv_lhs => rw [hγ]
+        rw [EisensteinInt.norm_mul, norm_one_sub_omega, hw2, EisensteinInt.norm_mul]
+      have hz : norm π * (1 - 3 * norm w2) = 0 := by linear_combination he
+      rcases mul_eq_zero.mp hz with h' | h'
+      · exact hnπ h'
+      · have := norm_nonneg w2
+        omega
+  rw [norm_def] at h3 ⊢
+  exact norm_mod3_cases π.a π.b h3
 
 /-- **Exercise 4.10(a).** The cubic character is multiplicative. -/
 theorem ex_4_10_a (π α β : EisensteinInt) :
