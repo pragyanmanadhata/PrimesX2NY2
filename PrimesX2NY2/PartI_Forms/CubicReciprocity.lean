@@ -96,20 +96,13 @@ theorem norm_mul (x y : EisensteinInt) : norm (x * y) = norm x * norm y := by
   simp only [norm, ha, hb]
   ring
 
-/-- **Proposition 4.3.** `ℤ[ω]` is a Euclidean ring: division with smaller-norm
-remainder. -/
-theorem prop_4_3 (α β : EisensteinInt) (hβ : β ≠ 0) :
-    ∃ γ δ : EisensteinInt, α = β * γ + δ ∧ norm δ < norm β := by
-  sorry
-
-/-- **Corollary 4.4.** `ℤ[ω]` is a PID and a UFD; in particular irreducible
-elements coincide with primes. -/
-theorem cor_4_4 (x : EisensteinInt) (hx : x ≠ 0) : IsIrreducibleE x ↔ IsPrimeE x := by
-  sorry
-
 /-- Componentwise formula for multiplication. -/
 theorem mul_def (x y : EisensteinInt) :
     x * y = ⟨x.a * y.a - x.b * y.b, x.a * y.b + x.b * y.a - x.b * y.b⟩ := rfl
+
+theorem add_def (x y : EisensteinInt) : x + y = ⟨x.a + y.a, x.b + y.b⟩ := rfl
+
+theorem sub_def (x y : EisensteinInt) : x - y = ⟨x.a - y.a, x.b - y.b⟩ := rfl
 
 /-- Componentwise formula for the norm. -/
 theorem norm_def (x : EisensteinInt) : norm x = x.a ^ 2 - x.a * x.b + x.b ^ 2 := rfl
@@ -183,6 +176,59 @@ theorem norm_mod3_cases (u v : ℤ) (h : ¬ ((3:ℤ) ∣ (u ^ 2 - u * v + v ^ 2)
   have h3 : ((u ^ 2 - u * v + v ^ 2 - 1 : ℤ) : ZMod 3) = 0 := by push_cast; exact h2
   exact_mod_cast (ZMod.intCast_zmod_eq_zero_iff_dvd _ 3).mp h3
 
+/-- Conjugation preserves the norm. -/
+theorem norm_conj (x : EisensteinInt) :
+    EisensteinInt.norm ⟨x.a - x.b, -x.b⟩ = EisensteinInt.norm x := by
+  rw [norm_def, norm_def]; ring
+
+/-- Nearest-integer rounding: `|2(A − n·m)| ≤ n` for a suitable `m`. -/
+theorem round_bound (A n : ℤ) (hn : 0 < n) :
+    ∃ m : ℤ, -n ≤ 2 * (A - n * m) ∧ 2 * (A - n * m) ≤ n := by
+  have h2n : (0:ℤ) < 2 * n := by omega
+  refine ⟨(2 * A + n) / (2 * n), ?_, ?_⟩ <;>
+    · have hdm := Int.ediv_add_emod (2 * A + n) (2 * n)
+      have hr0 : 0 ≤ (2 * A + n) % (2 * n) := Int.emod_nonneg _ (by omega)
+      have hr1 : (2 * A + n) % (2 * n) < 2 * n := Int.emod_lt_of_pos _ h2n
+      nlinarith [hdm, hr0, hr1]
+
+/-- **Proposition 4.3.** `ℤ[ω]` is a Euclidean ring: division with smaller-norm
+remainder. -/
+theorem prop_4_3 (α β : EisensteinInt) (hβ : β ≠ 0) :
+    ∃ γ δ : EisensteinInt, α = β * γ + δ ∧ norm δ < norm β := by
+  have hnpos : 0 < EisensteinInt.norm β :=
+    lt_of_le_of_ne (norm_nonneg β) (Ne.symm (norm_ne_zero β hβ))
+  obtain ⟨m, hm1, hm2⟩ := round_bound (α * ⟨β.a - β.b, -β.b⟩).a (EisensteinInt.norm β) hnpos
+  obtain ⟨k, hk1, hk2⟩ := round_bound (α * ⟨β.a - β.b, -β.b⟩).b (EisensteinInt.norm β) hnpos
+  refine ⟨⟨m, k⟩, α - β * ⟨m, k⟩, ?_, ?_⟩
+  · rw [add_def, sub_def]
+    obtain ⟨pa, pb⟩ := α
+    simp only [EisensteinInt.mk.injEq]
+    constructor <;> ring
+  · set n : ℤ := EisensteinInt.norm β with hn
+    set u : ℤ := (α * ⟨β.a - β.b, -β.b⟩).a - n * m with hu
+    set v : ℤ := (α * ⟨β.a - β.b, -β.b⟩).b - n * k with hv
+    have hprod : (α - β * ⟨m, k⟩) * ⟨β.a - β.b, -β.b⟩ = ⟨u, v⟩ := by
+      have hnb : n = β.a ^ 2 - β.a * β.b + β.b ^ 2 := by rw [hn, norm_def]
+      rw [hu, hv, mul_def, mul_def, sub_def, mul_def]
+      simp only [EisensteinInt.mk.injEq]
+      constructor <;> · rw [hnb]; ring
+    have hnorms := congrArg EisensteinInt.norm hprod
+    have hRHS : EisensteinInt.norm (⟨u, v⟩ : EisensteinInt) = u ^ 2 - u * v + v ^ 2 := rfl
+    rw [EisensteinInt.norm_mul, norm_conj, hRHS] at hnorms
+    have hu2 : (2 * u) ^ 2 ≤ n ^ 2 := by nlinarith [hm1, hm2]
+    have hv2 : (2 * v) ^ 2 ≤ n ^ 2 := by nlinarith [hk1, hk2]
+    have huvl : -(n ^ 2) ≤ 4 * (u * v) := by nlinarith [sq_nonneg (2 * u + 2 * v), hu2, hv2]
+    have h4 : 4 * (EisensteinInt.norm (α - β * ⟨m, k⟩) * n) ≤ 3 * (n * n) := by
+      nlinarith [hnorms, hu2, hv2, huvl]
+    have hn2 : 0 < n * n := mul_pos hnpos hnpos
+    have hlt : EisensteinInt.norm (α - β * ⟨m, k⟩) * n < n * n := by linarith [h4, hn2]
+    exact lt_of_mul_lt_mul_right hlt (le_of_lt hnpos)
+
+/-- **Corollary 4.4.** `ℤ[ω]` is a PID and a UFD; in particular irreducible
+elements coincide with primes. -/
+theorem cor_4_4 (x : EisensteinInt) (hx : x ≠ 0) : IsIrreducibleE x ↔ IsPrimeE x := by
+  sorry
+
 /-- **Lemma 4.5(i).** `x` is a unit iff `N(x) = 1`. -/
 theorem lemma_4_5_i (x : EisensteinInt) : IsUnitE x ↔ norm x = 1 := by
   constructor
@@ -203,7 +249,28 @@ theorem lemma_4_5_i (x : EisensteinInt) : IsUnitE x ↔ norm x = 1 := by
 theorem lemma_4_5_ii (x : EisensteinInt) :
     IsUnitE x ↔ x = 1 ∨ x = -1 ∨ x = omega ∨ x = -omega
       ∨ x = omega * omega ∨ x = -(omega * omega) := by
-  sorry
+  rw [lemma_4_5_i, norm_def]
+  have e2 : (-1 : EisensteinInt) = ⟨-1, 0⟩ := rfl
+  have e4 : (-omega : EisensteinInt) = ⟨0, -1⟩ := rfl
+  have e6 : (-(omega * omega) : EisensteinInt) = ⟨1, 1⟩ := rfl
+  have e5 : (omega * omega : EisensteinInt) = ⟨-1, -1⟩ := rfl
+  have e1 : (1 : EisensteinInt) = ⟨1, 0⟩ := rfl
+  have e3 : (omega : EisensteinInt) = ⟨0, 1⟩ := rfl
+  rw [e2, e4, e6, e5, e1, e3]
+  obtain ⟨p, q⟩ := x
+  simp only [EisensteinInt.mk.injEq]
+  constructor
+  · intro h
+    have h4 : (2 * p - q) ^ 2 + 3 * q ^ 2 = 4 := by nlinarith [h]
+    have hq1 : q ^ 2 ≤ 1 := by nlinarith [sq_nonneg (2 * p - q)]
+    have hqa : -1 ≤ q := by nlinarith [hq1]
+    have hqb : q ≤ 1 := by nlinarith [hq1]
+    have hpq : (2 * p - q) ^ 2 ≤ 4 := by nlinarith [sq_nonneg q]
+    have hpa : -1 ≤ p := by nlinarith [hpq, hqa, hqb]
+    have hpb : p ≤ 1 := by nlinarith [hpq, hqa, hqb]
+    interval_cases p <;> interval_cases q <;> omega
+  · rintro (⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩) <;>
+      norm_num
 
 /-- **Lemma 4.6.** If `N(α)` is a rational prime then `α` is prime in `ℤ[ω]`. -/
 theorem lemma_4_6 (α : EisensteinInt) (p : ℕ) (hp : p.Prime) (h : norm α = (p : ℤ)) :
