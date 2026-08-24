@@ -610,7 +610,26 @@ theorem ex_2_16 (D : ℤ) (hD : D % 4 = 1) :
 by a form of discriminant `D` forces `D ≡ 1 (mod 8)`. -/
 theorem ex_2_17_a (D : ℤ) (hD : D % 4 = 1) (f : BinaryQF) (hf : f.discr = D)
     (m : ℤ) (hm : Even m) (h : ProperlyRepresents f m) : D % 8 = 1 := by
-  sorry
+  obtain ⟨B, C, hBC⟩ := (properlyRepresents_iff_properlyEquivalent f m).mp h
+  have hd : (⟨m, B, C⟩ : BinaryQF).discr = D := by
+    rw [← discr_eq_of_properlyEquivalent hBC]; exact hf
+  have hD' : B ^ 2 - 4 * m * C = D := hd
+  obtain ⟨k, hk⟩ := hm
+  have hBodd : ¬ (2 ∣ B) := by
+    rintro ⟨t, ht⟩
+    rw [ht, hk] at hD'
+    have : D = 4 * (t ^ 2 - 2 * k * C) := by linear_combination -hD'
+    omega
+  obtain ⟨u, hu⟩ : ∃ u, B = 2 * u + 1 := by
+    rcases Int.even_or_odd B with ⟨t, ht⟩ | ⟨t, ht⟩
+    · exact absurd ⟨t, by omega⟩ hBodd
+    · exact ⟨t, ht⟩
+  have hD8 : ∃ s : ℤ, D = 8 * s + 1 := by
+    rcases Int.even_or_odd u with ⟨t, ht⟩ | ⟨t, ht⟩
+    · exact ⟨2 * t ^ 2 + t - k * C, by rw [← hD', hu, hk, ht]; ring⟩
+    · exact ⟨2 * t ^ 2 + 3 * t + 1 - k * C, by rw [← hD', hu, hk, ht]; ring⟩
+  obtain ⟨s, hs⟩ := hD8
+  omega
 
 /-- **Exercise 2.17(b).** For `D ≡ 1 (mod 4)`, an odd `m` prime to `D` represented
 by a form of discriminant `D` has `(D/m) = 1`. -/
@@ -827,7 +846,39 @@ nontrivial primitive solution (yielding the contradiction). -/
 theorem ex_2_24_b (p q : ℕ) (hp : p % 4 = 1) (hq : q % 4 = 3) :
     ¬ ∃ x y z : ℤ, (x, y, z) ≠ (0, 0, 0) ∧ Int.gcd (Int.gcd x y) z = 1
       ∧ x ^ 2 + (p : ℤ) * y ^ 2 - (q : ℤ) * z ^ 2 = 0 := by
-  sorry
+  rintro ⟨x, y, z, -, hg, heq⟩
+  have hev : ¬ ((2:ℤ) ∣ x ∧ (2:ℤ) ∣ y ∧ (2:ℤ) ∣ z) := by
+    rintro ⟨d1, d2, d3⟩
+    have e1 : 2 ∣ x.natAbs := by have h := Int.natAbs_dvd_natAbs.mpr d1; simpa using h
+    have e2 : 2 ∣ y.natAbs := by have h := Int.natAbs_dvd_natAbs.mpr d2; simpa using h
+    have e3 : 2 ∣ z.natAbs := by have h := Int.natAbs_dvd_natAbs.mpr d3; simpa using h
+    have g1 : 2 ∣ Int.gcd x y := Nat.dvd_gcd e1 e2
+    have g2 : 2 ∣ Int.gcd ((Int.gcd x y : ℕ) : ℤ) z := Nat.dvd_gcd (by simpa using g1) e3
+    rw [hg] at g2
+    omega
+  have hp4 : ((p : ℤ)) % 4 = 1 := by omega
+  have hq4 : ((q : ℤ)) % 4 = 3 := by omega
+  have key : (4 : ℤ) ∣ (x ^ 2 + y ^ 2 + z ^ 2) := by
+    obtain ⟨kp, hkp⟩ : (4 : ℤ) ∣ ((p : ℤ) - 1) := by omega
+    obtain ⟨kq, hkq⟩ : (4 : ℤ) ∣ ((q : ℤ) + 1) := by omega
+    exact ⟨-(kp * y ^ 2) + kq * z ^ 2, by linear_combination heq - y ^ 2 * hkp + z ^ 2 * hkq⟩
+  have sq4 : ∀ w : ℤ, w ^ 2 % 4 = 0 ∨ w ^ 2 % 4 = 1 := by
+    intro w
+    rcases Int.even_or_odd w with ⟨m, hm⟩ | ⟨m, hm⟩
+    · left; rw [hm]; have : (m + m) ^ 2 = 4 * m ^ 2 := by ring
+      rw [this]; omega
+    · right; rw [hm]; have : (2 * m + 1) ^ 2 = 4 * (m ^ 2 + m) + 1 := by ring
+      rw [this]; omega
+  have hx2 := sq4 x; have hy2 := sq4 y; have hz2 := sq4 z
+  have par : ∀ w : ℤ, w ^ 2 % 4 = 0 → (2:ℤ) ∣ w := by
+    intro w hw
+    rcases Int.even_or_odd w with ⟨m, hm⟩ | ⟨m, hm⟩
+    · exact ⟨m, by omega⟩
+    · exfalso; rw [hm] at hw
+      have : (2 * m + 1) ^ 2 = 4 * (m ^ 2 + m) + 1 := by ring
+      rw [this] at hw; omega
+  have hall : x ^ 2 % 4 = 0 ∧ y ^ 2 % 4 = 0 ∧ z ^ 2 % 4 = 0 := by omega
+  exact hev ⟨par x hall.1, par y hall.2.1, par z hall.2.2⟩
 
 /-- **Exercise 2.25.** Two forms are properly equivalent iff their opposites
 (`ax² − bxy + cy²`) are. -/
