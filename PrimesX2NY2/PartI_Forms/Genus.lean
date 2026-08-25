@@ -5,6 +5,7 @@ Authors: Pragyan Manadhata
 -/
 import Mathlib
 import PrimesX2NY2.PartI_Forms.FormClassGroup
+import PrimesX2NY2.PartI_Forms.Fermat
 
 /-!
 # Part I, Chapter 4 - Genus theory and representation
@@ -41,7 +42,14 @@ def principalGenus (D : ℤ) : Set (ZMod D.natAbs) := sorry
 
 /-- **Representation criterion via residues** (Cox, Thm 2.16 / §3). A prime `p`
 not dividing `D` is properly represented by some form of discriminant `D` iff `D`
-is a quadratic residue mod `p`. -/
+is a quadratic residue mod `p`.
+
+FLAG (under-hypothesized): FALSE as stated — it needs `D ≡ 0, 1 (mod 4)` and `Odd p`.
+See `properlyRepresents_iff_isSquare_counterexample` (D = 3, p = 11: no form has
+discriminant 3 at all) and `properlyRepresents_iff_isSquare_counterexample_two`
+(D = 5, p = 2), and `properlyRepresents_iff_isSquare_repaired` for the faithful form,
+all proved below. The forward direction needs no hypotheses at all:
+`properlyRepresents_isSquare_forward`. -/
 theorem properlyRepresents_iff_isSquare (D : ℤ) (p : ℕ) (hp : p.Prime)
     (hpD : ¬ (p : ℤ) ∣ D) :
     (∃ f : BinaryQF, f.discr = D ∧ ProperlyRepresents f p) ↔ IsSquare (D : ZMod p) := by
@@ -721,27 +729,290 @@ theorem directlyComposes_unique (f g F F' : BinaryQF) (D : ℤ)
 represented by a primitive form of discriminant `D` iff `D` is a quadratic
 residue mod `m`. (Cox §2; the general odd-`m` form of which
 `properlyRepresents_iff_isSquare` is the prime case.) -/
+private theorem represents_of_properlyEquivalent' {f g : BinaryQF} (h : ProperlyEquivalent f g)
+    (m : ℤ) (hf : Represents f m) : Represents g m := by
+  obtain ⟨M, hdet, rfl⟩ := h
+  obtain ⟨x, y, hxy⟩ := hf
+  have hd : M 0 0 * M 1 1 - M 0 1 * M 1 0 = 1 := by
+    rw [Matrix.det_fin_two] at hdet; linarith
+  refine ⟨M 1 1 * x - M 0 1 * y, -(M 1 0) * x + M 0 0 * y, ?_⟩
+  rw [eval_action]
+  have e1 : M 0 0 * (M 1 1 * x - M 0 1 * y) + M 0 1 * (-(M 1 0) * x + M 0 0 * y) = x := by
+    linear_combination x * hd
+  have e2 : M 1 0 * (M 1 1 * x - M 0 1 * y) + M 1 1 * (-(M 1 0) * x + M 0 0 * y) = y := by
+    linear_combination y * hd
+  rw [e1, e2]; exact hxy
+
+/-- Exercise 2.1 (copied from `Exercises/S2.lean`, which imports `Genus`). -/
+private theorem rep_eq_sq_mul' (f : BinaryQF) (m : ℤ) (h : Represents f m) :
+    ∃ d m' : ℤ, m = d ^ 2 * m' ∧ ProperlyRepresents f m' := by
+  obtain ⟨x, y, hxy⟩ := h
+  by_cases hxy0 : x = 0 ∧ y = 0
+  · obtain ⟨hx0, hy0⟩ := hxy0
+    subst hx0; subst hy0
+    have hm : m = 0 := by rw [← hxy]; simp [BinaryQF.eval]
+    exact ⟨0, f.eval 1 0, by rw [hm]; ring, 1, 0, rfl, isCoprime_one_left⟩
+  · have hg : 0 < Int.gcd x y :=
+      Nat.pos_of_ne_zero (fun hz => hxy0 (Int.gcd_eq_zero_iff.mp hz))
+    obtain ⟨x', y', hcop, hx, hy⟩ := Int.exists_gcd_one hg
+    set g : ℤ := (Int.gcd x y : ℤ) with hgdef
+    refine ⟨g, f.eval x' y', ?_, x', y', rfl, ?_⟩
+    · have hme : m = f.eval (x' * g) (y' * g) := by rw [← hx, ← hy]; exact hxy.symm
+      rw [hme]; simp only [BinaryQF.eval]; ring
+    · exact Int.isCoprime_iff_gcd_eq_one.mpr hcop
+
+/-- If a form of discriminant `D` *properly* represents a prime `p`, then `D` is a square
+mod `p`. (No hypotheses on `D` or `p` needed.) -/
+private theorem isSquare_of_properlyRepresents' (D : ℤ) (p : ℕ) (f : BinaryQF)
+    (hdiscr : f.discr = D) (hrep : ProperlyRepresents f (p : ℤ)) :
+    IsSquare (D : ZMod p) := by
+  obtain ⟨B, C, hBC⟩ := (properlyRepresents_iff_properlyEquivalent f (p : ℤ)).mp hrep
+  have hdBC := discr_eq_of_properlyEquivalent hBC
+  rw [hdiscr] at hdBC
+  simp only [BinaryQF.discr] at hdBC
+  refine ⟨(B : ZMod p), ?_⟩
+  have hcast := congrArg (fun t : ℤ => (t : ZMod p)) hdBC
+  push_cast at hcast
+  rw [ZMod.natCast_self] at hcast
+  rw [hcast]
+  ring
+
+/-- If a form of discriminant `D` represents a prime `p`, then `D` is a square mod `p`. -/
+private theorem isSquare_of_represents' (D : ℤ) (p : ℕ) (hp : p.Prime) (f : BinaryQF)
+    (hdiscr : f.discr = D) (hrep : Represents f (p : ℤ)) : IsSquare (D : ZMod p) := by
+  obtain ⟨d, m', hm', hpr⟩ := rep_eq_sq_mul' f (p : ℤ) hrep
+  have hdvd : d ^ 2 ∣ (p : ℤ) := ⟨m', hm'⟩
+  have hdn : d.natAbs ^ 2 ∣ p := by
+    have h := Int.natAbs_dvd_natAbs.mpr hdvd
+    rwa [Int.natAbs_pow, Int.natAbs_natCast] at h
+  have hd1 : d.natAbs = 1 := by
+    rcases hp.eq_one_or_self_of_dvd d.natAbs
+        ((dvd_pow_self d.natAbs two_ne_zero).trans hdn) with h | h
+    · exact h
+    · exfalso
+      rw [h] at hdn
+      have hle := Nat.le_of_dvd hp.pos hdn
+      nlinarith [hp.two_le]
+  have hd2 : d ^ 2 = 1 := by
+    rcases Int.natAbs_eq d with he | he <;> rw [he, hd1] <;> norm_num
+  have hm'p : m' = (p : ℤ) := by rw [hm', hd2, one_mul]
+  rw [hm'p] at hpr
+  exact isSquare_of_properlyRepresents' D p f hdiscr hpr
+
+/-- In `ZMod p` for an odd prime `p`, multiplying by `4` does not change squareness. -/
+private theorem isSquare_four_mul' (p : ℕ) (hp : p.Prime) (hodd : Odd p) (x : ZMod p) :
+    IsSquare (4 * x) ↔ IsSquare x := by
+  haveI := Fact.mk hp
+  have hp2 : p ≠ 2 := by rintro rfl; exact (Nat.not_odd_iff_even.mpr even_two) hodd
+  have h2 : (2 : ZMod p) ≠ 0 := by
+    intro h
+    have h' : ((2 : ℕ) : ZMod p) = 0 := by exact_mod_cast h
+    rw [ZMod.natCast_eq_zero_iff] at h'
+    exact hp2 ((Nat.prime_dvd_prime_iff_eq hp Nat.prime_two).mp h')
+  constructor
+  · rintro ⟨z, hz⟩
+    refine ⟨z * (2 : ZMod p)⁻¹, ?_⟩
+    have hinv : (2 : ZMod p) * (2 : ZMod p)⁻¹ = 1 := mul_inv_cancel₀ h2
+    have hz' : (2 : ZMod p) * (2 : ZMod p) * x = z * z := by
+      rw [← hz]; ring
+    calc x = ((2 : ZMod p) * (2 : ZMod p) * x) * ((2 : ZMod p)⁻¹ * (2 : ZMod p)⁻¹) := by
+            rw [show ((2 : ZMod p) * (2 : ZMod p) * x) * ((2 : ZMod p)⁻¹ * (2 : ZMod p)⁻¹)
+                  = ((2 : ZMod p) * (2 : ZMod p)⁻¹) * ((2 : ZMod p) * (2 : ZMod p)⁻¹) * x from by
+                ring, hinv]
+            ring
+      _ = z * (2 : ZMod p)⁻¹ * (z * (2 : ZMod p)⁻¹) := by rw [hz']; ring
+  · rintro ⟨z, hz⟩
+    exact ⟨2 * z, by rw [hz]; ring⟩
+
+/-! ## Target 1 : `properlyRepresents_iff_isSquare` -/
+
+/-- The forward (`→`) half of `properlyRepresents_iff_isSquare` holds with no hypotheses. -/
+
+theorem properlyRepresents_isSquare_forward' (D : ℤ) (p : ℕ)
+    (h : ∃ f : BinaryQF, f.discr = D ∧ ProperlyRepresents f (p : ℤ)) :
+    IsSquare (D : ZMod p) := by
+  obtain ⟨f, hd, hrep⟩ := h
+  exact isSquare_of_properlyRepresents' D p f hd hrep
+
+/-- COUNTEREXAMPLE to `properlyRepresents_iff_isSquare` as stated (`D = 3`, `p = 11`):
+`3` is a square mod `11`, but no binary quadratic form has discriminant `3` at all. -/
+
+theorem properlyRepresents_iff_isSquare_counterexample :
+    IsSquare (((3 : ℤ)) : ZMod 11) ∧
+      ¬ (∃ f : BinaryQF, f.discr = 3 ∧ ProperlyRepresents f ((11 : ℕ) : ℤ)) := by
+  constructor
+  · refine ⟨5, ?_⟩
+    have h3 : (((3 : ℤ)) : ZMod 11) = (3 : ZMod 11) := by push_cast; ring
+    rw [h3]; decide
+  · rintro ⟨f, hd, -⟩
+    have h := discr_mod_four f
+    rw [hd] at h
+    norm_num at h
+
+/-- COUNTEREXAMPLE showing `Odd p` is also needed (`D = 5`, `p = 2`). -/
+
+theorem properlyRepresents_iff_isSquare_counterexample_two :
+    IsSquare (((5 : ℤ)) : ZMod 2) ∧
+      ¬ (∃ f : BinaryQF, f.discr = 5 ∧ ProperlyRepresents f ((2 : ℕ) : ℤ)) := by
+  constructor
+  · refine ⟨1, ?_⟩
+    have h5 : (((5 : ℤ)) : ZMod 2) = (1 : ZMod 2) := by decide
+    rw [h5]; decide
+  · rintro ⟨f, hd, hrep⟩
+    obtain ⟨B, C, hBC⟩ := (properlyRepresents_iff_properlyEquivalent f ((2 : ℕ) : ℤ)).mp hrep
+    have hdBC := discr_eq_of_properlyEquivalent hBC
+    rw [hd] at hdBC
+    simp only [BinaryQF.discr] at hdBC
+    have hcast : ((5 : ℤ) : ZMod 8) = ((B : ZMod 8)) ^ 2 := by
+      have h := congrArg (fun t : ℤ => (t : ZMod 8)) hdBC
+      push_cast at h
+      rw [show ((8 : ZMod 8)) = 0 from by decide] at h
+      simpa using h
+    have hkey : ∀ b : ZMod 8, b ^ 2 ≠ ((5 : ℤ) : ZMod 8) := by decide
+    exact hkey _ hcast.symm
+
+/-- REPAIRED `properlyRepresents_iff_isSquare` (adds `D ≡ 0,1 mod 4` and `Odd p`). -/
+
+theorem properlyRepresents_iff_isSquare_repaired (D : ℤ) (hD : D % 4 = 0 ∨ D % 4 = 1)
+    (p : ℕ) (hp : p.Prime) (hodd : Odd p) (hpD : ¬ (p : ℤ) ∣ D) :
+    (∃ f : BinaryQF, f.discr = D ∧ ProperlyRepresents f (p : ℤ)) ↔ IsSquare (D : ZMod p) := by
+  constructor
+  · exact properlyRepresents_isSquare_forward' D p
+  · intro hsq
+    obtain ⟨b, c, hdiscr, -⟩ :=
+      PrimesX2NY2.Fermat.exists_form_of_isSquare D hD p hp hodd hpD hsq
+    exact ⟨⟨(p : ℤ), b, c⟩, hdiscr, 1, 0, by simp [BinaryQF.eval], isCoprime_one_left⟩
+
+/-! ## Target 2 : `properlyRepresents_iff_isSquare_general` -/
+
 theorem properlyRepresents_iff_isSquare_general (D : ℤ) (hD : D % 4 = 0 ∨ D % 4 = 1)
     (m : ℤ) (hm : Odd m) (hco : IsCoprime m D) :
     (∃ f : BinaryQF, f.discr = D ∧ f.Primitive ∧ ProperlyRepresents f m)
       ↔ IsSquare (D : ZMod m.natAbs) := by
-  sorry
+  have hmne : m ≠ 0 := by obtain ⟨k, hk⟩ := hm; omega
+  have hn0 : m.natAbs ≠ 0 := by simpa [Int.natAbs_eq_zero] using hmne
+  haveI : NeZero m.natAbs := ⟨hn0⟩
+  have hmzero : ((m : ℤ) : ZMod m.natAbs) = 0 := by
+    rw [ZMod.intCast_zmod_eq_zero_iff_dvd]
+    exact Int.natAbs_dvd.mpr dvd_rfl
+  constructor
+  · rintro ⟨f, hdiscr, -, hrep⟩
+    obtain ⟨B, C, hBC⟩ := (properlyRepresents_iff_properlyEquivalent f m).mp hrep
+    have hdBC := discr_eq_of_properlyEquivalent hBC
+    rw [hdiscr] at hdBC
+    simp only [BinaryQF.discr] at hdBC
+    refine ⟨(B : ZMod m.natAbs), ?_⟩
+    have hcast := congrArg (fun t : ℤ => (t : ZMod m.natAbs)) hdBC
+    push_cast at hcast
+    rw [hmzero] at hcast
+    rw [hcast]
+    ring
+  · intro hsq
+    obtain ⟨t, ht⟩ := hsq
+    have htv : ((t.val : ℕ) : ZMod m.natAbs) = t := ZMod.natCast_rightInverse t
+    have hdvd_n : ((m.natAbs : ℤ)) ∣ ((t.val : ℤ) ^ 2 - D) := by
+      have hz : ((((t.val : ℤ) ^ 2 - D : ℤ)) : ZMod m.natAbs) = 0 := by
+        push_cast
+        rw [htv, ht]
+        ring
+      rwa [ZMod.intCast_zmod_eq_zero_iff_dvd] at hz
+    have hnodd : Odd m.natAbs := Int.natAbs_odd.mpr hm
+    obtain ⟨j, hj⟩ := hnodd
+    have hjz : ((m.natAbs : ℤ)) = 2 * (j : ℤ) + 1 := by exact_mod_cast hj
+    -- pick `b ≡ t.val (mod |m|)` of the same parity as `D`
+    obtain ⟨b, hbn, hbpar⟩ : ∃ b : ℤ, ((m.natAbs : ℤ) ∣ (b - (t.val : ℤ))) ∧ (2 ∣ (b - D)) := by
+      rcases Int.even_or_odd ((t.val : ℤ) - D) with he | ho
+      · obtain ⟨k, hk⟩ := he
+        exact ⟨(t.val : ℤ), ⟨0, by ring⟩, ⟨k, by omega⟩⟩
+      · obtain ⟨k, hk⟩ := ho
+        exact ⟨(t.val : ℤ) + (m.natAbs : ℤ), ⟨1, by ring⟩, ⟨k + (j : ℤ) + 1, by omega⟩⟩
+    have hdvd_n' : ((m.natAbs : ℤ)) ∣ (b ^ 2 - D) := by
+      obtain ⟨s, hs⟩ := hbn
+      obtain ⟨r, hr⟩ := hdvd_n
+      exact ⟨r + s * (b + (t.val : ℤ)), by linear_combination hr + (b + (t.val:ℤ)) * hs⟩
+    have h4 : (4 : ℤ) ∣ (b ^ 2 - D) := by
+      obtain ⟨k, hk⟩ := hbpar
+      rcases hD with h0 | h1
+      · obtain ⟨d, hd⟩ : ∃ d : ℤ, D = 4 * d := ⟨D / 4, by omega⟩
+        refine ⟨4 * d ^ 2 + 4 * d * k + k ^ 2 - d, ?_⟩
+        have hb : b = 4 * d + 2 * k := by omega
+        rw [hb, hd]; ring
+      · obtain ⟨d, hd⟩ : ∃ d : ℤ, D = 4 * d + 1 := ⟨D / 4, by omega⟩
+        refine ⟨4 * d ^ 2 + k ^ 2 + d + 4 * d * k + k, ?_⟩
+        have hb : b = 4 * d + 1 + 2 * k := by omega
+        rw [hb, hd]; ring
+    have hc4 : Nat.Coprime 4 m.natAbs := by
+      have h2d : ¬ (2 ∣ m.natAbs) := by
+        have := Nat.odd_iff.mp (Int.natAbs_odd.mpr hm); omega
+      have h2 : Nat.Coprime 2 m.natAbs :=
+        (Nat.Prime.coprime_iff_not_dvd Nat.prime_two).mpr h2d
+      simpa using h2.pow_left 2
+    have hcop4 : IsCoprime (4 : ℤ) ((m.natAbs : ℤ)) := by
+      rw [Int.isCoprime_iff_gcd_eq_one]
+      simpa [Int.gcd, Int.natAbs_abs] using hc4
+    have h4n : (4 * (m.natAbs : ℤ)) ∣ (b ^ 2 - D) := hcop4.mul_dvd h4 hdvd_n'
+    obtain ⟨k, hk⟩ := h4n
+    have hm4 : (4 * m) ∣ (b ^ 2 - D) := by
+      rcases Int.natAbs_eq m with he | he
+      · exact ⟨k, by rw [← he] at hk; exact hk⟩
+      · refine ⟨-k, ?_⟩
+        rw [he]
+        linear_combination hk
+    obtain ⟨c, hc⟩ := hm4
+    refine ⟨⟨m, b, c⟩, ?_, ?_, ?_⟩
+    · show b ^ 2 - 4 * m * c = D
+      linarith [hc]
+    · show Int.gcd (Int.gcd m b) c = 1
+      have hGm : ((Int.gcd (Int.gcd m b) c : ℤ)) ∣ m :=
+        (Int.gcd_dvd_left _ _).trans (Int.gcd_dvd_left _ _)
+      have hGb : ((Int.gcd (Int.gcd m b) c : ℤ)) ∣ b :=
+        (Int.gcd_dvd_left _ _).trans (Int.gcd_dvd_right _ _)
+      have hGc : ((Int.gcd (Int.gcd m b) c : ℤ)) ∣ c := Int.gcd_dvd_right _ _
+      have hDeq : D = b ^ 2 - 4 * m * c := by linarith [hc]
+      have hGb2 : ((Int.gcd (Int.gcd m b) c : ℤ)) ∣ b ^ 2 := by
+        rw [sq]; exact hGb.mul_left b
+      have hG4mc : ((Int.gcd (Int.gcd m b) c : ℤ)) ∣ 4 * m * c := hGc.mul_left (4 * m)
+      have hGD : ((Int.gcd (Int.gcd m b) c : ℤ)) ∣ D := by
+        rw [hDeq]; exact dvd_sub hGb2 hG4mc
+      have hu : IsUnit ((Int.gcd (Int.gcd m b) c : ℤ)) := hco.isUnit_of_dvd' hGm hGD
+      have := Int.isUnit_iff.mp hu
+      omega
+    · exact ⟨1, 0, by simp [BinaryQF.eval], isCoprime_one_left⟩
+
+/-! ## Targets 3,4,5 : `cor_2_6`, `prop_2_15`, `thm_2_16` -/
 
 /-- **Corollary 2.6.** For an odd prime `p ∤ n`, `(−n/p) = 1` iff `p` is
 represented by a primitive form of discriminant `−4n`. (Cox §2.) -/
+private theorem not_dvd_neg_four_mul' (n : ℤ) (p : ℕ) (hp : p.Prime) (hodd : Odd p)
+    (hpn : ¬ (p : ℤ) ∣ n) : ¬ (p : ℤ) ∣ (-4 * n) := by
+  intro h
+  have hpp : Prime ((p : ℤ)) := Int.prime_iff_natAbs_prime.mpr (by simpa using hp)
+  rcases hpp.dvd_mul.mp h with h1 | h1
+  · have h4 : (p : ℤ) ∣ 4 := (dvd_neg.mp (by simpa using h1))
+    have hpn4 : p ∣ 4 := by exact_mod_cast h4
+    have hp2 : p = 2 := by
+      have : p ∣ 2 ^ 2 := by simpa using hpn4
+      exact (Nat.prime_dvd_prime_iff_eq hp Nat.prime_two).mp (hp.dvd_of_dvd_pow this)
+    rw [hp2] at hodd
+    exact (Nat.not_odd_iff_even.mpr even_two) hodd
+  · exact hpn h1
+
 theorem cor_2_6 (n : ℤ) (p : ℕ) (hp : p.Prime) (hodd : Odd p) (hpn : ¬ (p : ℤ) ∣ n) :
     IsSquare ((-n : ℤ) : ZMod p)
       ↔ ∃ f : BinaryQF, f.discr = -4 * n ∧ f.Primitive ∧ Represents f (p : ℤ) := by
-  sorry
-
-/-- **Proposition 2.15.** For an odd prime `p ∤ n`, `(−n/p) = 1` iff `p` is
-represented by one of the reduced forms of discriminant `−4n`. (Cox §2.) -/
-theorem prop_2_15 (n : ℕ) (hn : 0 < n) (p : ℕ) (hp : p.Prime) (hodd : Odd p)
-    (hpn : ¬ (p : ℤ) ∣ (n : ℤ)) :
-    IsSquare ((-(n : ℤ)) : ZMod p)
-      ↔ ∃ f : BinaryQF, f.discr = -4 * (n : ℤ) ∧ f.Reduced ∧ f.Primitive
-          ∧ Represents f (p : ℤ) := by
-  sorry
+  have hD4 : (-4 * n) % 4 = 0 ∨ (-4 * n) % 4 = 1 := Or.inl (by omega)
+  have hpD : ¬ (p : ℤ) ∣ (-4 * n) := not_dvd_neg_four_mul' n p hp hodd hpn
+  have hcast : (((-4 * n : ℤ)) : ZMod p) = 4 * (((-n : ℤ)) : ZMod p) := by push_cast; ring
+  have hsq4 : IsSquare (((-4 * n : ℤ)) : ZMod p) ↔ IsSquare (((-n : ℤ)) : ZMod p) := by
+    rw [hcast]; exact isSquare_four_mul' p hp hodd _
+  rw [← hsq4]
+  constructor
+  · intro hsq
+    obtain ⟨b, c, hdiscr, hprim⟩ :=
+      PrimesX2NY2.Fermat.exists_form_of_isSquare (-4 * n) hD4 p hp hodd hpD hsq
+    exact ⟨⟨(p : ℤ), b, c⟩, hdiscr, hprim, 1, 0, by simp [BinaryQF.eval]⟩
+  · rintro ⟨f, hdiscr, -, hrep⟩
+    exact isSquare_of_represents' (-4 * n) p hp f hdiscr hrep
 
 /-- **Theorem 2.16.** For negative `D ≡ 0,1 (mod 4)` and an odd prime `p ∤ D`,
 `(D/p) = 1` (equivalently `[p] ∈ ker χ`) iff `p` is represented by one of the
@@ -750,7 +1021,104 @@ theorem thm_2_16 (D : ℤ) (hD : D % 4 = 0 ∨ D % 4 = 1) (hDneg : D < 0)
     (p : ℕ) (hp : p.Prime) (hodd : Odd p) (hpD : ¬ (p : ℤ) ∣ D) :
     IsSquare (D : ZMod p)
       ↔ ∃ f : BinaryQF, f.discr = D ∧ f.Reduced ∧ f.Primitive ∧ Represents f (p : ℤ) := by
-  sorry
+  constructor
+  · intro hsq
+    obtain ⟨b, c, hdiscr, hprim⟩ :=
+      PrimesX2NY2.Fermat.exists_form_of_isSquare D hD p hp hodd hpD hsq
+    have hpos : ((⟨(p : ℤ), b, c⟩ : BinaryQF)).PosDef := by
+      refine ⟨?_, ?_⟩
+      · show (0 : ℤ) < (p : ℤ)
+        exact_mod_cast hp.pos
+      · rw [hdiscr]; exact hDneg
+    obtain ⟨g, ⟨hred, heq⟩, -⟩ := exists_unique_reduced _ hpos
+    refine ⟨g, ?_, hred, ?_, ?_⟩
+    · rw [← discr_eq_of_properlyEquivalent heq]; exact hdiscr
+    · exact (primitive_of_properlyEquivalent heq).mp hprim
+    · exact represents_of_properlyEquivalent' heq (p : ℤ) ⟨1, 0, by simp [BinaryQF.eval]⟩
+  · rintro ⟨f, hdiscr, -, -, hrep⟩
+    exact isSquare_of_represents' D p hp f hdiscr hrep
+
+/-- **Proposition 2.15.** For an odd prime `p ∤ n`, `(−n/p) = 1` iff `p` is
+represented by one of the reduced forms of discriminant `−4n`. (Cox §2.) -/
+theorem prop_2_15 (n : ℕ) (hn : 0 < n) (p : ℕ) (hp : p.Prime) (hodd : Odd p)
+    (hpn : ¬ (p : ℤ) ∣ (n : ℤ)) :
+    IsSquare ((-(n : ℤ)) : ZMod p)
+      ↔ ∃ f : BinaryQF, f.discr = -4 * (n : ℤ) ∧ f.Reduced ∧ f.Primitive
+          ∧ Represents f (p : ℤ) := by
+  have hnz : (0 : ℤ) < (n : ℤ) := by exact_mod_cast hn
+  have hD4 : (-4 * (n : ℤ)) % 4 = 0 ∨ (-4 * (n : ℤ)) % 4 = 1 := Or.inl (by omega)
+  have hDneg : (-4 * (n : ℤ)) < 0 := by linarith
+  have hpD : ¬ (p : ℤ) ∣ (-4 * (n : ℤ)) := not_dvd_neg_four_mul' (n : ℤ) p hp hodd hpn
+  have hcast : (((-4 * (n : ℤ) : ℤ)) : ZMod p) = 4 * (-(((n : ℤ)) : ZMod p)) := by
+    push_cast; ring
+  have hsq4 : IsSquare (((-4 * (n : ℤ) : ℤ)) : ZMod p) ↔ IsSquare (-(((n : ℤ)) : ZMod p)) := by
+    rw [hcast]; exact isSquare_four_mul' p hp hodd _
+  rw [← hsq4]
+  exact thm_2_16 (-4 * (n : ℤ)) hD4 hDneg p hp hodd hpD
+
+/-! ## Target 6 : `principalForm_values_subgroup` -/
+
+/-- A prime dividing `N` cannot divide an integer whose residue mod `N` is a unit. -/
+private theorem not_prime_dvd_of_isUnit' (N : ℕ) (v : ℤ) (hv : IsUnit ((v : ℤ) : ZMod N))
+    (q : ℕ) (hq : q.Prime) (hqN : q ∣ N) (hqv : (q : ℤ) ∣ v) : False := by
+  haveI := Fact.mk hq
+  have h := hv.map (ZMod.castHom hqN (ZMod q))
+  rw [map_intCast] at h
+  rw [(ZMod.intCast_zmod_eq_zero_iff_dvd v q).mpr hqv] at h
+  exact not_isUnit_zero h
+
+/-- **Primitive vectors in a residue class.** If no prime factor of `N` divides both `A` and
+`B`, then some `(x, y) ≡ (A, B) (mod N)` is a primitive vector. -/
+private theorem exists_coprime_congr' (A B N : ℤ)
+    (h : ∀ q : ℕ, q.Prime → (q : ℤ) ∣ N → ¬ ((q : ℤ) ∣ A ∧ (q : ℤ) ∣ B)) :
+    ∃ x y : ℤ, N ∣ (x - A) ∧ N ∣ (y - B) ∧ IsCoprime x y := by
+  classical
+  rcases eq_or_ne B 0 with rfl | hB
+  · refine ⟨A, N, ⟨0, by ring⟩, ⟨1, by ring⟩, ?_⟩
+    refine coprime_of_all_primes A N ?_
+    intro q hq hqN hqA
+    exact h q hq hqN ⟨hqA, dvd_zero _⟩
+  · obtain ⟨P, hP⟩ : ∃ P : ℕ,
+        P = ∏ r ∈ (B.natAbs.primeFactors.filter (fun r : ℕ => ¬ ((r : ℤ) ∣ A))), r := ⟨_, rfl⟩
+    refine ⟨A + N * (P : ℤ), B, ⟨(P : ℤ), by ring⟩, ⟨0, by ring⟩, ?_⟩
+    refine coprime_of_all_primes _ B ?_
+    intro q hq hqB hqx
+    have hqZ : Prime ((q : ℤ)) := Int.prime_iff_natAbs_prime.mpr (by simpa using hq)
+    by_cases hqA : (q : ℤ) ∣ A
+    · have hqN : ¬ ((q : ℤ) ∣ N) := fun hd => h q hq hd ⟨hqA, hqB⟩
+      have hqP : ¬ ((q : ℤ) ∣ (P : ℤ)) := by
+        intro hd
+        have hdn : q ∣ P := by exact_mod_cast hd
+        rw [hP] at hdn
+        obtain ⟨r, hr, hqr⟩ := (hq.prime.dvd_finsetProd_iff (fun r => r)).mp hdn
+        have hrmem := Finset.mem_filter.mp hr
+        have hqreq : q = r :=
+          (Nat.prime_dvd_prime_iff_eq hq (Nat.prime_of_mem_primeFactors hrmem.1)).mp hqr
+        exact hrmem.2 (by rw [← hqreq]; exact hqA)
+      have hNP : (q : ℤ) ∣ N * (P : ℤ) := by
+        have hd2 : (q : ℤ) ∣ (A + N * (P : ℤ)) - A := dvd_sub hqx hqA
+        simpa using hd2
+      rcases hqZ.dvd_mul.mp hNP with h1 | h1
+      · exact hqN h1
+      · exact hqP h1
+    · have hqmem : q ∈ (B.natAbs.primeFactors.filter (fun r : ℕ => ¬ ((r : ℤ) ∣ A))) := by
+        refine Finset.mem_filter.mpr ⟨?_, hqA⟩
+        refine Nat.mem_primeFactors.mpr ⟨hq, ?_, ?_⟩
+        · simpa using Int.natAbs_dvd_natAbs.mpr hqB
+        · simpa [Int.natAbs_eq_zero] using hB
+      have hqP : (q : ℤ) ∣ (P : ℤ) := by
+        have hdn : q ∣ P := by
+          rw [hP]; exact Finset.dvd_prod_of_mem (fun r => r) hqmem
+        exact_mod_cast hdn
+      have hqNP : (q : ℤ) ∣ N * (P : ℤ) := hqP.mul_left N
+      exact hqA (by simpa using dvd_sub hqx hqNP)
+
+/-- The composition (Brahmagupta) identity for a form with leading coefficient `1`. -/
+private theorem eval_mul_eval_of_a_one' (f : BinaryQF) (hfa : f.a = 1) (x₁ y₁ x₂ y₂ : ℤ) :
+    f.eval x₁ y₁ * f.eval x₂ y₂
+      = f.eval (x₁ * x₂ - f.c * y₁ * y₂) (x₁ * y₂ + x₂ * y₁ + f.b * y₁ * y₂) := by
+  simp only [BinaryQF.eval, hfa, one_mul]
+  ring
 
 /-- **Lemma 2.24** (part i). For negative `D ≡ 0,1 (mod 4)`, the residues in
 `(ℤ/Dℤ)ˣ` represented by the principal form constitute a subgroup `H`. (Cox §2.) -/
@@ -760,7 +1128,68 @@ theorem principalForm_values_subgroup (D : ℤ) (hD : D % 4 = 0 ∨ D % 4 = 1)
       ∀ u : (ZMod D.natAbs)ˣ,
         (u ∈ H ↔ ∃ x y : ℤ, IsCoprime x y ∧
           ((principalForm D).eval x y : ZMod D.natAbs) = (u : ZMod D.natAbs)) := by
-  sorry
+  have hD0 : D ≠ 0 := ne_of_lt hDneg
+  have hn0 : D.natAbs ≠ 0 := fun hh => hD0 (Int.natAbs_eq_zero.mp hh)
+  haveI : NeZero D.natAbs := ⟨hn0⟩
+  have hfa : (principalForm D).a = 1 := by simp only [principalForm]; split <;> rfl
+  -- membership predicate
+  set P : (ZMod D.natAbs)ˣ → Prop := fun u => ∃ x y : ℤ, IsCoprime x y ∧
+      (((principalForm D).eval x y : ℤ) : ZMod D.natAbs) = (u : ZMod D.natAbs) with hPdef
+  have hone : P 1 := by
+    refine ⟨1, 0, isCoprime_one_left, ?_⟩
+    simp [BinaryQF.eval, hfa]
+  have hmul : ∀ u₁ u₂ : (ZMod D.natAbs)ˣ, P u₁ → P u₂ → P (u₁ * u₂) := by
+    rintro u₁ u₂ ⟨x₁, y₁, hc₁, hv₁⟩ ⟨x₂, y₂, hc₂, hv₂⟩
+    set X := x₁ * x₂ - (principalForm D).c * y₁ * y₂ with hX
+    set Y := x₁ * y₂ + x₂ * y₁ + (principalForm D).b * y₁ * y₂ with hY
+    have hcomp : (principalForm D).eval x₁ y₁ * (principalForm D).eval x₂ y₂
+        = (principalForm D).eval X Y := eval_mul_eval_of_a_one' _ hfa x₁ y₁ x₂ y₂
+    have hvu : ((((principalForm D).eval X Y : ℤ)) : ZMod D.natAbs)
+        = ((u₁ * u₂ : (ZMod D.natAbs)ˣ) : ZMod D.natAbs) := by
+      rw [← hcomp]
+      push_cast
+      rw [hv₁, hv₂]
+    have hUnit : IsUnit ((((principalForm D).eval X Y : ℤ)) : ZMod D.natAbs) := by
+      rw [hvu]; exact Units.isUnit _
+    have hside : ∀ q : ℕ, q.Prime → (q : ℤ) ∣ ((D.natAbs : ℤ)) →
+        ¬ ((q : ℤ) ∣ X ∧ (q : ℤ) ∣ Y) := by
+      intro q hq hqn hqXY
+      refine not_prime_dvd_of_isUnit' D.natAbs ((principalForm D).eval X Y) hUnit q hq
+        (by exact_mod_cast hqn) ?_
+      obtain ⟨s, hs⟩ := hqXY.1
+      obtain ⟨t, ht⟩ := hqXY.2
+      refine ⟨(q : ℤ) * ((principalForm D).a * s ^ 2 + (principalForm D).b * s * t
+        + (principalForm D).c * t ^ 2), ?_⟩
+      simp only [BinaryQF.eval]
+      rw [hs, ht]; ring
+    obtain ⟨x, y, hx, hy, hcop⟩ := exists_coprime_congr' X Y ((D.natAbs : ℤ)) hside
+    refine ⟨x, y, hcop, ?_⟩
+    have hxm : X ≡ x [ZMOD ((D.natAbs : ℤ))] := Int.modEq_iff_dvd.mpr hx
+    have hym : Y ≡ y [ZMOD ((D.natAbs : ℤ))] := Int.modEq_iff_dvd.mpr hy
+    have hev := eval_cong (principalForm D) X x Y y ((D.natAbs : ℤ)) hxm hym
+    have hcast2 := (ZMod.intCast_eq_intCast_iff _ _ _).mpr hev
+    rw [← hcast2, hvu]
+  have hpow : ∀ u : (ZMod D.natAbs)ˣ, P u → ∀ k : ℕ, P (u ^ k) := by
+    intro u hu k
+    induction k with
+    | zero => simpa using hone
+    | succ k ih => rw [pow_succ]; exact hmul _ _ ih hu
+  have hinv : ∀ u : (ZMod D.natAbs)ˣ, P u → P u⁻¹ := by
+    intro u hu
+    have hcard : 0 < Fintype.card (ZMod D.natAbs)ˣ := Fintype.card_pos
+    have hu1 : u ^ (Fintype.card (ZMod D.natAbs)ˣ) = 1 := pow_card_eq_one
+    have hstep : u * u ^ (Fintype.card (ZMod D.natAbs)ˣ - 1) = 1 := by
+      rw [← pow_succ']
+      rw [show Fintype.card (ZMod D.natAbs)ˣ - 1 + 1 = Fintype.card (ZMod D.natAbs)ˣ by omega]
+      exact hu1
+    rw [inv_eq_of_mul_eq_one_right hstep]
+    exact hpow u hu _
+  refine ⟨{ carrier := {u | P u}
+            mul_mem' := fun {a b} ha hb => hmul a b ha hb
+            one_mem' := hone
+            inv_mem' := fun {a} ha => hinv a ha }, ?_⟩
+  intro u
+  exact Iff.rfl
 
 /-- **Lemma 2.25** (Gauss). Every *primitive* form properly represents some value
 relatively prime to a given nonzero integer `M`. The `Primitive` and `M ≠ 0` hypotheses
