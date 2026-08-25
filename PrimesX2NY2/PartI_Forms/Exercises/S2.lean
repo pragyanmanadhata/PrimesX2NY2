@@ -524,10 +524,79 @@ theorem ex_2_12_b :
 
 /-- **Exercise 2.13.** The result (2.19): for an odd prime `p ∤ 5`,
 `p ≡ 1,3,7,9 (mod 20)` iff `(−5/p) = 1`. -/
+private theorem sq5_1 : IsSquare (((1:ℕ) : ZMod 5)) := by decide
+private theorem sq5_4 : IsSquare (((4:ℕ) : ZMod 5)) := by decide
+private theorem nsq5_2 : ¬ IsSquare (((2:ℕ) : ZMod 5)) := by decide
+private theorem nsq5_3 : ¬ IsSquare (((3:ℕ) : ZMod 5)) := by decide
+private theorem ne5_1 : (((1:ℕ) : ZMod 5)) ≠ 0 := by decide
+private theorem ne5_4 : (((4:ℕ) : ZMod 5)) ≠ 0 := by decide
+
 theorem ex_2_13 (p : ℕ) (hp : p.Prime) (hodd : Odd p) (hp5 : ¬ (p : ℤ) ∣ 5) :
     (p % 20 = 1 ∨ p % 20 = 3 ∨ p % 20 = 7 ∨ p % 20 = 9)
       ↔ IsSquare ((-5 : ℤ) : ZMod p) := by
-  sorry
+  haveI : Fact p.Prime := ⟨hp⟩
+  haveI : Fact (Nat.Prime 5) := ⟨by norm_num⟩
+  have hp2 : p ≠ 2 := by rintro rfl; exact absurd hodd (by decide)
+  have hple := hp.two_le
+  have hp5' : p ≠ 5 := by rintro rfl; exact hp5 (by norm_num)
+  have hn5 : ¬ (p ∣ 5) := by
+    intro h; exact hp5 (by exact_mod_cast h)
+  -- `-5` is nonzero mod `p`
+  have hne : ((-5 : ℤ) : ZMod p) ≠ 0 := by
+    rw [Ne, ZMod.intCast_zmod_eq_zero_iff_dvd]
+    intro h
+    exact hn5 (by exact_mod_cast (dvd_neg).mp h)
+  rw [← legendreSym.eq_one_iff p hne]
+  -- (-5/p) = (-1)^(p/2) · (p/5)
+  have hm1 : legendreSym p (-1) = (-1 : ℤ) ^ (p / 2) := by
+    rw [legendreSym.at_neg_one hp2, ZMod.χ₄_eq_neg_one_pow (hp.eq_two_or_odd.resolve_left hp2)]
+  have hQR : legendreSym p (5 : ℤ) = (-1 : ℤ) ^ (5 / 2 * (p / 2)) * legendreSym 5 (p : ℤ) := by
+    exact_mod_cast legendreSym.quadratic_reciprocity' (p := 5) (q := p) (by norm_num) hp2
+  have key : legendreSym p (-5) = (-1 : ℤ) ^ (p / 2) * legendreSym 5 (p : ℤ) := by
+    calc legendreSym p (-5) = legendreSym p (-1) * legendreSym p 5 := by
+          rw [← legendreSym.mul]; norm_num
+      _ = (-1 : ℤ) ^ (p / 2) * ((-1 : ℤ) ^ (5 / 2 * (p / 2)) * legendreSym 5 (p : ℤ)) := by
+          rw [hm1, hQR]
+      _ = (-1 : ℤ) ^ (p / 2) * legendreSym 5 (p : ℤ) := by
+          rw [show (5 : ℕ) / 2 = 2 from rfl, pow_mul]
+          norm_num
+  -- residues
+  have hmod5 : p % 5 = 1 ∨ p % 5 = 2 ∨ p % 5 = 3 ∨ p % 5 = 4 := by
+    have : ¬ (5 ∣ p) := by
+      intro h
+      exact hp5' ((Nat.prime_dvd_prime_iff_eq (by norm_num) hp).mp h).symm
+    omega
+  have hmod4 : p % 4 = 1 ∨ p % 4 = 3 := by
+    have := Nat.odd_iff.mp hodd
+    omega
+  have hcast5 : ((p : ℤ) : ZMod 5) = ((p % 5 : ℕ) : ZMod 5) := by
+    rw [Int.cast_natCast, ← ZMod.natCast_mod]
+  have hne5 : ((p : ℤ) : ZMod 5) ≠ 0 := by
+    rw [Ne, ZMod.intCast_zmod_eq_zero_iff_dvd]
+    intro h
+    have : (5 : ℕ) ∣ p := by exact_mod_cast h
+    exact hp5' ((Nat.prime_dvd_prime_iff_eq (by norm_num) hp).mp this).symm
+  have h5val : legendreSym 5 (p : ℤ) = if p % 5 = 1 ∨ p % 5 = 4 then 1 else -1 := by
+    rcases hmod5 with e | e | e | e
+    · rw [if_pos (by omega)]
+      exact (legendreSym.eq_one_iff 5 (by rw [hcast5, e]; exact ne5_1)).mpr
+        (by rw [hcast5, e]; exact sq5_1)
+    · rw [if_neg (by omega)]
+      exact (legendreSym.eq_neg_one_iff 5).mpr (by rw [hcast5, e]; exact nsq5_2)
+    · rw [if_neg (by omega)]
+      exact (legendreSym.eq_neg_one_iff 5).mpr (by rw [hcast5, e]; exact nsq5_3)
+    · rw [if_pos (by omega)]
+      exact (legendreSym.eq_one_iff 5 (by rw [hcast5, e]; exact ne5_4)).mpr
+        (by rw [hcast5, e]; exact sq5_4)
+  have h4val : (-1 : ℤ) ^ (p / 2) = if p % 4 = 1 then 1 else -1 := by
+    rcases hmod4 with e | e
+    · rw [if_pos e]
+      exact Even.neg_one_pow ⟨p / 4, by omega⟩
+    · rw [if_neg (by omega)]
+      exact Odd.neg_one_pow ⟨p / 4, by omega⟩
+  rw [key, h5val, h4val]
+  rcases hmod4 with e4 | e4 <;> rcases hmod5 with e5 | e5 | e5 | e5 <;>
+    norm_num [e4, e5] <;> omega
 
 -- The values of `x² + 5y²` on units of `ℤ/20ℤ` are exactly `1, 9`.
 set_option maxRecDepth 40000 in
