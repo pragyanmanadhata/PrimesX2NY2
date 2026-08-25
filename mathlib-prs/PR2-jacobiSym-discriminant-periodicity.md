@@ -1,10 +1,15 @@
 # Mathlib PR draft #2 — sharp periodicity of `J(D | ·)` for discriminants
 
-**Status:** DRAFT — not submitted. Statement corresponds to
-`PrimesX2NY2.PartI.S1.ex_1_11` (Cox, *Primes of the Form x²+ny²*, Exercise 1.11).
-**Proof not yet complete in this project** — see "Status of the proof" below. This
-draft records the gap, the intended statement, and the proof plan; it should not be
-opened as a PR until the Lean proof is finished and axiom-clean.
+**Status:** DRAFT — not submitted, but now **complete and axiom-clean**. Proved in this
+project as `PrimesX2NY2.PartI.S1.mod_right_of_discr` (with `ex_1_11` its explicit-binder
+restatement), `PrimesX2NY2/PartI_Forms/Exercises/S1.lean`. The proof below uses **only
+Mathlib** — it was developed and verified in a file importing nothing but `Mathlib`, so
+it lifts into `JacobiSymbol.lean` verbatim. `#print axioms` reports exactly
+`[propext, Classical.choice, Quot.sound]`.
+
+Downstream in this project it yields Cox Exercise 1.12(a) — that `m ↦ J(D | m)` is a
+Dirichlet character mod `|D|` — and Exercise 1.14, the mod-`n` (rather than mod-`4n`)
+criterion for `n ≡ 3 (mod 4)`. Those are the applications that motivate it.
 
 ## Title
 

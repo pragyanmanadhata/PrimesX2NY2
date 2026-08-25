@@ -1,11 +1,11 @@
 # Mathlib PR drafts — and what actually blocks this project
 
-Drafts only. Nothing here has been submitted, and PR2 is not yet proved.
+Drafts only — nothing here has been submitted. All four are now proved and axiom-clean.
 
 | # | Contribution | Proved? | Blocks us? |
 |---|---|---|---|
 | [1](PR1-exists_sq_eq_neg_three_iff.md) | `ZMod.exists_sq_eq_neg_three_iff` — `−3` is a QR mod `p` iff `p ≡ 1 mod 3` | Yes, axiom-clean | No |
-| [2](PR2-jacobiSym-discriminant-periodicity.md) | `J(D \| ·)` has period `\|D\|` for `D ≡ 0, 1 mod 4` | **No** — plan only | No |
+| [2](PR2-jacobiSym-discriminant-periodicity.md) | `J(D \| ·)` has period `\|D\|` for `D ≡ 0, 1 mod 4` | Yes, axiom-clean, pure Mathlib | No |
 | [3](PR3-binary-quadratic-forms-reduction.md) | Gauss reduction theory of binary quadratic forms (a series) | Yes, axiom-clean | No |
 | 4 | `Zsqrtd.prime_of_norm_prime` — an element of `ℤ√d` whose norm is a rational prime is prime | Yes, axiom-clean (for `ℤ[i]`) | No |
 
@@ -70,4 +70,5 @@ questions" — chiefly whether `BinaryQuadraticForm` should be a standalone stru
 or a layer over `QuadraticForm`, and which way the `SL₂(ℤ)`-action should compose).
 Best opened as a Zulip thread in `#mathlib4` before any code.
 
-PR2 should not be opened until its Lean proof exists.
+PR2 is also ready: its proof is complete, axiom-clean, and was developed in a file
+importing only `Mathlib`, so it lifts into `JacobiSymbol.lean` verbatim.
