@@ -1060,10 +1060,94 @@ discriminant forces `f` and `g` to be equivalent.
 Note: Cox's exercise text states this without an oddness hypothesis, but his proof
 (examining the middle coefficient mod `p` via Lemma 2.3) uses `p` odd, so we keep
 the hypothesis `Odd p` and flag the divergence. -/
+private theorem pe_to_eq {f g : BinaryQF} (h : ProperlyEquivalent f g) : Equivalent f g := by
+  obtain ⟨M, hM, hact⟩ := h
+  exact ⟨M, Or.inl hM, hact⟩
+
+private theorem equiv_neg_b (a b c : ℤ) : Equivalent (⟨a, b, c⟩ : BinaryQF) ⟨a, -b, c⟩ := by
+  refine ⟨!![1, 0; 0, -1], Or.inr (by rw [Matrix.det_fin_two_of]; ring), ?_⟩
+  simp only [action, BinaryQF.mk.injEq, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.of_apply, Matrix.cons_val', Matrix.empty_val', Matrix.cons_val_fin_one]
+  refine ⟨by ring, by ring, by ring⟩
+
+private theorem two_mul_dvd_of_odd {p : ℕ} (hodd : Odd p) {x : ℤ}
+    (h2 : (2 : ℤ) ∣ x) (hpx : (p : ℤ) ∣ x) : (2 * (p : ℤ)) ∣ x := by
+  obtain ⟨k, hk⟩ := hpx
+  have h2k : (2 : ℤ) ∣ k := by
+    have hd : (2 : ℤ) ∣ (p : ℤ) * k := hk ▸ h2
+    rcases Int.prime_two.dvd_or_dvd hd with h | h
+    · exfalso
+      obtain ⟨j, hj⟩ := hodd
+      omega
+    · exact h
+  obtain ⟨m, hm⟩ := h2k
+  exact ⟨m, by rw [hk, hm]; ring⟩
+
 theorem ex_2_27_a (f g : BinaryQF) (hfg : f.discr = g.discr) (p : ℕ) (hp : p.Prime)
     (hodd : Odd p) (hf : Represents f (p : ℤ)) (hg : Represents g (p : ℤ)) :
     Equivalent f g := by
-  sorry
+  have key : ∀ h : BinaryQF, Represents h (p : ℤ) →
+      ∃ b c : ℤ, ProperlyEquivalent h ⟨(p : ℤ), b, c⟩ := by
+    intro h hrep
+    obtain ⟨d, m', hm', hpr⟩ := ex_2_1 h (p : ℤ) hrep
+    have hdvd : d ^ 2 ∣ (p : ℤ) := ⟨m', hm'⟩
+    have hdn : d.natAbs ^ 2 ∣ p := by
+      have h := Int.natAbs_dvd_natAbs.mpr hdvd
+      rwa [Int.natAbs_pow, Int.natAbs_natCast] at h
+    have hd1 : d.natAbs = 1 := by
+      rcases hp.eq_one_or_self_of_dvd d.natAbs
+          ((dvd_pow_self d.natAbs two_ne_zero).trans hdn) with h | h
+      · exact h
+      · exfalso
+        rw [h] at hdn
+        have hle := Nat.le_of_dvd hp.pos hdn
+        nlinarith [hp.two_le]
+    have hd2 : d ^ 2 = 1 := by
+      rcases Int.natAbs_eq d with he | he <;> rw [he, hd1] <;> norm_num
+    have hm'p : m' = (p : ℤ) := by rw [hm', hd2, one_mul]
+    rw [hm'p] at hpr
+    exact (properlyRepresents_iff_properlyEquivalent h (p : ℤ)).mp hpr
+  obtain ⟨b, c, hb⟩ := key f hf
+  obtain ⟨b', c', hb'⟩ := key g hg
+  have hpne : (p : ℤ) ≠ 0 := by exact_mod_cast hp.pos.ne'
+  have hdf : b ^ 2 - 4 * (p : ℤ) * c = b' ^ 2 - 4 * (p : ℤ) * c' := by
+    have h1 : (⟨(p : ℤ), b, c⟩ : BinaryQF).discr = (⟨(p : ℤ), b', c'⟩ : BinaryQF).discr := by
+      rw [← discr_eq_of_properlyEquivalent hb, ← discr_eq_of_properlyEquivalent hb', hfg]
+    simp only [BinaryQF.discr] at h1
+    linear_combination h1
+  have hprod : (b - b') * (b + b') = 4 * (p : ℤ) * (c - c') := by linear_combination hdf
+  have h2 : (2 : ℤ) ∣ (b - b') := by
+    have hd2 : (2 : ℤ) ∣ (b - b') * (b + b') := ⟨2 * (p : ℤ) * (c - c'), by rw [hprod]; ring⟩
+    rcases Int.prime_two.dvd_or_dvd hd2 with h | h
+    · exact h
+    · omega
+  have hpd : (p : ℤ) ∣ (b - b') ∨ (p : ℤ) ∣ (b + b') := by
+    have hdd : (p : ℤ) ∣ (b - b') * (b + b') := ⟨4 * (c - c'), by rw [hprod]; ring⟩
+    exact (Nat.prime_iff_prime_int.mp hp).dvd_or_dvd hdd
+  rcases hpd with hcase | hcase
+  · have ht : (2 * (p : ℤ)) ∣ (b - b') := two_mul_dvd_of_odd hodd h2 hcase
+    have pe1 : ProperlyEquivalent (⟨(p : ℤ), b', c'⟩ : BinaryQF) ⟨(p : ℤ), b, c⟩ :=
+      translation_equiv (p : ℤ) b' c' b c hpne ht (by linear_combination -hdf)
+    exact equivalent_equivalence.trans (pe_to_eq hb)
+      (equivalent_equivalence.symm (equivalent_equivalence.trans (pe_to_eq hb') (pe_to_eq pe1)))
+  · have h2' : (2 : ℤ) ∣ (b + b') := by omega
+    have ht : (2 * (p : ℤ)) ∣ (b - -b') := by
+      have : b - -b' = b + b' := by ring
+      rw [this]
+      exact two_mul_dvd_of_odd hodd h2' hcase
+    have pe1 : ProperlyEquivalent (⟨(p : ℤ), -b', c'⟩ : BinaryQF) ⟨(p : ℤ), b, c⟩ :=
+      translation_equiv (p : ℤ) (-b') c' b c hpne ht (by linear_combination -hdf)
+    have e1 : Equivalent f (⟨(p : ℤ), b, c⟩ : BinaryQF) := pe_to_eq hb
+    have e2 : Equivalent (⟨(p : ℤ), b, c⟩ : BinaryQF) ⟨(p : ℤ), -b', c'⟩ :=
+      equivalent_equivalence.symm (pe_to_eq pe1)
+    have e3 : Equivalent (⟨(p : ℤ), -b', c'⟩ : BinaryQF) ⟨(p : ℤ), b', c'⟩ :=
+      equivalent_equivalence.symm (equiv_neg_b (p : ℤ) b' c')
+    have e4 : Equivalent (⟨(p : ℤ), b', c'⟩ : BinaryQF) g :=
+      equivalent_equivalence.symm (pe_to_eq hb')
+    exact equivalent_equivalence.trans e1
+      (equivalent_equivalence.trans e2 (equivalent_equivalence.trans e3 e4))
+
+/-! ## Target 2 : ex_1_15 -/
 
 /-- **Exercise 2.27(b).** A reduced form equivalent to `x² + ny²` equals it. -/
 theorem ex_2_27_b (n : ℤ) (g : BinaryQF) (hg : g.Reduced) (h : Equivalent ⟨1, 0, n⟩ g) :

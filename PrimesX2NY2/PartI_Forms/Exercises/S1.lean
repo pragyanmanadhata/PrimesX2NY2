@@ -225,7 +225,47 @@ theorem ex_1_8 (p q : ℕ) (hp : p.Prime) [Fact q.Prime] (hq : q ≠ 2) :
     legendreSym q ((-1) ^ ((p - 1) / 2) * (p : ℤ)) = 1
       ↔ ∃ β : ℤ, Odd β ∧
           ((p : ℤ) ≡ β ^ 2 [ZMOD (4 * q)] ∨ (p : ℤ) ≡ -β ^ 2 [ZMOD (4 * q)]) := by
+  -- FLAG (under-hypothesized): FALSE as stated, in two independent ways.
+  -- (i) p = 2 with q ≡ ±1 (mod 8) (smallest q = 7): the left side is
+  --     legendreSym 7 2 = 1, but the right side is unsatisfiable, since β odd makes
+  --     ±β² − 2 odd and hence never divisible by the even modulus 4q.
+  -- (ii) p = q: the left side is 0, while the right side holds with β = q.
+  -- With p odd and p ≠ q the ± statement is correct (checked numerically for all
+  -- odd p ≠ q < 120). See `ex_1_8_FALSE` for a machine-checked instance of (i).
   sorry
+
+private theorem ne0_2_7 : ((2 : ℤ) : ZMod 7) ≠ 0 := by decide
+
+private theorem sq2_7 : IsSquare ((2 : ℤ) : ZMod 7) := by decide
+
+local instance factSeven : Fact (Nat.Prime 7) := ⟨by norm_num⟩
+
+private theorem leg7_two : legendreSym 7 2 = 1 :=
+  (legendreSym.eq_one_iff 7 ne0_2_7).mpr sq2_7
+
+/-- Cox (1.13) as literally stated in `ex_1_8` is FALSE: it fails at `p = 2`, `q = 7`
+(and also whenever `p = q`). -/
+theorem ex_1_8_FALSE :
+    ¬ (∀ (p q : ℕ), p.Prime → ∀ [Fact q.Prime], q ≠ 2 →
+        (legendreSym q ((-1) ^ ((p - 1) / 2) * (p : ℤ)) = 1
+          ↔ ∃ β : ℤ, Odd β ∧
+              ((p : ℤ) ≡ β ^ 2 [ZMOD (4 * q)] ∨ (p : ℤ) ≡ -β ^ 2 [ZMOD (4 * q)]))) := by
+  intro h
+  have h2 := (h 2 7 (by norm_num) (by norm_num)).mp (by
+    have harg : ((-1 : ℤ) ^ ((2 - 1) / 2) * ((2 : ℕ) : ℤ)) = 2 := by norm_num
+    rw [harg]
+    exact leg7_two)
+  obtain ⟨β, hβ, hcase⟩ := h2
+  obtain ⟨m, hm⟩ := (hβ.pow : Odd (β ^ 2))
+  rcases hcase with hc | hc
+  · obtain ⟨t, ht⟩ := hc.dvd
+    rw [hm] at ht
+    push_cast at ht
+    omega
+  · obtain ⟨t, ht⟩ := hc.dvd
+    rw [hm] at ht
+    push_cast at ht
+    omega
 
 /-- **Exercise 1.9(a).** For `p > 3`, the representability `p ≡ 1 (mod 3)` matches
 the reciprocity instance `(−3/p) = (p/3)`. -/
@@ -391,10 +431,39 @@ theorem ex_1_14 (n : ℕ) (hn : n % 4 = 3) :
 
 /-- **Exercise 1.15.** The residue classes in `(ℤ/84ℤ)ˣ` with `(−21/p) = 1`
 (solving the Reciprocity Step for `n = 21`). -/
+private theorem sq_neg21_mod2 : IsSquare ((-21 : ℤ) : ZMod 2) := by decide
+
+private theorem val_two_84 : (2 : ZMod 84).val = 2 := by decide
+
 theorem ex_1_15 :
     ∃ S : Finset (ZMod 84),
       ∀ (p : ℕ), p.Prime → ¬ (p : ℤ) ∣ 21 →
         (IsSquare ((-21 : ℤ) : ZMod p) ↔ (p : ZMod 84) ∈ S) := by
-  sorry
+  classical
+  refine ⟨Finset.univ.filter (fun x : ZMod 84 => x = 2 ∨ jacobiSym (-21) x.val = 1), ?_⟩
+  intro p hp hp21
+  haveI : Fact p.Prime := ⟨hp⟩
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and]
+  have hval : ((p : ZMod 84)).val = p % 84 := ZMod.val_natCast 84 p
+  rcases eq_or_ne p 2 with rfl | hp2
+  · exact ⟨fun _ => Or.inl (by norm_num), fun _ => sq_neg21_mod2⟩
+  · have hodd : Odd p := hp.odd_of_ne_two hp2
+    have hne0 : ((-21 : ℤ) : ZMod p) ≠ 0 := by
+      rw [Ne, ZMod.intCast_zmod_eq_zero_iff_dvd]
+      intro h
+      exact hp21 (dvd_neg.mp h)
+    have hnot2 : ((p : ZMod 84)) ≠ 2 := by
+      intro h
+      have hv := congrArg ZMod.val h
+      rw [hval, val_two_84] at hv
+      obtain ⟨j, hj⟩ := hodd
+      omega
+    have h84 : 4 * (-21 : ℤ).natAbs = 84 := by norm_num
+    have hmr : jacobiSym (-21) p = jacobiSym (-21) (p % 84) := by
+      rw [jacobiSym.mod_right (-21 : ℤ) hodd, h84]
+    rw [← legendreSym.eq_one_iff p hne0, jacobiSym.legendreSym.to_jacobiSym p (-21), hmr, hval]
+    exact ⟨Or.inr, fun h => h.resolve_left hnot2⟩
+
+/-! ## Target 3 : ex_1_8 is FALSE as stated -/
 
 end PrimesX2NY2.PartI.S1
