@@ -84,7 +84,64 @@ primes. -/
 theorem prop_4_18_split (p : ℕ) (hp : p.Prime) (h1 : p % 4 = 1) :
     ∃ π : GaussianInt, Prime π ∧ (p : GaussianInt) = π * conj π
       ∧ ¬ Associated π (conj π) := by
-  sorry
+  haveI : Fact p.Prime := ⟨hp⟩
+  have hple := hp.two_le
+  have hp5 : 5 ≤ p := by omega
+  obtain ⟨a, b, hab⟩ := Nat.Prime.sq_add_sq (p := p) (by omega)
+  have hp2 : (a : ℤ) ^ 2 + (b : ℤ) ^ 2 = (p : ℤ) := by exact_mod_cast hab
+  have hprod : ((p : ℕ) : GaussianInt) = (⟨a, b⟩ : GaussianInt) * conj ⟨a, b⟩ := by
+    rw [Zsqrtd.ext_iff]
+    refine ⟨?_, ?_⟩
+    · simp only [Zsqrtd.re_mul, conj, Zsqrtd.re_natCast]
+      linear_combination -hp2
+    · simp only [Zsqrtd.im_mul, conj, Zsqrtd.im_natCast]
+      ring
+  -- a and b are nonzero, since p is not a perfect square
+  have hsq : ∀ c : ℕ, p = c * c → False := by
+    intro c hc
+    have h2 := hp.two_le
+    rcases Nat.Prime.eq_one_or_self_of_dvd hp c ⟨c, hc⟩ with h | h
+    · rw [h] at hc; omega
+    · rw [h] at hc; nlinarith [h2, hc]
+  have hane : a ≠ 0 := by
+    intro hz; rw [hz] at hp2
+    exact hsq b (by exact_mod_cast (by linear_combination hp2 : (b:ℤ) * (b:ℤ) = (p:ℤ)).symm)
+  have hbne : b ≠ 0 := by
+    intro hz; rw [hz] at hp2
+    exact hsq a (by exact_mod_cast (by linear_combination hp2 : (a:ℤ) * (a:ℤ) = (p:ℤ)).symm)
+  refine ⟨⟨a, b⟩, ?_, hprod, ?_⟩
+  · refine prime_of_norm_prime hp ?_
+    rw [Zsqrtd.norm_def]
+    linear_combination hp2
+  · rintro ⟨u, hu⟩
+    -- π² · u = π · (π · u) = π · conj π = p
+    have key : ((⟨a, b⟩ : GaussianInt) * ⟨a, b⟩) * (u : GaussianInt) = (p : GaussianInt) := by
+      rw [mul_assoc, hu, ← hprod]
+    -- hence π² = p · u⁻¹, so p divides both components of π²
+    have hinv : ((u : GaussianInt)) * ((↑u⁻¹ : GaussianInt)) = 1 := u.mul_inv
+    have hsq2 : (⟨a, b⟩ : GaussianInt) * ⟨a, b⟩
+        = (p : GaussianInt) * ((↑u⁻¹ : GaussianInt)) := by
+      rw [← key, mul_assoc, hinv, mul_one]
+    have him2 := congrArg Zsqrtd.im hsq2
+    simp only [Zsqrtd.im_mul, Zsqrtd.re_natCast, Zsqrtd.im_natCast] at him2
+    -- p ∣ 2ab
+    have hdvd : (p : ℤ) ∣ 2 * ((a : ℤ) * (b : ℤ)) :=
+      ⟨((↑u⁻¹ : GaussianInt)).im, by linarith [him2]⟩
+    have hdvdN : p ∣ 2 * (a * b) := by exact_mod_cast hdvd
+    -- p is odd, so p ∣ a or p ∣ b
+    have hp2' : p ≠ 2 := by omega
+    have hpab : p ∣ a * b := by
+      rcases (Nat.Prime.dvd_mul hp).mp hdvdN with h | h
+      · exact absurd (Nat.le_of_dvd (by norm_num) h) (by omega)
+      · exact h
+    -- but 0 < a, b < p
+    have halt : a < p := by nlinarith [hp2, hab, Nat.one_le_iff_ne_zero.mpr hane,
+      Nat.one_le_iff_ne_zero.mpr hbne]
+    have hblt : b < p := by nlinarith [hp2, hab, Nat.one_le_iff_ne_zero.mpr hane,
+      Nat.one_le_iff_ne_zero.mpr hbne]
+    rcases (Nat.Prime.dvd_mul hp).mp hpab with h | h
+    · exact absurd (Nat.le_of_dvd (Nat.pos_of_ne_zero hane) h) (by omega)
+    · exact absurd (Nat.le_of_dvd (Nat.pos_of_ne_zero hbne) h) (by omega)
 
 /-- **Proposition 4.18(iii).** For `p ≡ 3 (mod 4)`, `p` remains prime in `ℤ[i]`. -/
 theorem prop_4_18_inert (p : ℕ) (hp : p.Prime) (h3 : p % 4 = 3) :
