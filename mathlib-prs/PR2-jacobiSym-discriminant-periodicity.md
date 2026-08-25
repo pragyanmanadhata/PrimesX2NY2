@@ -96,18 +96,119 @@ Degenerate cases: `D = 0` (then `m ≡ n mod 0` forces `m = n`); and arguments n
 coprime to `D`, where both sides are `0` — handled automatically because each factor
 above matches, `J(m | D₀) = J(n | D₀)` by `mod_left` including the zero case.
 
-## Status of the proof
+## The proof (verified)
 
-Not yet formalized. A first formalization attempt in this project was cut short by
-an infrastructure limit before producing a verified proof; no partial results are
-being claimed. The plan above is the classical argument and each ingredient it names
-(`mul_left`, `pow_left`, `mod_left`, `at_two`, `at_neg_one`,
-`quadratic_reciprocity'`, `qrSign` lemmas, `Nat.exists_eq_pow_mul_and_not_dvd` for
-the `2`-adic split) has been confirmed present in the pinned Mathlib.
+Two simplifications over the plan above are worth noting. (a) The reciprocity sign is
+handled through `qrSign m d = J(χ₄ m | d)` rather than `(-1) ^ (d / 2 * (m / 2))`, which
+makes it visibly depend only on `m mod 4` and avoids all parity-of-quotient arithmetic.
+(b) `e = 1` is impossible given `D ≡ 0, 1 (mod 4)` and is discharged directly, so the
+`e ≥ 2` branch is uniform in the sign of `D`; only `e = 2` versus `e ≥ 3` needs splitting
+(`J(2 | m)² = 1` versus `m ≡ n mod 8`).
 
-**Before this PR is opened:** finish the Lean proof, confirm
-`#print axioms mod_right_of_discr` is exactly `[propext, Classical.choice, Quot.sound]`,
-and re-check the `%`-form's edge cases.
+The file this was verified in has `open ZMod`, so the two χ-helpers appear as `χ₄ …`
+below; qualify them as `ZMod.χ₄` if dropping into a context without that `open`.
+
+```lean
+private theorem chi4_congr {m n : ℕ} (h : m % 4 = n % 4) :
+    χ₄ (m : ZMod 4) = χ₄ (n : ZMod 4) := by
+  rw [ZMod.χ₄_nat_eq_if_mod_four, ZMod.χ₄_nat_eq_if_mod_four, h,
+    show m % 2 = n % 2 by omega]
+
+/-- `χ₈` on naturals depends only on the argument mod `8`. -/
+private theorem chi8_congr {m n : ℕ} (h : m % 8 = n % 8) :
+    χ₈ (m : ZMod 8) = χ₈ (n : ZMod 8) := by
+  rw [ZMod.χ₈_nat_eq_if_mod_eight, ZMod.χ₈_nat_eq_if_mod_eight, h,
+    show m % 2 = n % 2 by omega]
+
+private theorem gcd_two_odd {k : ℕ} (hk : Odd k) : Int.gcd 2 (k : ℤ) = 1 := by
+  have h : Nat.gcd 2 k = 1 := Nat.coprime_two_left.mpr hk
+  simpa [Int.gcd] using h
+
+/-- For odd `d`, `J(d | ·)` depends only on the argument mod `4` and mod `d`. -/
+private theorem jac_recip_congr {d m n : ℕ} (hd : Odd d) (hm : Odd m) (hn : Odd n)
+    (h4 : m % 4 = n % 4) (hmod : (m : ℤ) % (d : ℤ) = (n : ℤ) % (d : ℤ)) :
+    jacobiSym (d : ℤ) m = jacobiSym (d : ℤ) n := by
+  rw [jacobiSym.quadratic_reciprocity' hd hm, jacobiSym.quadratic_reciprocity' hd hn,
+    jacobiSym.mod_left' hmod]
+  simp only [qrSign]
+  rw [chi4_congr h4]
+
+/-- For `d % 4 = 3` and odd `m`, `J(-d | m) = J(m | d)`. -/
+private theorem case_neg_odd {d m : ℕ} (hd3 : d % 4 = 3) (hm : Odd m) :
+    jacobiSym (-(d : ℤ)) m = jacobiSym (m : ℤ) d := by
+  have hdodd : Odd d := Nat.odd_iff.mpr (by omega)
+  rw [jacobiSym.neg _ hm, jacobiSym.quadratic_reciprocity' hdodd hm]
+  simp only [qrSign]
+  rcases Nat.odd_mod_four_iff.mp (Nat.odd_iff.mp hm) with h1 | h3
+  · rw [ZMod.χ₄_nat_one_mod_four h1]
+    simp
+  · rw [ZMod.χ₄_nat_three_mod_four h3,
+      jacobiSym.at_neg_one hdodd, ZMod.χ₄_nat_three_mod_four hd3]
+    ring
+
+/-- **Sharp periodicity of the Jacobi symbol for discriminants.**
+For `D ≡ 0` or `1 mod 4` the symbol `J(D | ·)` has period `|D|` on odd arguments. -/
+theorem mod_right_of_discr {D : ℤ} (hD : D % 4 = 0 ∨ D % 4 = 1) {m n : ℕ}
+    (hm : Odd m) (hn : Odd n) (h : (m : ℤ) ≡ (n : ℤ) [ZMOD D]) :
+    jacobiSym D m = jacobiSym D n := by
+  rcases eq_or_ne D 0 with rfl | hD0
+  · have h' : ((n : ℤ)) - (m : ℤ) = 0 := zero_dvd_iff.mp h.dvd
+    have hmn : m = n := by omega
+    rw [hmn]
+  have hN0 : D.natAbs ≠ 0 := Int.natAbs_ne_zero.mpr hD0
+  obtain ⟨e, d, hd2, hNe⟩ := Nat.exists_eq_pow_mul_and_not_dvd hN0 2 (by norm_num)
+  have hdodd : Odd d := Nat.odd_iff.mpr (by omega)
+  have hd2' : d % 2 = 1 := Nat.odd_iff.mp hdodd
+  have hcast : ((D.natAbs : ℕ) : ℤ) = 2 ^ e * (d : ℤ) := by rw [hNe]; push_cast; ring
+  have hdvd : (2 : ℤ) ^ e * (d : ℤ) ∣ ((n : ℤ) - (m : ℤ)) := by
+    rw [← hcast]; exact dvd_trans (Int.natAbs_dvd.mpr dvd_rfl) h.dvd
+  have hmodd : (m : ℤ) % (d : ℤ) = (n : ℤ) % (d : ℤ) :=
+    Int.modEq_iff_dvd.mpr ((dvd_mul_left ((d : ℤ)) ((2 : ℤ) ^ e)).trans hdvd)
+  have hDsplit : D = 2 ^ e * (d : ℤ) ∨ D = -(2 ^ e * (d : ℤ)) := by
+    rcases Int.natAbs_eq D with h1 | h1
+    · exact Or.inl (h1.trans hcast)
+    · exact Or.inr (h1.trans (congrArg Neg.neg hcast))
+  have he1 : e ≠ 1 := by
+    rintro rfl
+    obtain ⟨t, ht⟩ := hdodd
+    rcases hDsplit with hs | hs <;> rw [ht] at hs <;> push_cast [pow_one] at hs <;> omega
+  rcases Nat.eq_zero_or_pos e with he0 | hepos
+  · subst he0
+    simp only [pow_zero, one_mul] at hDsplit
+    rcases hDsplit with hs | hs
+    · have hd1 : d % 4 = 1 := by rw [hs] at hD; omega
+      rw [hs, jacobiSym.quadratic_reciprocity_one_mod_four hd1 hm,
+        jacobiSym.quadratic_reciprocity_one_mod_four hd1 hn]
+      exact jacobiSym.mod_left' hmodd
+    · have hd3 : d % 4 = 3 := by rw [hs] at hD; omega
+      rw [hs, case_neg_odd hd3 hm, case_neg_odd hd3 hn]
+      exact jacobiSym.mod_left' hmodd
+  · have he : 2 ≤ e := by omega
+    have h4p : (4 : ℤ) ∣ (2 : ℤ) ^ e :=
+      ⟨2 ^ (e - 2), by rw [show (4 : ℤ) = 2 ^ 2 by norm_num, ← pow_add]; congr 1; omega⟩
+    have h4z : (4 : ℤ) ∣ ((n : ℤ) - (m : ℤ)) := (h4p.mul_right _).trans hdvd
+    have h4 : m % 4 = n % 4 := by obtain ⟨k, hk⟩ := h4z; omega
+    have hjd : jacobiSym (d : ℤ) m = jacobiSym (d : ℤ) n :=
+      jac_recip_congr hdodd hm hn h4 hmodd
+    have hj2 : jacobiSym 2 m ^ e = jacobiSym 2 n ^ e := by
+      rcases Nat.lt_or_ge e 3 with he3 | he3
+      · have he2 : e = 2 := by omega
+        rw [he2, jacobiSym.sq_one (gcd_two_odd hm), jacobiSym.sq_one (gcd_two_odd hn)]
+      · have h8p : (8 : ℤ) ∣ (2 : ℤ) ^ e :=
+          ⟨2 ^ (e - 3), by rw [show (8 : ℤ) = 2 ^ 3 by norm_num, ← pow_add]; congr 1; omega⟩
+        have h8z : (8 : ℤ) ∣ ((n : ℤ) - (m : ℤ)) := (h8p.mul_right _).trans hdvd
+        have h8 : m % 8 = n % 8 := by obtain ⟨k, hk⟩ := h8z; omega
+        rw [jacobiSym.at_two hm, jacobiSym.at_two hn, chi8_congr h8]
+    rcases hDsplit with hs | hs
+    · rw [hs, jacobiSym.mul_left, jacobiSym.mul_left, jacobiSym.pow_left,
+        jacobiSym.pow_left, hj2, hjd]
+    · rw [hs, jacobiSym.neg _ hm, jacobiSym.neg _ hn, jacobiSym.mul_left, jacobiSym.mul_left,
+        jacobiSym.pow_left, jacobiSym.pow_left, hj2, hjd, chi4_congr h4]
+```
+
+The `%`-form `mod_right_discr` sketched above was **not** proved: for `D ≡ 1 mod 4` the
+modulus `D.natAbs` is odd, so `b % D.natAbs` can be even and the statement needs care.
+The congruence form is what every application uses, so that is what is offered here.
 
 ## Open questions for the reviewer
 
