@@ -7,6 +7,15 @@ Drafts only. Nothing here has been submitted, and PR2 is not yet proved.
 | [1](PR1-exists_sq_eq_neg_three_iff.md) | `ZMod.exists_sq_eq_neg_three_iff` — `−3` is a QR mod `p` iff `p ≡ 1 mod 3` | Yes, axiom-clean | No |
 | [2](PR2-jacobiSym-discriminant-periodicity.md) | `J(D \| ·)` has period `\|D\|` for `D ≡ 0, 1 mod 4` | **No** — plan only | No |
 | [3](PR3-binary-quadratic-forms-reduction.md) | Gauss reduction theory of binary quadratic forms (a series) | Yes, axiom-clean | No |
+| 4 | `Zsqrtd.prime_of_norm_prime` — an element of `ℤ√d` whose norm is a rational prime is prime | Yes, axiom-clean (for `ℤ[i]`) | No |
+
+**PR4 (new, small).** While proving Cox's Proposition 4.18 we needed "norm is a rational
+prime ⟹ the element is prime" for `ℤ[i]` and found Mathlib has no such lemma, despite
+having the `EuclideanDomain ℤ[i]` instance and `Zsqrtd.norm_eq_one_iff'` next door. Our
+proof (`PrimesX2NY2/PartI_Forms/BiquadraticReciprocity.lean`, `prime_of_norm_prime`) is
+six lines over `irreducible_iff_prime` plus multiplicativity of the norm, and generalizes
+verbatim to any `ℤ√d` with `d ≤ 0`. Natural home:
+`Mathlib/NumberTheory/Zsqrtd/Basic.lean`, beside `norm_eq_one_iff'`.
 
 ## The honest summary
 
