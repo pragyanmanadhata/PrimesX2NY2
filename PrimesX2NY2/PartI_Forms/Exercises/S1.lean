@@ -372,10 +372,163 @@ theorem ex_1_10_d (M : ℤ) (m : ℕ) (hm : Odd m) (hco : IsCoprime M (m : ℤ))
 
 /-- **Exercise 1.11.** Completion of `(1.17)`: for `D ≡ 0,1 (mod 4)` and odd
 `m ≡ n (mod D)`, `(D/m) = (D/n)`. -/
-theorem ex_1_11 (D : ℤ) (hD : D % 4 = 0 ∨ D % 4 = 1) (m n : ℕ)
+private theorem chi4_congr {m n : ℕ} (h : m % 4 = n % 4) :
+    ZMod.χ₄ (m : ZMod 4) = ZMod.χ₄ (n : ZMod 4) := by
+  rw [ZMod.χ₄_nat_eq_if_mod_four, ZMod.χ₄_nat_eq_if_mod_four, h,
+    show m % 2 = n % 2 by omega]
+
+private theorem chi8_congr {m n : ℕ} (h : m % 8 = n % 8) :
+    ZMod.χ₈ (m : ZMod 8) = ZMod.χ₈ (n : ZMod 8) := by
+  rw [ZMod.χ₈_nat_eq_if_mod_eight, ZMod.χ₈_nat_eq_if_mod_eight, h,
+    show m % 2 = n % 2 by omega]
+
+private theorem gcd_two_odd {k : ℕ} (hk : Odd k) : Int.gcd 2 (k : ℤ) = 1 := by
+  have h : Nat.gcd 2 k = 1 := Nat.coprime_two_left.mpr hk
+  simpa [Int.gcd] using h
+
+private theorem jac_recip_congr {d m n : ℕ} (hd : Odd d) (hm : Odd m) (hn : Odd n)
+    (h4 : m % 4 = n % 4) (hmod : (m : ℤ) % (d : ℤ) = (n : ℤ) % (d : ℤ)) :
+    jacobiSym (d : ℤ) m = jacobiSym (d : ℤ) n := by
+  rw [jacobiSym.quadratic_reciprocity' hd hm, jacobiSym.quadratic_reciprocity' hd hn,
+    jacobiSym.mod_left' hmod]
+  simp only [qrSign]
+  rw [chi4_congr h4]
+
+private theorem case_neg_odd {d m : ℕ} (hd3 : d % 4 = 3) (hm : Odd m) :
+    jacobiSym (-(d : ℤ)) m = jacobiSym (m : ℤ) d := by
+  have hdodd : Odd d := Nat.odd_iff.mpr (by omega)
+  rw [jacobiSym.neg _ hm, jacobiSym.quadratic_reciprocity' hdodd hm]
+  simp only [qrSign]
+  rcases Nat.odd_mod_four_iff.mp (Nat.odd_iff.mp hm) with h1 | h3
+  · rw [ZMod.χ₄_nat_one_mod_four h1]
+    simp
+  · rw [ZMod.χ₄_nat_three_mod_four h3,
+      jacobiSym.at_neg_one hdodd, ZMod.χ₄_nat_three_mod_four hd3]
+    ring
+
+theorem mod_right_of_discr {D : ℤ} (hD : D % 4 = 0 ∨ D % 4 = 1) {m n : ℕ}
     (hm : Odd m) (hn : Odd n) (h : (m : ℤ) ≡ (n : ℤ) [ZMOD D]) :
     jacobiSym D m = jacobiSym D n := by
-  sorry
+  rcases eq_or_ne D 0 with rfl | hD0
+  · have h' : ((n : ℤ)) - (m : ℤ) = 0 := zero_dvd_iff.mp h.dvd
+    have hmn : m = n := by omega
+    rw [hmn]
+  have hN0 : D.natAbs ≠ 0 := Int.natAbs_ne_zero.mpr hD0
+  obtain ⟨e, d, hd2, hNe⟩ := Nat.exists_eq_pow_mul_and_not_dvd hN0 2 (by norm_num)
+  have hdodd : Odd d := Nat.odd_iff.mpr (by omega)
+  have hd2' : d % 2 = 1 := Nat.odd_iff.mp hdodd
+  have hcast : ((D.natAbs : ℕ) : ℤ) = 2 ^ e * (d : ℤ) := by rw [hNe]; push_cast; ring
+  have hdvd : (2 : ℤ) ^ e * (d : ℤ) ∣ ((n : ℤ) - (m : ℤ)) := by
+    rw [← hcast]; exact dvd_trans (Int.natAbs_dvd.mpr dvd_rfl) h.dvd
+  have hmodd : (m : ℤ) % (d : ℤ) = (n : ℤ) % (d : ℤ) :=
+    Int.modEq_iff_dvd.mpr ((dvd_mul_left ((d : ℤ)) ((2 : ℤ) ^ e)).trans hdvd)
+  have hDsplit : D = 2 ^ e * (d : ℤ) ∨ D = -(2 ^ e * (d : ℤ)) := by
+    rcases Int.natAbs_eq D with h1 | h1
+    · exact Or.inl (h1.trans hcast)
+    · exact Or.inr (h1.trans (congrArg Neg.neg hcast))
+  have he1 : e ≠ 1 := by
+    rintro rfl
+    obtain ⟨t, ht⟩ := hdodd
+    rcases hDsplit with hs | hs <;> rw [ht] at hs <;> push_cast [pow_one] at hs <;> omega
+  rcases Nat.eq_zero_or_pos e with he0 | hepos
+  · subst he0
+    simp only [pow_zero, one_mul] at hDsplit
+    rcases hDsplit with hs | hs
+    · have hd1 : d % 4 = 1 := by rw [hs] at hD; omega
+      rw [hs, jacobiSym.quadratic_reciprocity_one_mod_four hd1 hm,
+        jacobiSym.quadratic_reciprocity_one_mod_four hd1 hn]
+      exact jacobiSym.mod_left' hmodd
+    · have hd3 : d % 4 = 3 := by rw [hs] at hD; omega
+      rw [hs, case_neg_odd hd3 hm, case_neg_odd hd3 hn]
+      exact jacobiSym.mod_left' hmodd
+  · have he : 2 ≤ e := by omega
+    have h4p : (4 : ℤ) ∣ (2 : ℤ) ^ e :=
+      ⟨2 ^ (e - 2), by rw [show (4 : ℤ) = 2 ^ 2 by norm_num, ← pow_add]; congr 1; omega⟩
+    have h4z : (4 : ℤ) ∣ ((n : ℤ) - (m : ℤ)) := (h4p.mul_right _).trans hdvd
+    have h4 : m % 4 = n % 4 := by obtain ⟨k, hk⟩ := h4z; omega
+    have hjd : jacobiSym (d : ℤ) m = jacobiSym (d : ℤ) n :=
+      jac_recip_congr hdodd hm hn h4 hmodd
+    have hj2 : jacobiSym 2 m ^ e = jacobiSym 2 n ^ e := by
+      rcases Nat.lt_or_ge e 3 with he3 | he3
+      · have he2 : e = 2 := by omega
+        rw [he2, jacobiSym.sq_one (gcd_two_odd hm), jacobiSym.sq_one (gcd_two_odd hn)]
+      · have h8p : (8 : ℤ) ∣ (2 : ℤ) ^ e :=
+          ⟨2 ^ (e - 3), by rw [show (8 : ℤ) = 2 ^ 3 by norm_num, ← pow_add]; congr 1; omega⟩
+        have h8z : (8 : ℤ) ∣ ((n : ℤ) - (m : ℤ)) := (h8p.mul_right _).trans hdvd
+        have h8 : m % 8 = n % 8 := by obtain ⟨k, hk⟩ := h8z; omega
+        rw [jacobiSym.at_two hm, jacobiSym.at_two hn, chi8_congr h8]
+    rcases hDsplit with hs | hs
+    · rw [hs, jacobiSym.mul_left, jacobiSym.mul_left, jacobiSym.pow_left,
+        jacobiSym.pow_left, hj2, hjd]
+    · rw [hs, jacobiSym.neg _ hm, jacobiSym.neg _ hn, jacobiSym.mul_left, jacobiSym.mul_left,
+        jacobiSym.pow_left, jacobiSym.pow_left, hj2, hjd, chi4_congr h4]
+
+/-! ### Odd representatives of residue classes -/
+
+/-- An odd natural number representing the class `x` in `ZMod N` (for odd `N`, or for `x` a
+unit and `N` even). -/
+private def oddRep (N : ℕ) (x : ZMod N) : ℕ :=
+  if x.val % 2 = 1 then x.val else x.val + N
+
+private theorem oddRep_cast {N : ℕ} [NeZero N] (x : ZMod N) :
+    ((oddRep N x : ℕ) : ZMod N) = x := by
+  unfold oddRep
+  by_cases hx : x.val % 2 = 1
+  · rw [if_pos hx]; exact ZMod.natCast_rightInverse x
+  · rw [if_neg hx]
+    push_cast
+    rw [ZMod.natCast_self, add_zero]
+    exact ZMod.natCast_rightInverse x
+
+private theorem oddRep_odd_of_odd {N : ℕ} (hN : N % 2 = 1) (x : ZMod N) :
+    Odd (oddRep N x) := by
+  unfold oddRep
+  by_cases hx : x.val % 2 = 1
+  · rw [if_pos hx]; exact Nat.odd_iff.mpr hx
+  · rw [if_neg hx]; exact Nat.odd_iff.mpr (by omega)
+
+private theorem oddRep_odd_unit {N : ℕ} (u : (ZMod N)ˣ) :
+    Odd (oddRep N (u : ZMod N)) := by
+  have hco : Nat.gcd ((u : ZMod N)).val N = 1 := ZMod.val_coe_unit_coprime u
+  unfold oddRep
+  by_cases hx : ((u : ZMod N)).val % 2 = 1
+  · rw [if_pos hx]; exact Nat.odd_iff.mpr hx
+  · rw [if_neg hx]
+    have hN : N % 2 = 1 := by
+      by_contra hN
+      have h2 : (2 : ℕ) ∣ Nat.gcd ((u : ZMod N)).val N := Nat.dvd_gcd (by omega) (by omega)
+      rw [hco] at h2
+      omega
+    exact Nat.odd_iff.mpr (by omega)
+
+private theorem modeq_of_zmod {D : ℤ} {N : ℕ} (hDN : D ∣ (N : ℤ)) {a b : ℕ}
+    (h : ((a : ℕ) : ZMod N) = ((b : ℕ) : ZMod N)) : (a : ℤ) ≡ (b : ℤ) [ZMOD D] := by
+  have h1 : a ≡ b [MOD N] := (ZMod.natCast_eq_natCast_iff _ _ _).mp h
+  exact Int.modEq_iff_dvd.mpr (hDN.trans h1.dvd)
+
+/-! ### Target 2 -/
+
+private def jacUnit (D : ℤ) (k : ℕ) : ℤˣ :=
+  if jacobiSym D k = -1 then -1 else 1
+
+private theorem jacUnit_val {D : ℤ} {k : ℕ}
+    (h : jacobiSym D k = 1 ∨ jacobiSym D k = -1) :
+    ((jacUnit D k : ℤˣ) : ℤ) = jacobiSym D k := by
+  unfold jacUnit
+  rcases h with h | h <;> rw [h] <;> norm_num
+
+private theorem jacUnit_mul {D : ℤ} {a b c : ℕ}
+    (ha : jacobiSym D a = 1 ∨ jacobiSym D a = -1)
+    (hb : jacobiSym D b = 1 ∨ jacobiSym D b = -1)
+    (h : jacobiSym D c = jacobiSym D a * jacobiSym D b) :
+    jacUnit D c = jacUnit D a * jacUnit D b := by
+  unfold jacUnit
+  rcases ha with ha | ha <;> rcases hb with hb | hb <;> rw [h, ha, hb] <;> norm_num
+
+theorem ex_1_11 (D : ℤ) (hD : D % 4 = 0 ∨ D % 4 = 1) (m n : ℕ)
+    (hm : Odd m) (hn : Odd n) (h : (m : ℤ) ≡ (n : ℤ) [ZMOD D]) :
+    jacobiSym D m = jacobiSym D n :=
+  mod_right_of_discr hD hm hn h
 
 /-- **Exercise 1.12(a).** The map `χ([m]) = (D/m)` is a well-defined homomorphism
 `(ℤ/Dℤ)ˣ → {±1}`. -/
@@ -383,7 +536,51 @@ theorem ex_1_12_a (D : ℤ) (hD0 : D ≠ 0) (hD4 : D % 4 = 0 ∨ D % 4 = 1) :
     ∃ χ : (ZMod D.natAbs)ˣ →* ℤˣ,
       ∀ (m : ℕ) (_ : Odd m) (hco : Nat.Coprime m D.natAbs),
         (χ (ZMod.unitOfCoprime m hco) : ℤ) = jacobiSym D m := by
-  sorry
+  classical
+  haveI : NeZero D.natAbs := ⟨Int.natAbs_ne_zero.mpr hD0⟩
+  have hDN : D ∣ ((D.natAbs : ℕ) : ℤ) := Int.dvd_natAbs.mpr dvd_rfl
+  have hgcd : ∀ u : (ZMod D.natAbs)ˣ,
+      Int.gcd D ((oddRep D.natAbs (u : ZMod D.natAbs) : ℕ) : ℤ) = 1 := by
+    intro u
+    have h1 : Nat.Coprime (oddRep D.natAbs (u : ZMod D.natAbs)) D.natAbs :=
+      (ZMod.isUnit_iff_coprime _ _).mp (by rw [oddRep_cast]; exact u.isUnit)
+    have h2 : Nat.gcd D.natAbs (oddRep D.natAbs (u : ZMod D.natAbs)) = 1 := h1.symm
+    simpa [Int.gcd] using h2
+  have hpm : ∀ u : (ZMod D.natAbs)ˣ,
+      jacobiSym D (oddRep D.natAbs (u : ZMod D.natAbs)) = 1 ∨
+        jacobiSym D (oddRep D.natAbs (u : ZMod D.natAbs)) = -1 :=
+    fun u => jacobiSym.eq_one_or_neg_one (hgcd u)
+  have hmulhom : ∀ u v : (ZMod D.natAbs)ˣ,
+      jacUnit D (oddRep D.natAbs ((u * v : (ZMod D.natAbs)ˣ) : ZMod D.natAbs))
+        = jacUnit D (oddRep D.natAbs (u : ZMod D.natAbs))
+          * jacUnit D (oddRep D.natAbs (v : ZMod D.natAbs)) := by
+    intro u v
+    refine jacUnit_mul (hpm u) (hpm v) ?_
+    have hodd1 := oddRep_odd_unit u
+    have hodd2 := oddRep_odd_unit v
+    have hodd3 := oddRep_odd_unit (u * v)
+    have hcong : ((oddRep D.natAbs ((u * v : (ZMod D.natAbs)ˣ) : ZMod D.natAbs) : ℕ) : ℤ)
+        ≡ ((oddRep D.natAbs (u : ZMod D.natAbs)
+            * oddRep D.natAbs (v : ZMod D.natAbs) : ℕ) : ℤ) [ZMOD D] := by
+      refine modeq_of_zmod hDN ?_
+      push_cast
+      rw [oddRep_cast, oddRep_cast, oddRep_cast]
+    rw [mod_right_of_discr hD4 hodd3 (hodd1.mul hodd2) hcong,
+      jacobiSym.mul_right' D hodd1.pos.ne' hodd2.pos.ne']
+  refine ⟨MonoidHom.mk' (fun u : (ZMod D.natAbs)ˣ =>
+    jacUnit D (oddRep D.natAbs (u : ZMod D.natAbs))) hmulhom, ?_⟩
+  intro m hm hco
+  have happ : ((MonoidHom.mk' (fun u : (ZMod D.natAbs)ˣ =>
+      jacUnit D (oddRep D.natAbs (u : ZMod D.natAbs))) hmulhom)
+      (ZMod.unitOfCoprime m hco))
+      = jacUnit D (oddRep D.natAbs
+          ((ZMod.unitOfCoprime m hco : (ZMod D.natAbs)ˣ) : ZMod D.natAbs)) := rfl
+  rw [happ, jacUnit_val (hpm (ZMod.unitOfCoprime m hco))]
+  refine mod_right_of_discr hD4 (oddRep_odd_unit _) hm ?_
+  refine modeq_of_zmod hDN ?_
+  rw [oddRep_cast, ZMod.coe_unitOfCoprime]
+
+/-! ### Target 3 -/
 
 /-- **Exercise 1.13(a).** Quadratic reciprocity, assuming Lemma 1.14. -/
 theorem ex_1_13_a (p q : ℕ) [Fact p.Prime] [Fact q.Prime] (hp : p ≠ 2) (hq : q ≠ 2) :
@@ -427,7 +624,23 @@ theorem ex_1_14 (n : ℕ) (hn : n % 4 = 3) :
       ∀ (p : ℕ), p.Prime → Odd p → ¬ (p : ℤ) ∣ (n : ℤ) →
         ((∃ x y : ℤ, IsCoprime x y ∧ (p : ℤ) ∣ x ^ 2 + n * y ^ 2)
           ↔ (p : ZMod n) ∈ S) := by
-  sorry
+  classical
+  haveI : NeZero n := ⟨by omega⟩
+  refine ⟨Finset.univ.filter (fun x : ZMod n => jacobiSym (-(n : ℤ)) (oddRep n x) = 1), ?_⟩
+  intro p hp hodd hpn
+  haveI : Fact p.Prime := ⟨hp⟩
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and]
+  have hD4 : (-(n : ℤ)) % 4 = 0 ∨ (-(n : ℤ)) % 4 = 1 := by omega
+  have hne0 : ((-(n : ℤ) : ℤ) : ZMod p) ≠ 0 := by
+    rw [Ne, ZMod.intCast_zmod_eq_zero_iff_dvd]
+    intro hd
+    exact hpn (dvd_neg.mp hd)
+  have hrep : jacobiSym (-(n : ℤ)) p = jacobiSym (-(n : ℤ)) (oddRep n (p : ZMod n)) := by
+    refine mod_right_of_discr hD4 hodd (oddRep_odd_of_odd (by omega) _) ?_
+    refine modeq_of_zmod (D := -(n : ℤ)) ⟨-1, by ring⟩ ?_
+    exact (oddRep_cast _).symm
+  rw [PrimesX2NY2.Fermat.dvd_sq_add_nsq_iff_isSquare (n : ℤ) p hp hodd hpn,
+    ← legendreSym.eq_one_iff p hne0, jacobiSym.legendreSym.to_jacobiSym p (-(n : ℤ)), hrep]
 
 /-- **Exercise 1.15.** The residue classes in `(ℤ/84ℤ)ˣ` with `(−21/p) = 1`
 (solving the Reciprocity Step for `n = 21`). -/

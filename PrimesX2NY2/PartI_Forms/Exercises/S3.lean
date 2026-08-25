@@ -363,11 +363,116 @@ are `(x, y) = (3, ±5)`. -/
 theorem ex_3_22 (x y : ℤ) (h : x ^ 3 = y ^ 2 + 2) : x = 3 ∧ (y = 5 ∨ y = -5) := by
   sorry
 
+private theorem not_sq_of_prime (p : ℕ) (hp : p.Prime) (c : ℕ) (hc : p = c * c) : False := by
+  have h2 := hp.two_le
+  rcases Nat.Prime.eq_one_or_self_of_dvd hp c ⟨c, hc⟩ with h | h
+  · rw [h] at hc; omega
+  · rw [h] at hc; nlinarith [h2, hc]
+
+set_option maxHeartbeats 1000000 in
 /-- **Exercise 3.23.** An odd prime `p` of the form `x² + n y²` (`n > 1`) has a
 unique representation `p = x² + n y²` with `x, y ≥ 0`. -/
 theorem ex_3_23 (n p : ℕ) (hn : 1 < n) (hp : p.Prime) (hodd : Odd p)
     (hrep : ∃ x y : ℤ, x ^ 2 + (n : ℤ) * y ^ 2 = (p : ℤ)) :
     ∃! q : ℕ × ℕ, (q.1 : ℤ) ^ 2 + (n : ℤ) * (q.2 : ℤ) ^ 2 = (p : ℤ) := by
-  sorry
+  obtain ⟨x, y, hxy⟩ := hrep
+  have hsqabs : ∀ z : ℤ, ((z.natAbs : ℤ)) ^ 2 = z ^ 2 := by
+    intro z
+    have h := Int.natAbs_mul_self' z
+    nlinarith [h]
+  have hAB : ((x.natAbs : ℤ)) ^ 2 + (n : ℤ) * ((y.natAbs : ℤ)) ^ 2 = (p : ℤ) := by
+    rw [hsqabs x, hsqabs y]; exact hxy
+  refine ⟨(x.natAbs, y.natAbs), hAB, ?_⟩
+  rintro ⟨c, d⟩ hcd
+  show ((c : ℕ), (d : ℕ)) = (x.natAbs, y.natAbs)
+  have hCD : ((c : ℤ)) ^ 2 + (n : ℤ) * ((d : ℤ)) ^ 2 = (p : ℤ) := hcd
+  set A : ℤ := (x.natAbs : ℤ) with hAdef
+  set B : ℤ := (y.natAbs : ℤ) with hBdef
+  set C : ℤ := (c : ℤ) with hCdef
+  set D : ℤ := (d : ℤ) with hDdef
+  have hA0 : 0 ≤ A := Int.natCast_nonneg _
+  have hB0 : 0 ≤ B := Int.natCast_nonneg _
+  have hC0 : 0 ≤ C := Int.natCast_nonneg _
+  have hD0 : 0 ≤ D := Int.natCast_nonneg _
+  have hn1 : (1 : ℤ) < (n : ℤ) := by exact_mod_cast hn
+  have hppos : (0 : ℤ) < (p : ℤ) := by exact_mod_cast hp.pos
+  have hpZ : Prime (p : ℤ) := Nat.prime_iff_prime_int.mp hp
+  have hfac : (p : ℤ) ∣ (A * D - B * C) * (A * D + B * C) :=
+    ⟨D ^ 2 - B ^ 2, by linear_combination D ^ 2 * hAB - B ^ 2 * hCD⟩
+  have hI1 : (p : ℤ) ^ 2 = (A * C + (n : ℤ) * B * D) ^ 2 + (n : ℤ) * (A * D - B * C) ^ 2 := by
+    linear_combination (-(C ^ 2 + (n : ℤ) * D ^ 2)) * hAB - (p : ℤ) * hCD
+  have hI2 : (p : ℤ) ^ 2 = (A * C - (n : ℤ) * B * D) ^ 2 + (n : ℤ) * (A * D + B * C) ^ 2 := by
+    linear_combination (-(C ^ 2 + (n : ℤ) * D ^ 2)) * hAB - (p : ℤ) * hCD
+  have hkey : A = C ∧ B = D := by
+    rcases hpZ.dvd_mul.mp hfac with h | h
+    · obtain ⟨k, hk⟩ := h
+      have hI1' : (p : ℤ) ^ 2 = (A * C + (n : ℤ) * B * D) ^ 2 + (n : ℤ) * ((p : ℤ) * k) ^ 2 := by
+        rw [← hk]; exact hI1
+      have hks : (n : ℤ) * ((p : ℤ) * k) ^ 2 ≤ (p : ℤ) ^ 2 := by
+        linarith [hI1', sq_nonneg (A * C + (n : ℤ) * B * D)]
+      have hk0 : k = 0 := by
+        by_contra hkne
+        have hk1 : 1 ≤ k ^ 2 := by
+          rcases lt_or_gt_of_ne hkne with hneg | hpos
+          · nlinarith [hneg]
+          · nlinarith [hpos]
+        nlinarith [hks, hk1, hn1, hppos, mul_pos hppos hppos]
+      rw [hk0, mul_zero] at hk
+      have hADBC : A * D = B * C := by linarith
+      have hsq : (A * C + (n : ℤ) * B * D) ^ 2 = (p : ℤ) ^ 2 := by
+        linear_combination -hI1 - (n : ℤ) * (A * D - B * C) * hk
+      have hnn : 0 ≤ A * C + (n : ℤ) * B * D := by positivity
+      have hsum : A * C + (n : ℤ) * B * D = (p : ℤ) := by nlinarith [hsq, hnn, hppos]
+      constructor
+      · have h1 : A * (p : ℤ) = C * (p : ℤ) := by
+          linear_combination (-A) * hsum + C * hAB + (n : ℤ) * B * hADBC
+        exact mul_right_cancel₀ (ne_of_gt hppos) h1
+      · have h2 : B * (p : ℤ) = D * (p : ℤ) := by
+          linear_combination (-B) * hsum + D * hAB + (-A) * hADBC
+        exact mul_right_cancel₀ (ne_of_gt hppos) h2
+    · obtain ⟨k, hk⟩ := h
+      have hI2' : (p : ℤ) ^ 2 = (A * C - (n : ℤ) * B * D) ^ 2 + (n : ℤ) * ((p : ℤ) * k) ^ 2 := by
+        rw [← hk]; exact hI2
+      have hks : (n : ℤ) * ((p : ℤ) * k) ^ 2 ≤ (p : ℤ) ^ 2 := by
+        linarith [hI2', sq_nonneg (A * C - (n : ℤ) * B * D)]
+      have hk0 : k = 0 := by
+        by_contra hkne
+        have hk1 : 1 ≤ k ^ 2 := by
+          rcases lt_or_gt_of_ne hkne with hneg | hpos
+          · nlinarith [hneg]
+          · nlinarith [hpos]
+        nlinarith [hks, hk1, hn1, hppos, mul_pos hppos hppos]
+      rw [hk0, mul_zero] at hk
+      have hAD : A * D = 0 := by linarith [mul_nonneg hA0 hD0, mul_nonneg hB0 hC0, hk]
+      have hBC : B * C = 0 := by linarith [mul_nonneg hA0 hD0, mul_nonneg hB0 hC0, hk]
+      rcases mul_eq_zero.mp hAD with hA' | hD'
+      · have hBne : B ≠ 0 := by
+          intro hB'
+          rw [hA', hB'] at hAB
+          norm_num at hAB
+          omega
+        have hC' : C = 0 := by
+          rcases mul_eq_zero.mp hBC with h' | h'
+          · exact absurd h' hBne
+          · exact h'
+        have hnne : (n : ℤ) ≠ 0 := by linarith
+        have hBD2 : (n : ℤ) * B ^ 2 = (n : ℤ) * D ^ 2 := by
+          rw [hA'] at hAB; rw [hC'] at hCD; linarith
+        have hBD : B ^ 2 = D ^ 2 := mul_left_cancel₀ hnne hBD2
+        refine ⟨by rw [hA', hC'], ?_⟩
+        nlinarith [hBD, hB0, hD0]
+      · exfalso
+        rw [hD'] at hCD
+        have hCC : (C : ℤ) * C = (p : ℤ) := by linear_combination hCD
+        have hpc : p = c * c := by
+          have hc : ((c * c : ℕ) : ℤ) = ((p : ℕ) : ℤ) := by push_cast; linear_combination hCC
+          exact_mod_cast hc.symm
+        exact not_sq_of_prime p hp c hpc
+  obtain ⟨h1, h2⟩ := hkey
+  rw [hAdef, hCdef] at h1
+  rw [hBdef, hDdef] at h2
+  have hc1 : c = x.natAbs := by exact_mod_cast h1.symm
+  have hd1 : d = y.natAbs := by exact_mod_cast h2.symm
+  rw [hc1, hd1]
 
 end PrimesX2NY2.PartI.S3
