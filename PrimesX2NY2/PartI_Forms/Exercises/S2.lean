@@ -393,13 +393,276 @@ theorem ex_2_10_c (D : ℤ) (hD : 0 < D) (hns : ¬ IsSquare D) :
       exact mul_left_cancel₀ (mul_ne_zero (by norm_num) h0) h4
     exact qf_ext ha hbq hc
 
+/-! ### quadratic residues mod 7 (hoisted `decide` facts) -/
+
+private theorem sq7_1 : IsSquare (((1:ℕ) : ZMod 7)) := by decide
+private theorem sq7_2 : IsSquare (((2:ℕ) : ZMod 7)) := by decide
+private theorem sq7_4 : IsSquare (((4:ℕ) : ZMod 7)) := by decide
+private theorem nsq7_3 : ¬ IsSquare (((3:ℕ) : ZMod 7)) := by decide
+private theorem nsq7_5 : ¬ IsSquare (((5:ℕ) : ZMod 7)) := by decide
+private theorem nsq7_6 : ¬ IsSquare (((6:ℕ) : ZMod 7)) := by decide
+private theorem ne7_1 : (((1:ℕ) : ZMod 7)) ≠ 0 := by decide
+private theorem ne7_2 : (((2:ℕ) : ZMod 7)) ≠ 0 := by decide
+private theorem ne7_4 : (((4:ℕ) : ZMod 7)) ≠ 0 := by decide
+
+/-- `−7` is a square mod an odd prime `p ≠ 7` iff `p ≡ 1, 2, 4 (mod 7)`. -/
+private theorem neg_seven_isSquare_iff' (p : ℕ) [Fact p.Prime] (hodd : Odd p) (hp7 : p ≠ 7) :
+    IsSquare ((-7 : ℤ) : ZMod p) ↔ (p % 7 = 1 ∨ p % 7 = 2 ∨ p % 7 = 4) := by
+  have hp : p.Prime := Fact.out
+  haveI : Fact (Nat.Prime 7) := ⟨by norm_num⟩
+  have hp2 : p ≠ 2 := by rintro rfl; exact absurd hodd (by decide)
+  have hn7 : p % 7 ≠ 0 := by
+    intro h
+    exact hp7 ((Nat.prime_dvd_prime_iff_eq (by norm_num) hp).mp (Nat.dvd_of_mod_eq_zero h)).symm
+  have hne : ((-7 : ℤ) : ZMod p) ≠ 0 := by
+    rw [Ne, ZMod.intCast_zmod_eq_zero_iff_dvd]
+    intro h
+    have h7 : p ∣ 7 := by exact_mod_cast (dvd_neg).mp h
+    have := (Nat.prime_dvd_prime_iff_eq hp (by norm_num)).mp h7
+    exact hp7 this
+  rw [← legendreSym.eq_one_iff p hne]
+  have hm1 : legendreSym p (-1) = (-1 : ℤ) ^ (p / 2) := by
+    rw [legendreSym.at_neg_one hp2, ZMod.χ₄_eq_neg_one_pow (hp.eq_two_or_odd.resolve_left hp2)]
+  have hQR : legendreSym p (7 : ℤ) = (-1 : ℤ) ^ (7 / 2 * (p / 2)) * legendreSym 7 (p : ℤ) := by
+    exact_mod_cast legendreSym.quadratic_reciprocity' (p := 7) (q := p) (by norm_num) hp2
+  have key : legendreSym p (-7) = legendreSym 7 (p : ℤ) := by
+    calc legendreSym p (-7) = legendreSym p (-1) * legendreSym p 7 := by
+          rw [← legendreSym.mul]; norm_num
+      _ = (-1 : ℤ) ^ (p / 2) * ((-1 : ℤ) ^ (7 / 2 * (p / 2)) * legendreSym 7 (p : ℤ)) := by
+          rw [hm1, hQR]
+      _ = legendreSym 7 (p : ℤ) := by
+          rw [show (7 : ℕ) / 2 = 3 from rfl, ← mul_assoc, ← pow_add,
+            Even.neg_one_pow ⟨2 * (p / 2), by ring⟩, one_mul]
+  rw [key]
+  have hmod7 : p % 7 = 1 ∨ p % 7 = 2 ∨ p % 7 = 3 ∨ p % 7 = 4 ∨ p % 7 = 5 ∨ p % 7 = 6 := by omega
+  have hcast7 : ((p : ℤ) : ZMod 7) = ((p % 7 : ℕ) : ZMod 7) := by
+    rw [Int.cast_natCast, ← ZMod.natCast_mod]
+  have h7val : legendreSym 7 (p : ℤ) = if (p % 7 = 1 ∨ p % 7 = 2 ∨ p % 7 = 4) then 1 else -1 := by
+    rcases hmod7 with e | e | e | e | e | e
+    · rw [if_pos (by omega)]
+      exact (legendreSym.eq_one_iff 7 (by rw [hcast7, e]; exact ne7_1)).mpr
+        (by rw [hcast7, e]; exact sq7_1)
+    · rw [if_pos (by omega)]
+      exact (legendreSym.eq_one_iff 7 (by rw [hcast7, e]; exact ne7_2)).mpr
+        (by rw [hcast7, e]; exact sq7_2)
+    · rw [if_neg (by omega)]
+      exact (legendreSym.eq_neg_one_iff 7).mpr (by rw [hcast7, e]; exact nsq7_3)
+    · rw [if_pos (by omega)]
+      exact (legendreSym.eq_one_iff 7 (by rw [hcast7, e]; exact ne7_4)).mpr
+        (by rw [hcast7, e]; exact sq7_4)
+    · rw [if_neg (by omega)]
+      exact (legendreSym.eq_neg_one_iff 7).mpr (by rw [hcast7, e]; exact nsq7_5)
+    · rw [if_neg (by omega)]
+      exact (legendreSym.eq_neg_one_iff 7).mpr (by rw [hcast7, e]; exact nsq7_6)
+  rw [h7val]
+  by_cases hC : (p % 7 = 1 ∨ p % 7 = 2 ∨ p % 7 = 4)
+  · rw [if_pos hC]; exact ⟨fun _ => hC, fun _ => rfl⟩
+  · rw [if_neg hC]; exact ⟨fun h => absurd h (by norm_num), fun h => absurd h hC⟩
+
+/-! ### the reduced primitive forms of discriminant `−28` -/
+
+/-- The only reduced *primitive* form of discriminant `−28` is `x² + 7y²`. -/
+private theorem reduced_neg_28' (g : BinaryQF) (hred : g.Reduced) (hprim : g.Primitive)
+    (hd : g.discr = -28) : g = ⟨1, 0, 7⟩ := by
+  obtain ⟨a, b, c⟩ := g
+  simp only [BinaryQF.Reduced, BinaryQF.discr, BinaryQF.Primitive] at hred hd hprim
+  obtain ⟨h1, h2, h3⟩ := hred
+  obtain ⟨hb1, hb2⟩ := abs_le.mp h1
+  have ha0' : 0 ≤ a := le_trans (abs_nonneg b) h1
+  have ha0 : 0 < a := by
+    rcases eq_or_lt_of_le ha0' with h | h
+    · rw [← h] at hd; exfalso; nlinarith [sq_nonneg b]
+    · exact h
+  have hbsq : b ^ 2 ≤ a ^ 2 := sq_le_sq' hb1 hb2
+  have hac : a * a ≤ a * c := mul_le_mul_of_nonneg_left h2 ha0.le
+  have h3a : 3 * a ^ 2 ≤ 28 := by nlinarith
+  have hbound : 18 * a ≤ 55 := by nlinarith [sq_nonneg (a - 3)]
+  have ha_le : a ≤ 3 := by omega
+  have hd' : b * b - 4 * (a * c) = -28 := by linear_combination hd
+  rcases (show a = 1 ∨ a = 2 ∨ a = 3 by omega) with rfl | rfl | rfl
+  · rcases (show b = -1 ∨ b = 0 ∨ b = 1 by omega) with rfl | rfl | rfl
+    · omega
+    · obtain rfl : c = 7 := by omega
+      rfl
+    · omega
+  · exfalso
+    rcases (show b = -2 ∨ b = -1 ∨ b = 0 ∨ b = 1 ∨ b = 2 by omega)
+      with rfl | rfl | rfl | rfl | rfl
+    · have := h3 (Or.inl (by norm_num))
+      omega
+    · omega
+    · omega
+    · omega
+    · obtain rfl : c = 4 := by omega
+      norm_num [Int.gcd] at hprim
+  · exfalso
+    rcases (show b = -3 ∨ b = -2 ∨ b = -1 ∨ b = 0 ∨ b = 1 ∨ b = 2 ∨ b = 3 by omega)
+      with rfl | rfl | rfl | rfl | rfl | rfl | rfl <;> omega
+
+/-! ### the reduced forms of discriminant `−56` -/
+
+private theorem reduced_neg_56' (g : BinaryQF) (hred : g.Reduced) (hd : g.discr = -56) :
+    g = ⟨1, 0, 14⟩ ∨ g = ⟨2, 0, 7⟩ ∨ g = ⟨3, 2, 5⟩ ∨ g = ⟨3, -2, 5⟩ := by
+  obtain ⟨a, b, c⟩ := g
+  simp only [BinaryQF.Reduced, BinaryQF.discr] at hred hd
+  obtain ⟨h1, h2, h3⟩ := hred
+  obtain ⟨hb1, hb2⟩ := abs_le.mp h1
+  have ha0' : 0 ≤ a := le_trans (abs_nonneg b) h1
+  have ha0 : 0 < a := by
+    rcases eq_or_lt_of_le ha0' with h | h
+    · rw [← h] at hd; exfalso; nlinarith [sq_nonneg b]
+    · exact h
+  have hbsq : b ^ 2 ≤ a ^ 2 := sq_le_sq' hb1 hb2
+  have hac : a * a ≤ a * c := mul_le_mul_of_nonneg_left h2 ha0.le
+  have h3a : 3 * a ^ 2 ≤ 56 := by nlinarith
+  have hbound : 24 * a ≤ 104 := by nlinarith [sq_nonneg (a - 4)]
+  have ha_le : a ≤ 4 := by omega
+  have hd' : b * b - 4 * (a * c) = -56 := by linear_combination hd
+  rcases (show a = 1 ∨ a = 2 ∨ a = 3 ∨ a = 4 by omega) with rfl | rfl | rfl | rfl
+  · rcases (show b = -1 ∨ b = 0 ∨ b = 1 by omega) with rfl | rfl | rfl
+    · omega
+    · obtain rfl : c = 14 := by omega
+      exact Or.inl rfl
+    · omega
+  · rcases (show b = -2 ∨ b = -1 ∨ b = 0 ∨ b = 1 ∨ b = 2 by omega)
+      with rfl | rfl | rfl | rfl | rfl
+    · omega
+    · omega
+    · obtain rfl : c = 7 := by omega
+      exact Or.inr (Or.inl rfl)
+    · omega
+    · omega
+  · rcases (show b = -3 ∨ b = -2 ∨ b = -1 ∨ b = 0 ∨ b = 1 ∨ b = 2 ∨ b = 3 by omega)
+      with rfl | rfl | rfl | rfl | rfl | rfl | rfl
+    · omega
+    · obtain rfl : c = 5 := by omega
+      exact Or.inr (Or.inr (Or.inr rfl))
+    · omega
+    · omega
+    · omega
+    · obtain rfl : c = 5 := by omega
+      exact Or.inr (Or.inr (Or.inl rfl))
+    · omega
+  · exfalso
+    rcases (show b = -4 ∨ b = -3 ∨ b = -2 ∨ b = -1 ∨ b = 0 ∨ b = 1 ∨ b = 2 ∨ b = 3 ∨ b = 4
+      by omega) with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;> omega
+
+/-! ### the reduced forms of discriminant `−24` -/
+
+private theorem reduced_neg_24' (g : BinaryQF) (hred : g.Reduced) (hd : g.discr = -24) :
+    g = ⟨1, 0, 6⟩ ∨ g = ⟨2, 0, 3⟩ := by
+  obtain ⟨a, b, c⟩ := g
+  simp only [BinaryQF.Reduced, BinaryQF.discr] at hred hd
+  obtain ⟨h1, h2, h3⟩ := hred
+  obtain ⟨hb1, hb2⟩ := abs_le.mp h1
+  have ha0' : 0 ≤ a := le_trans (abs_nonneg b) h1
+  have ha0 : 0 < a := by
+    rcases eq_or_lt_of_le ha0' with h | h
+    · rw [← h] at hd; exfalso; nlinarith [sq_nonneg b]
+    · exact h
+  have hbsq : b ^ 2 ≤ a ^ 2 := sq_le_sq' hb1 hb2
+  have hac : a * a ≤ a * c := mul_le_mul_of_nonneg_left h2 ha0.le
+  have h3a : 3 * a ^ 2 ≤ 24 := by nlinarith
+  have hbound : 18 * a ≤ 51 := by nlinarith [sq_nonneg (a - 3)]
+  have ha_le : a ≤ 2 := by omega
+  have hd' : b * b - 4 * (a * c) = -24 := by linear_combination hd
+  rcases (show a = 1 ∨ a = 2 by omega) with rfl | rfl
+  · rcases (show b = -1 ∨ b = 0 ∨ b = 1 by omega) with rfl | rfl | rfl
+    · omega
+    · obtain rfl : c = 6 := by omega
+      exact Or.inl rfl
+    · omega
+  · rcases (show b = -2 ∨ b = -1 ∨ b = 0 ∨ b = 1 ∨ b = 2 by omega)
+      with rfl | rfl | rfl | rfl | rfl
+    · omega
+    · omega
+    · obtain rfl : c = 3 := by omega
+      exact Or.inr rfl
+    · omega
+    · omega
+
+/-! ### hoisted residue facts -/
+
+private theorem m7_a3 : ∀ X Y : ZMod 7, ((3:ℕ) : ZMod 7) ≠ X ^ 2 + 14 * Y ^ 2 := by decide
+private theorem m7_a5 : ∀ X Y : ZMod 7, ((5:ℕ) : ZMod 7) ≠ X ^ 2 + 14 * Y ^ 2 := by decide
+private theorem m7_a6 : ∀ X Y : ZMod 7, ((6:ℕ) : ZMod 7) ≠ X ^ 2 + 14 * Y ^ 2 := by decide
+private theorem m7_b3 : ∀ X Y : ZMod 7, ((3:ℕ) : ZMod 7) ≠ 2 * X ^ 2 + 7 * Y ^ 2 := by decide
+private theorem m7_b5 : ∀ X Y : ZMod 7, ((5:ℕ) : ZMod 7) ≠ 2 * X ^ 2 + 7 * Y ^ 2 := by decide
+private theorem m7_b6 : ∀ X Y : ZMod 7, ((6:ℕ) : ZMod 7) ≠ 2 * X ^ 2 + 7 * Y ^ 2 := by decide
+
+private theorem m8_a3 : ∀ X Y : ZMod 8, ((3:ℕ) : ZMod 8) ≠ X ^ 2 + 14 * Y ^ 2 := by decide
+private theorem m8_a5 : ∀ X Y : ZMod 8, ((5:ℕ) : ZMod 8) ≠ X ^ 2 + 14 * Y ^ 2 := by decide
+private theorem m8_b3 : ∀ X Y : ZMod 8, ((3:ℕ) : ZMod 8) ≠ 2 * X ^ 2 + 7 * Y ^ 2 := by decide
+private theorem m8_b5 : ∀ X Y : ZMod 8, ((5:ℕ) : ZMod 8) ≠ 2 * X ^ 2 + 7 * Y ^ 2 := by decide
+private theorem m8_c1 : ∀ X Y : ZMod 8,
+    ((1:ℕ) : ZMod 8) ≠ 3 * X ^ 2 + 2 * X * Y + 5 * Y ^ 2 := by decide
+private theorem m8_c7 : ∀ X Y : ZMod 8,
+    ((7:ℕ) : ZMod 8) ≠ 3 * X ^ 2 + 2 * X * Y + 5 * Y ^ 2 := by decide
+private theorem m8_d1 : ∀ X Y : ZMod 8,
+    ((1:ℕ) : ZMod 8) ≠ 3 * X ^ 2 - 2 * X * Y + 5 * Y ^ 2 := by decide
+private theorem m8_d7 : ∀ X Y : ZMod 8,
+    ((7:ℕ) : ZMod 8) ≠ 3 * X ^ 2 - 2 * X * Y + 5 * Y ^ 2 := by decide
+
+private theorem m8_f3 : ∀ X Y : ZMod 8, ((3:ℕ) : ZMod 8) ≠ X ^ 2 + 6 * Y ^ 2 := by decide
+private theorem m8_f5 : ∀ X Y : ZMod 8, ((5:ℕ) : ZMod 8) ≠ X ^ 2 + 6 * Y ^ 2 := by decide
+private theorem m3_f2 : ∀ X Y : ZMod 3, ((2:ℕ) : ZMod 3) ≠ X ^ 2 + 6 * Y ^ 2 := by decide
+private theorem m8_e1 : ∀ X Y : ZMod 8, ((1:ℕ) : ZMod 8) ≠ 2 * X ^ 2 + 3 * Y ^ 2 := by decide
+private theorem m8_e7 : ∀ X Y : ZMod 8, ((7:ℕ) : ZMod 8) ≠ 2 * X ^ 2 + 3 * Y ^ 2 := by decide
+
+/-! ### Exercise 2.11 -/
+
 /-- **Exercise 2.11.** The result (2.17): for a prime `p ≠ 7`, `p = x² + 7y²` iff
 `p ≡ 1,9,11,15,23,25 (mod 28)`. -/
 theorem ex_2_11 (p : ℕ) (hp : p.Prime) (hodd : Odd p) (hp7 : p ≠ 7) :
     (∃ x y : ℤ, (p : ℤ) = x ^ 2 + 7 * y ^ 2) ↔
       p % 28 = 1 ∨ p % 28 = 9 ∨ p % 28 = 11 ∨ p % 28 = 15 ∨ p % 28 = 23
         ∨ p % 28 = 25 := by
-  sorry
+  haveI : Fact p.Prime := ⟨hp⟩
+  have hodd2 : p % 2 = 1 := Nat.odd_iff.mp hodd
+  have hbridge : (p % 28 = 1 ∨ p % 28 = 9 ∨ p % 28 = 11 ∨ p % 28 = 15 ∨ p % 28 = 23
+      ∨ p % 28 = 25) ↔ (p % 7 = 1 ∨ p % 7 = 2 ∨ p % 7 = 4) := by omega
+  rw [hbridge, ← neg_seven_isSquare_iff' p hodd hp7]
+  constructor
+  · rintro ⟨x, y, hxy⟩
+    exact Fermat.isSquare_neg_of_repr 7 p hp x y hxy
+  · intro hsq7
+    have hsq : IsSquare ((-28 : ℤ) : ZMod p) := by
+      obtain ⟨s, hs⟩ := hsq7
+      refine ⟨2 * s, ?_⟩
+      push_cast at hs ⊢
+      linear_combination (4 : ZMod p) * hs
+    have hpD : ¬ (p : ℤ) ∣ (-28 : ℤ) := by
+      intro hdvd
+      have h28 : p ∣ 28 := by exact_mod_cast (dvd_neg).mp hdvd
+      have h : p ∣ 2 ^ 2 * 7 := by rw [show (2:ℕ) ^ 2 * 7 = 28 from by norm_num]; exact h28
+      rcases (Nat.Prime.dvd_mul hp).mp h with h4 | h7
+      · have h2d : p ∣ 2 := hp.dvd_of_dvd_pow h4
+        have hle := Nat.le_of_dvd (by norm_num) h2d
+        have h2le := hp.two_le
+        omega
+      · exact hp7 ((Nat.prime_dvd_prime_iff_eq hp (by norm_num)).mp h7)
+    obtain ⟨b, c, hdiscr, hprim⟩ :=
+      Fermat.exists_form_of_isSquare (-28) (Or.inl (by decide)) p hp hodd hpD hsq
+    have hpos : (⟨(p : ℤ), b, c⟩ : BinaryQF).PosDef := by
+      constructor
+      · show (0 : ℤ) < (p : ℤ)
+        exact_mod_cast hp.pos
+      · rw [hdiscr]; norm_num
+    obtain ⟨g, ⟨hgred, hgequiv⟩, -⟩ := exists_unique_reduced _ hpos
+    have hgdiscr : g.discr = -28 := by
+      rw [← discr_eq_of_properlyEquivalent hgequiv]; exact hdiscr
+    have hgprim : g.Primitive := (primitive_of_properlyEquivalent hgequiv).mp hprim
+    have hg : g = ⟨1, 0, 7⟩ := reduced_neg_28' g hgred hgprim hgdiscr
+    obtain ⟨N, hN, hNg⟩ := properlyEquivalent_equivalence.symm hgequiv
+    have hev := eval_action N g 1 0
+    rw [hNg] at hev
+    have hf10 : (⟨(p : ℤ), b, c⟩ : BinaryQF).eval 1 0 = (p : ℤ) := by simp [BinaryQF.eval]
+    refine ⟨N 0 0 * 1 + N 0 1 * 0, N 1 0 * 1 + N 1 1 * 0, ?_⟩
+    rw [← hf10, hev, hg]
+    simp only [BinaryQF.eval]
+    ring
+
+/-! ### Exercise 2.15 -/
 
 /-- **Exercise 2.12(a).** An integer `> 1` that is not a prime power factors as
 `m = ac` with `1 < a < c` and `gcd(a,c) = 1`. -/
@@ -650,6 +913,7 @@ theorem ex_2_14 (m : ℤ) (hco : IsCoprime m 20) :
     · exact Or.inl (by rw [← hm]; exact h)
     · exact Or.inr (by rw [← hm]; exact h)
 
+set_option maxHeartbeats 1000000 in
 /-- **Exercise 2.15.** The result (2.23): for a prime `p ≠ 7`, `p = x²+14y²` or
 `2x²+7y²` iff `p ≡ 1,9,15,23,25,39 (mod 56)`. -/
 theorem ex_2_15 (p : ℕ) (hp : p.Prime) (hodd : Odd p) (hp7 : p ≠ 7) :
@@ -657,7 +921,151 @@ theorem ex_2_15 (p : ℕ) (hp : p.Prime) (hodd : Odd p) (hp7 : p ≠ 7) :
         ∨ (∃ x y : ℤ, (p : ℤ) = 2 * x ^ 2 + 7 * y ^ 2)) ↔
       p % 56 = 1 ∨ p % 56 = 9 ∨ p % 56 = 15 ∨ p % 56 = 23 ∨ p % 56 = 25
         ∨ p % 56 = 39 := by
-  sorry
+  haveI : Fact p.Prime := ⟨hp⟩
+  have hodd2 : p % 2 = 1 := Nat.odd_iff.mp hodd
+  have hp2 : p ≠ 2 := by rintro rfl; exact absurd hodd (by decide)
+  have hn7 : p % 7 ≠ 0 := by
+    intro h
+    exact hp7 ((Nat.prime_dvd_prime_iff_eq (by norm_num) hp).mp (Nat.dvd_of_mod_eq_zero h)).symm
+  have h8cases : p % 8 = 1 ∨ p % 8 = 3 ∨ p % 8 = 5 ∨ p % 8 = 7 := by omega
+  have h7cases : p % 7 = 1 ∨ p % 7 = 2 ∨ p % 7 = 3 ∨ p % 7 = 4 ∨ p % 7 = 5 ∨ p % 7 = 6 := by
+    omega
+  have hbridge : (p % 56 = 1 ∨ p % 56 = 9 ∨ p % 56 = 15 ∨ p % 56 = 23 ∨ p % 56 = 25
+      ∨ p % 56 = 39) ↔ ((p % 8 = 1 ∨ p % 8 = 7) ∧ (p % 7 = 1 ∨ p % 7 = 2 ∨ p % 7 = 4)) := by
+    omega
+  rw [hbridge]
+  clear hbridge
+  constructor
+  · rintro (⟨x, y, hxy⟩ | ⟨x, y, hxy⟩)
+    · constructor
+      · have hz8 : ((p % 8 : ℕ) : ZMod 8)
+            = (x : ZMod 8) ^ 2 + 14 * (y : ZMod 8) ^ 2 := by
+          rw [ZMod.natCast_mod]
+          have h0 : ((p : ℤ) : ZMod 8) = ((x ^ 2 + 14 * y ^ 2 : ℤ) : ZMod 8) := by rw [hxy]
+          push_cast at h0
+          linear_combination h0
+        rcases h8cases with h|h|h|h
+        · exact Or.inl h
+        · rw [h] at hz8; exact absurd hz8 (m8_a3 _ _)
+        · rw [h] at hz8; exact absurd hz8 (m8_a5 _ _)
+        · exact Or.inr h
+      · have hz7 : ((p % 7 : ℕ) : ZMod 7)
+            = (x : ZMod 7) ^ 2 + 14 * (y : ZMod 7) ^ 2 := by
+          rw [ZMod.natCast_mod]
+          have h0 : ((p : ℤ) : ZMod 7) = ((x ^ 2 + 14 * y ^ 2 : ℤ) : ZMod 7) := by rw [hxy]
+          push_cast at h0
+          linear_combination h0
+        rcases h7cases with h|h|h|h|h|h
+        · exact Or.inl h
+        · exact Or.inr (Or.inl h)
+        · rw [h] at hz7; exact absurd hz7 (m7_a3 _ _)
+        · exact Or.inr (Or.inr h)
+        · rw [h] at hz7; exact absurd hz7 (m7_a5 _ _)
+        · rw [h] at hz7; exact absurd hz7 (m7_a6 _ _)
+    · constructor
+      · have hz8 : ((p % 8 : ℕ) : ZMod 8)
+            = 2 * (x : ZMod 8) ^ 2 + 7 * (y : ZMod 8) ^ 2 := by
+          rw [ZMod.natCast_mod]
+          have h0 : ((p : ℤ) : ZMod 8) = ((2 * x ^ 2 + 7 * y ^ 2 : ℤ) : ZMod 8) := by rw [hxy]
+          push_cast at h0
+          linear_combination h0
+        rcases h8cases with h|h|h|h
+        · exact Or.inl h
+        · rw [h] at hz8; exact absurd hz8 (m8_b3 _ _)
+        · rw [h] at hz8; exact absurd hz8 (m8_b5 _ _)
+        · exact Or.inr h
+      · have hz7 : ((p % 7 : ℕ) : ZMod 7)
+            = 2 * (x : ZMod 7) ^ 2 + 7 * (y : ZMod 7) ^ 2 := by
+          rw [ZMod.natCast_mod]
+          have h0 : ((p : ℤ) : ZMod 7) = ((2 * x ^ 2 + 7 * y ^ 2 : ℤ) : ZMod 7) := by rw [hxy]
+          push_cast at h0
+          linear_combination h0
+        rcases h7cases with h|h|h|h|h|h
+        · exact Or.inl h
+        · exact Or.inr (Or.inl h)
+        · rw [h] at hz7; exact absurd hz7 (m7_b3 _ _)
+        · exact Or.inr (Or.inr h)
+        · rw [h] at hz7; exact absurd hz7 (m7_b5 _ _)
+        · rw [h] at hz7; exact absurd hz7 (m7_b6 _ _)
+  · rintro ⟨h8, h7⟩
+    have hsq2 : IsSquare (2 : ZMod p) := (ZMod.exists_sq_eq_two_iff hp2).mpr h8
+    have hsq7 : IsSquare ((-7 : ℤ) : ZMod p) := (neg_seven_isSquare_iff' p hodd hp7).mpr h7
+    have hsq14 : IsSquare ((-14 : ℤ) : ZMod p) := by
+      obtain ⟨s, hs⟩ := hsq2
+      obtain ⟨t, ht⟩ := hsq7
+      refine ⟨s * t, ?_⟩
+      push_cast at ht ⊢
+      linear_combination (-7 : ZMod p) * hs + (s * s) * ht
+    have hsq56 : IsSquare ((-56 : ℤ) : ZMod p) := by
+      obtain ⟨s, hs⟩ := hsq14
+      refine ⟨2 * s, ?_⟩
+      push_cast at hs ⊢
+      linear_combination (4 : ZMod p) * hs
+    have hpD : ¬ (p : ℤ) ∣ (-56 : ℤ) := by
+      intro hdvd
+      have h56 : p ∣ 56 := by exact_mod_cast (dvd_neg).mp hdvd
+      have h : p ∣ 2 ^ 3 * 7 := by rw [show (2:ℕ) ^ 3 * 7 = 56 from by norm_num]; exact h56
+      rcases (Nat.Prime.dvd_mul hp).mp h with h4 | h7'
+      · have h2d : p ∣ 2 := hp.dvd_of_dvd_pow h4
+        have hle := Nat.le_of_dvd (by norm_num) h2d
+        have h2le := hp.two_le
+        omega
+      · exact hp7 ((Nat.prime_dvd_prime_iff_eq hp (by norm_num)).mp h7')
+    obtain ⟨b, c, hdiscr, hprim⟩ :=
+      Fermat.exists_form_of_isSquare (-56) (Or.inl (by decide)) p hp hodd hpD hsq56
+    have hpos : (⟨(p : ℤ), b, c⟩ : BinaryQF).PosDef := by
+      constructor
+      · show (0 : ℤ) < (p : ℤ)
+        exact_mod_cast hp.pos
+      · rw [hdiscr]; norm_num
+    obtain ⟨g, ⟨hgred, hgequiv⟩, -⟩ := exists_unique_reduced _ hpos
+    have hgdiscr : g.discr = -56 := by
+      rw [← discr_eq_of_properlyEquivalent hgequiv]; exact hdiscr
+    have hgcases := reduced_neg_56' g hgred hgdiscr
+    obtain ⟨N, hN, hNg⟩ := properlyEquivalent_equivalence.symm hgequiv
+    have hev := eval_action N g 1 0
+    rw [hNg] at hev
+    have hf10 : (⟨(p : ℤ), b, c⟩ : BinaryQF).eval 1 0 = (p : ℤ) := by simp [BinaryQF.eval]
+    obtain ⟨u, v, hrep⟩ : ∃ u v : ℤ, (p : ℤ) = g.eval u v := ⟨_, _, by rw [← hf10, hev]⟩
+    rcases hgcases with hg | hg | hg | hg
+    · rw [hg] at hrep
+      refine Or.inl ⟨u, v, ?_⟩
+      rw [hrep]; simp only [BinaryQF.eval]; ring
+    · rw [hg] at hrep
+      refine Or.inr ⟨u, v, ?_⟩
+      rw [hrep]; simp only [BinaryQF.eval]; ring
+    · exfalso
+      rw [hg] at hrep
+      have hrep' : (p : ℤ) = 3 * u ^ 2 + 2 * u * v + 5 * v ^ 2 := by
+        rw [hrep]; simp only [BinaryQF.eval]
+      have hz8 : ((p % 8 : ℕ) : ZMod 8)
+          = 3 * (u : ZMod 8) ^ 2 + 2 * (u : ZMod 8) * (v : ZMod 8)
+            + 5 * (v : ZMod 8) ^ 2 := by
+        rw [ZMod.natCast_mod]
+        have h0 : ((p : ℤ) : ZMod 8)
+            = ((3 * u ^ 2 + 2 * u * v + 5 * v ^ 2 : ℤ) : ZMod 8) := by rw [hrep']
+        push_cast at h0
+        linear_combination h0
+      rcases h8 with h | h
+      · rw [h] at hz8; exact m8_c1 _ _ hz8
+      · rw [h] at hz8; exact m8_c7 _ _ hz8
+    · exfalso
+      rw [hg] at hrep
+      have hrep' : (p : ℤ) = 3 * u ^ 2 - 2 * u * v + 5 * v ^ 2 := by
+        rw [hrep]; simp only [BinaryQF.eval]; ring
+      have hz8 : ((p % 8 : ℕ) : ZMod 8)
+          = 3 * (u : ZMod 8) ^ 2 - 2 * (u : ZMod 8) * (v : ZMod 8)
+            + 5 * (v : ZMod 8) ^ 2 := by
+        rw [ZMod.natCast_mod]
+        have h0 : ((p : ℤ) : ZMod 8)
+            = ((3 * u ^ 2 - 2 * u * v + 5 * v ^ 2 : ℤ) : ZMod 8) := by rw [hrep']
+        push_cast at h0
+        linear_combination h0
+      rcases h8 with h | h
+      · rw [h] at hz8; exact m8_d1 _ _ hz8
+      · rw [h] at hz8; exact m8_d7 _ _ hz8
+
+/-! ### Exercise 2.21 -/
 
 /-- **Exercise 2.16.** For `D ≡ 1 (mod 4)`, the form `x² + xy + ((1−D)/4)y²` has
 discriminant `D` and is reduced when `D < 0`. -/
@@ -785,7 +1193,92 @@ theorem ex_2_18_b_correct (f : BinaryQF) (hf : f.Primitive) (M : ℤ) (hM : M �
 `p = x² + 6y²` iff `p ≡ 1, 7 (mod 24)`. -/
 theorem ex_2_21 (p : ℕ) (hp : p.Prime) (hodd : Odd p) (hp3 : p ≠ 3) :
     (∃ x y : ℤ, (p : ℤ) = x ^ 2 + 6 * y ^ 2) ↔ p % 24 = 1 ∨ p % 24 = 7 := by
-  sorry
+  haveI : Fact p.Prime := ⟨hp⟩
+  have hodd2 : p % 2 = 1 := Nat.odd_iff.mp hodd
+  have hp2 : p ≠ 2 := by rintro rfl; exact absurd hodd (by decide)
+  have hn3 : p % 3 ≠ 0 := by
+    intro h
+    exact hp3 ((Nat.prime_dvd_prime_iff_eq (by norm_num) hp).mp (Nat.dvd_of_mod_eq_zero h)).symm
+  have hbridge : (p % 24 = 1 ∨ p % 24 = 7)
+      ↔ ((p % 8 = 1 ∨ p % 8 = 7) ∧ p % 3 = 1) := by omega
+  rw [hbridge]
+  constructor
+  · rintro ⟨x, y, hxy⟩
+    constructor
+    · have hz8 : ((p % 8 : ℕ) : ZMod 8) = (x : ZMod 8) ^ 2 + 6 * (y : ZMod 8) ^ 2 := by
+        rw [ZMod.natCast_mod]
+        have h0 : ((p : ℤ) : ZMod 8) = ((x ^ 2 + 6 * y ^ 2 : ℤ) : ZMod 8) := by rw [hxy]
+        push_cast at h0
+        linear_combination h0
+      rcases (show p % 8 = 1 ∨ p % 8 = 3 ∨ p % 8 = 5 ∨ p % 8 = 7 by omega) with h|h|h|h
+      · exact Or.inl h
+      · rw [h] at hz8; exact absurd hz8 (m8_f3 _ _)
+      · rw [h] at hz8; exact absurd hz8 (m8_f5 _ _)
+      · exact Or.inr h
+    · have hz3 : ((p % 3 : ℕ) : ZMod 3) = (x : ZMod 3) ^ 2 + 6 * (y : ZMod 3) ^ 2 := by
+        rw [ZMod.natCast_mod]
+        have h0 : ((p : ℤ) : ZMod 3) = ((x ^ 2 + 6 * y ^ 2 : ℤ) : ZMod 3) := by rw [hxy]
+        push_cast at h0
+        linear_combination h0
+      rcases (show p % 3 = 1 ∨ p % 3 = 2 by omega) with h | h
+      · exact h
+      · rw [h] at hz3; exact absurd hz3 (m3_f2 _ _)
+  · rintro ⟨h8, h3⟩
+    have hsq2 : IsSquare (2 : ZMod p) := (ZMod.exists_sq_eq_two_iff hp2).mpr h8
+    have hsq3 : IsSquare ((-3 : ℤ) : ZMod p) := (Fermat.neg_three_isSquare_iff p hodd hp3).mpr h3
+    have hsq6 : IsSquare ((-6 : ℤ) : ZMod p) := by
+      obtain ⟨s, hs⟩ := hsq2
+      obtain ⟨t, ht⟩ := hsq3
+      refine ⟨s * t, ?_⟩
+      push_cast at ht ⊢
+      linear_combination (-3 : ZMod p) * hs + (s * s) * ht
+    have hsq24 : IsSquare ((-24 : ℤ) : ZMod p) := by
+      obtain ⟨s, hs⟩ := hsq6
+      refine ⟨2 * s, ?_⟩
+      push_cast at hs ⊢
+      linear_combination (4 : ZMod p) * hs
+    have hpD : ¬ (p : ℤ) ∣ (-24 : ℤ) := by
+      intro hdvd
+      have h24 : p ∣ 24 := by exact_mod_cast (dvd_neg).mp hdvd
+      have h : p ∣ 2 ^ 3 * 3 := by rw [show (2:ℕ) ^ 3 * 3 = 24 from by norm_num]; exact h24
+      rcases (Nat.Prime.dvd_mul hp).mp h with h4 | h3'
+      · have h2d : p ∣ 2 := hp.dvd_of_dvd_pow h4
+        have hle := Nat.le_of_dvd (by norm_num) h2d
+        have h2le := hp.two_le
+        omega
+      · exact hp3 ((Nat.prime_dvd_prime_iff_eq hp (by norm_num)).mp h3')
+    obtain ⟨b, c, hdiscr, hprim⟩ :=
+      Fermat.exists_form_of_isSquare (-24) (Or.inl (by decide)) p hp hodd hpD hsq24
+    have hpos : (⟨(p : ℤ), b, c⟩ : BinaryQF).PosDef := by
+      constructor
+      · show (0 : ℤ) < (p : ℤ)
+        exact_mod_cast hp.pos
+      · rw [hdiscr]; norm_num
+    obtain ⟨g, ⟨hgred, hgequiv⟩, -⟩ := exists_unique_reduced _ hpos
+    have hgdiscr : g.discr = -24 := by
+      rw [← discr_eq_of_properlyEquivalent hgequiv]; exact hdiscr
+    have hgcases := reduced_neg_24' g hgred hgdiscr
+    obtain ⟨N, hN, hNg⟩ := properlyEquivalent_equivalence.symm hgequiv
+    have hev := eval_action N g 1 0
+    rw [hNg] at hev
+    have hf10 : (⟨(p : ℤ), b, c⟩ : BinaryQF).eval 1 0 = (p : ℤ) := by simp [BinaryQF.eval]
+    obtain ⟨u, v, hrep⟩ : ∃ u v : ℤ, (p : ℤ) = g.eval u v := ⟨_, _, by rw [← hf10, hev]⟩
+    rcases hgcases with hg | hg
+    · rw [hg] at hrep
+      exact ⟨u, v, by rw [hrep]; simp only [BinaryQF.eval]; ring⟩
+    · exfalso
+      rw [hg] at hrep
+      have hrep' : (p : ℤ) = 2 * u ^ 2 + 3 * v ^ 2 := by
+        rw [hrep]; simp only [BinaryQF.eval]; ring
+      have hz8 : ((p % 8 : ℕ) : ZMod 8)
+          = 2 * (u : ZMod 8) ^ 2 + 3 * (v : ZMod 8) ^ 2 := by
+        rw [ZMod.natCast_mod]
+        have h0 : ((p : ℤ) : ZMod 8) = ((2 * u ^ 2 + 3 * v ^ 2 : ℤ) : ZMod 8) := by rw [hrep']
+        push_cast at h0
+        linear_combination h0
+      rcases h8 with h | h
+      · rw [h] at hz8; exact m8_e1 _ _ hz8
+      · rw [h] at hz8; exact m8_e7 _ _ hz8
 
 /-- **Exercise 2.22.** The composition identity (2.31) (and its special case
 (2.30)). -/
