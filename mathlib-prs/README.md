@@ -1,5 +1,9 @@
 # Mathlib PR drafts — and what actually blocks this project
 
+**Read [AI-DISCLOSURE-AND-DECISIONS.md](AI-DISCLOSURE-AND-DECISIONS.md) before opening any of
+these.** Mathlib's contribution policy requires disclosure of AI use and requires the
+submitter to justify every design decision unaided; that file is the decision record.
+
 Drafts only — nothing here has been submitted. All four are now proved and axiom-clean.
 
 | # | Contribution | Proved? | Blocks us? |
@@ -7,15 +11,21 @@ Drafts only — nothing here has been submitted. All four are now proved and axi
 | [1](PR1-exists_sq_eq_neg_three_iff.md) | `ZMod.exists_sq_eq_neg_three_iff` — `−3` is a QR mod `p` iff `p ≡ 1 mod 3` | Yes, axiom-clean | No |
 | [2](PR2-jacobiSym-discriminant-periodicity.md) | `J(D \| ·)` has period `\|D\|` for `D ≡ 0, 1 mod 4` | Yes, axiom-clean, pure Mathlib | No |
 | [3](PR3-binary-quadratic-forms-reduction.md) | Gauss reduction theory of binary quadratic forms (a series) | Yes, axiom-clean | No |
-| 4 | `Zsqrtd.prime_of_norm_prime` — an element of `ℤ√d` whose norm is a rational prime is prime | Yes, axiom-clean (for `ℤ[i]`) | No |
+| 4 | `Zsqrtd.prime_of_norm_prime` — an element of `ℤ[i]` whose norm is a rational prime is prime | Yes, axiom-clean (`ℤ[i]` only — see correction) | No |
 
-**PR4 (new, small).** While proving Cox's Proposition 4.18 we needed "norm is a rational
+**PR4 (small).** While proving Cox's Proposition 4.18 we needed "norm is a rational
 prime ⟹ the element is prime" for `ℤ[i]` and found Mathlib has no such lemma, despite
 having the `EuclideanDomain ℤ[i]` instance and `Zsqrtd.norm_eq_one_iff'` next door. Our
 proof (`PrimesX2NY2/PartI_Forms/BiquadraticReciprocity.lean`, `prime_of_norm_prime`) is
-six lines over `irreducible_iff_prime` plus multiplicativity of the norm, and generalizes
-verbatim to any `ℤ√d` with `d ≤ 0`. Natural home:
-`Mathlib/NumberTheory/Zsqrtd/Basic.lean`, beside `norm_eq_one_iff'`.
+six lines over `irreducible_iff_prime` plus multiplicativity of the norm.
+
+**Correction.** An earlier version of this file claimed the proof "generalizes verbatim to
+any `ℤ√d` with `d ≤ 0`. That is false. `irreducible_iff_prime` needs a
+`[DecompositionMonoid]` instance, which `ℤ[i]` has (via `EuclideanDomain → PID → UFD`) but
+a general `ℤ√d` does not — and this project itself supplies the counterexample: `ex_4_6_b`
+proves `2` is irreducible but not prime in `ℤ[√−3]`, so that ring is not a UFD. The
+correct scope is `ℤ[i]`, or any `ℤ√d` known to be a UFD. Whether the *statement* still
+holds in non-UFD cases is a separate question, not settled here.
 
 ## The honest summary
 
