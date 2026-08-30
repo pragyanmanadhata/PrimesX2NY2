@@ -1,5 +1,7 @@
 # Mathlib PR draft #2 — sharp periodicity of `J(D | ·)` for discriminants
 
+[Design notes](PR2-NOTES.md) · [Contribution overview](README.md)
+
 **Status:** Draft; not submitted. The project proves the result as
 `PrimesX2NY2.PartI.S1.mod_right_of_discr` in
 `PrimesX2NY2/PartI_Forms/Exercises/S1.lean`; `ex_1_11` restates it with explicit binders.

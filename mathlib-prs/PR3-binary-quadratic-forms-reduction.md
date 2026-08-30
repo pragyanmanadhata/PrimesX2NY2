@@ -1,9 +1,11 @@
 # Mathlib PR draft #3 — Gauss reduction theory of binary quadratic forms
 
+[Design notes](PR3-NOTES.md) · [Contribution overview](README.md)
+
 **Status:** Draft; not submitted. The proposed results are proved in
 `PrimesX2NY2/PartI_Forms/Forms.lean` without `sorryAx` dependencies. The contribution
 would add definitions, equivalence, reduction, and finiteness results across a series
-of PRs. Its design needs discussion and human review before submission.
+of PRs. Its design needs discussion; independent review takes place during the PR process.
 
 ## Titles (a series, in dependency order)
 

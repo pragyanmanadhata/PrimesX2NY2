@@ -1,5 +1,7 @@
 # Mathlib PR draft #1 — `ZMod.exists_sq_eq_neg_three_iff`
 
+[Design notes](PR1-NOTES.md) · [Contribution overview](README.md)
+
 **Status:** Draft; not submitted. The project proves the result as
 `PrimesX2NY2.Fermat.neg_three_isSquare_iff` in `PrimesX2NY2/PartI_Forms/Fermat.lean`,
 with no `sorryAx` dependency. `PrimesX2NY2.PartI.S1.neg_three_isSquare_iff`

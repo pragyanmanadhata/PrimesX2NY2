@@ -1,19 +1,26 @@
 # Mathlib contribution drafts
 
-[AI-DISCLOSURE-AND-DECISIONS.md](AI-DISCLOSURE-AND-DECISIONS.md) records the provenance,
-design choices, and submission requirements for these proposals. The quoted Mathlib
-policy requires disclosure of AI use and an unaided understanding of each design decision.
+This folder collects possible Mathlib contributions from my Lean formalization
+of Cox's *Primes of the Form x² + ny²*. The drafts and notes describe the
+proposed results, their proof status, and the choices behind their interfaces.
+
+I led the mathematical work and Lean development, choosing the statements,
+proofs, and interfaces. Claude (Fable/Opus 5) provided practical assistance and
+refinement through ongoing discussion.
+
+Mathlib's [contribution guidance](https://leanprover-community.github.io/contribute/index.html)
+describes the submission process.
 
 Nothing here has been submitted. All four proposals have supporting proofs in this
-project with no `sorryAx` dependency. That verification does not establish that the
-drafts are ready for upstream review; API choices, placement, and human review remain.
+project with no `sorryAx` dependency. API choices and placement still need discussion.
+Independent review takes place during the PR process, before merging.
 
-| # | Contribution | In-project verification | Needed to continue? |
-|---|---|---|---|
-| [1](PR1-exists_sq_eq_neg_three_iff.md) | `ZMod.exists_sq_eq_neg_three_iff` — `−3` is a square mod a prime `p ≠ 2, 3` iff `p ≡ 1 mod 3` | Proved; no `sorryAx` | No |
-| [2](PR2-jacobiSym-discriminant-periodicity.md) | `J(D \| ·)` has period `\|D\|` on odd arguments for `D ≡ 0, 1 mod 4` | Proved using only Mathlib; no `sorryAx` | No |
-| [3](PR3-binary-quadratic-forms-reduction.md) | Gauss reduction theory of binary quadratic forms (a series) | Proposed results proved; no `sorryAx` | No |
-| 4 | `Zsqrtd.prime_of_norm_prime` — an element of `ℤ[i]` whose norm is a rational prime is prime | Proved for `ℤ[i]`; no `sorryAx` (see correction) | No |
+| # | Contribution | In-project verification | Needed to continue? | Notes |
+|---|---|---|---|---|
+| [1](PR1-exists_sq_eq_neg_three_iff.md) | `ZMod.exists_sq_eq_neg_three_iff` — `−3` is a square mod a prime `p ≠ 2, 3` iff `p ≡ 1 mod 3` | Proved; no `sorryAx` | No | [PR1 notes](PR1-NOTES.md) |
+| [2](PR2-jacobiSym-discriminant-periodicity.md) | `J(D \| ·)` has period `\|D\|` on odd arguments for `D ≡ 0, 1 mod 4` | Proved using only Mathlib; no `sorryAx` | No | [PR2 notes](PR2-NOTES.md) |
+| [3](PR3-binary-quadratic-forms-reduction.md) | Gauss reduction theory of binary quadratic forms (a series) | Proposed results proved; no `sorryAx` | No | [PR3 notes](PR3-NOTES.md) |
+| 4 | `Zsqrtd.prime_of_norm_prime` — an element of `ℤ[i]` whose norm is a rational prime is prime | Proved for `ℤ[i]`; no `sorryAx` (see correction) | No | [PR4 notes](PR4-NOTES.md) |
 
 **PR4.** Cox's Proposition 4.18 uses "norm is a rational prime ⟹ the element is prime"
 for `ℤ[i]`. The pinned Mathlib revision has the `EuclideanDomain ℤ[i]` instance and
@@ -64,21 +71,3 @@ statements as explicit `sorry`-bodied theorems rather than adding axioms, as des
 in [CONVENTIONS.md](../CONVENTIONS.md).
 Any work on these larger dependencies needs a separate scope from the four
 contributions listed here.
-
-## Preparation for submission
-
-PR1 is a small candidate for initial review: a single lemma intended to fit the
-family in `Mathlib/NumberTheory/LegendreSymbol/QuadraticReciprocity.lean`. Its draft
-still raises questions about placement, hypotheses, and a possible finite-field
-generalization. The submitter also needs to complete the review and disclosure
-checklist in the decision record.
-
-PR2's proof was developed in a file importing only `Mathlib`. It has no project
-dependencies, but its statement, helper lemmas, and namespace assumptions still
-need review in the target file.
-
-PR3 needs a design discussion in `#mathlib4` on Zulip before a code submission.
-The main questions are whether `BinaryQuadraticForm` should be a standalone
-structure or a layer over `QuadraticForm`, and how the `SL₂(ℤ)` action should
-compose. Its proposed series begins with definitions and equivalence; reduction
-would follow once those conventions are settled.
