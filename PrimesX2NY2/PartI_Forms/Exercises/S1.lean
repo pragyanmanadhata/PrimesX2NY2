@@ -9,15 +9,16 @@ import PrimesX2NY2.PartI_Forms.Fermat
 /-!
 # Part I, §1 - Exercises
 
-Faithful `sorry`-bodied statements of the exercises of Cox §1 (Exercises 1.1-1.16).
-Cited by number only; statements are paraphrased.
+Statements and proofs for the exercises of Cox §1 (Exercises 1.1-1.16).
+Statements are paraphrased and cited by exercise number.
 
 A handful of sub-parts (1.12(b), 1.12(c), 1.16) are recorded in the blueprint as
-`\notready` flagged nodes rather than Lean signatures - see the FLAG LIST in the
-project report - because a faithful self-contained statement requires fixing a
-specific homomorphism / subgroup that the exercise only pins down implicitly.
+`\notready` nodes without Lean signatures. These parts require a choice of
+homomorphism or subgroup that the exercise leaves implicit.
 
-**Scaffold only:** every proof is `sorry`.
+The remaining `sorry` proofs are in three statements with missing hypotheses:
+Exercises 1.8, 1.10(b), and 1.13(a). Their limitations and corrected results are
+documented alongside them.
 -/
 
 namespace PrimesX2NY2.PartI.S1
@@ -180,8 +181,9 @@ theorem ex_1_4_b (p : ℕ) (hp : p.Prime) (hodd : Odd p) (x y : ℤ)
     have hmod : p % 3 = 1 := (PrimesX2NY2.Fermat.neg_three_isSquare_iff p hodd hp3).mp hsq
     exact (PrimesX2NY2.Fermat.prime_sq_add_three_sq p hp hlt).mpr hmod
 
-/-- Helper: `−3` is a quadratic residue mod an odd prime `p ≠ 3` iff `p ≡ 1 (mod 3)`.
-Proved in `PrimesX2NY2.Fermat`; Mathlib has only the `−1`, `2`, `−2` cases. -/
+/-- `−3` is a quadratic residue mod an odd prime `p ≠ 3` iff `p ≡ 1 (mod 3)`.
+This uses the result in `PrimesX2NY2.Fermat`; the pinned Mathlib version supplies
+the corresponding `−1`, `2`, and `−2` cases. -/
 theorem neg_three_isSquare_iff (p : ℕ) [Fact p.Prime] (hodd : Odd p) (hp3 : p ≠ 3) :
     IsSquare ((-3 : ℤ) : ZMod p) ↔ p % 3 = 1 :=
   PrimesX2NY2.Fermat.neg_three_isSquare_iff p hodd hp3
@@ -225,13 +227,12 @@ theorem ex_1_8 (p q : ℕ) (hp : p.Prime) [Fact q.Prime] (hq : q ≠ 2) :
     legendreSym q ((-1) ^ ((p - 1) / 2) * (p : ℤ)) = 1
       ↔ ∃ β : ℤ, Odd β ∧
           ((p : ℤ) ≡ β ^ 2 [ZMOD (4 * q)] ∨ (p : ℤ) ≡ -β ^ 2 [ZMOD (4 * q)]) := by
-  -- FLAG (under-hypothesized): FALSE as stated, in two independent ways.
-  -- (i) p = 2 with q ≡ ±1 (mod 8) (smallest q = 7): the left side is
-  --     legendreSym 7 2 = 1, but the right side is unsatisfiable, since β odd makes
-  --     ±β² − 2 odd and hence never divisible by the even modulus 4q.
-  -- (ii) p = q: the left side is 0, while the right side holds with β = q.
-  -- With p odd and p ≠ q the ± statement is correct (checked numerically for all
-  -- odd p ≠ q < 120). See `ex_1_8_FALSE` for a machine-checked instance of (i).
+  -- This signature is false without `Odd p` and `p ≠ q`.
+  -- At `p = 2`, `q = 7`, the symbol is `1`, but odd `β` makes `±β² − 2` odd,
+  -- so the congruence modulo `4q` cannot hold. At `p = q`, the symbol is `0`
+  -- while the right side holds with `β = q`.
+  -- The version with distinct odd primes was checked numerically for primes
+  -- below 120; that check is not a proof. `ex_1_8_FALSE` proves the first counterexample.
   sorry
 
 private theorem ne0_2_7 : ((2 : ℤ) : ZMod 7) ≠ 0 := by decide
@@ -243,8 +244,8 @@ local instance factSeven : Fact (Nat.Prime 7) := ⟨by norm_num⟩
 private theorem leg7_two : legendreSym 7 2 = 1 :=
   (legendreSym.eq_one_iff 7 ne0_2_7).mpr sq2_7
 
-/-- Cox (1.13) as literally stated in `ex_1_8` is FALSE: it fails at `p = 2`, `q = 7`
-(and also whenever `p = q`). -/
+/-- The signature of `ex_1_8` fails at `p = 2`, `q = 7` because it omits the
+oddness hypothesis from the intended use of Cox (1.13). It also fails when `p = q`. -/
 theorem ex_1_8_FALSE :
     ¬ (∀ (p q : ℕ), p.Prime → ∀ [Fact q.Prime], q ≠ 2 →
         (legendreSym q ((-1) ^ ((p - 1) / 2) * (p : ℤ)) = 1
@@ -305,11 +306,11 @@ theorem ex_1_10_a (M N : ℤ) (m : ℕ) (h : M ≡ N [ZMOD m]) :
 theorem ex_1_10_b (M N : ℤ) (m n : ℕ) :
     jacobiSym (M * N) m = jacobiSym M m * jacobiSym N m ∧
       jacobiSym M (m * n) = jacobiSym M m * jacobiSym M n := by
-  -- FLAG (under-hypothesized): the second conjunct is FALSE for m = 0 or n = 0, since
-  -- Mathlib defines `jacobiSym a 0 = 1`: with M = N = 2, m = 3, n = 0 the LHS is
-  -- `jacobiSym 2 0 = 1` while the RHS is `jacobiSym 2 3 * jacobiSym 2 0 = -1`.
-  -- Cox implicitly takes the moduli positive (indeed odd). The salvageable statements
-  -- are `ex_1_10_b_left` and `ex_1_10_b_right` below.
+  -- The second conjunct can fail when a modulus is zero, since Mathlib defines
+  -- `jacobiSym a 0 = 1`. For `M = N = 2`, `m = 3`, `n = 0`, its two sides are
+  -- `1` and `-1`. Cox works with positive odd moduli.
+  -- See `ex_1_10_b_left` and `ex_1_10_b_right` for the valid statements, with
+  -- nonzero moduli required for multiplication in the denominator.
   sorry
 
 /-- The first conjunct of Exercise 1.10(b), which holds unconditionally
@@ -506,7 +507,7 @@ private theorem modeq_of_zmod {D : ℤ} {N : ℕ} (hDN : D ∣ (N : ℤ)) {a b :
   have h1 : a ≡ b [MOD N] := (ZMod.natCast_eq_natCast_iff _ _ _).mp h
   exact Int.modEq_iff_dvd.mpr (hDN.trans h1.dvd)
 
-/-! ### Target 2 -/
+/-! ### The quadratic character on units -/
 
 private def jacUnit (D : ℤ) (k : ℕ) : ℤˣ :=
   if jacobiSym D k = -1 then -1 else 1
@@ -580,15 +581,14 @@ theorem ex_1_12_a (D : ℤ) (hD0 : D ≠ 0) (hD4 : D % 4 = 0 ∨ D % 4 = 1) :
   refine modeq_of_zmod hDN ?_
   rw [oddRep_cast, ZMod.coe_unitOfCoprime]
 
-/-! ### Target 3 -/
+/-! ### Reciprocity and its supplements -/
 
 /-- **Exercise 1.13(a).** Quadratic reciprocity, assuming Lemma 1.14. -/
 theorem ex_1_13_a (p q : ℕ) [Fact p.Prime] [Fact q.Prime] (hp : p ≠ 2) (hq : q ≠ 2) :
     legendreSym p (q : ℤ) * legendreSym q (p : ℤ) = (-1) ^ (p / 2 * (q / 2)) := by
-  -- FLAG (under-hypothesized): FALSE for p = q, since legendreSym p p = 0 while the RHS is +/-1.
-  -- Mathlib's legendreSym.quadratic_reciprocity requires the missing hypothesis `p ≠ q`.
-  -- See `ex_1_13_a_FALSE` for a proof that the stated form fails, and `ex_1_13_a_fixed`
-  -- for the faithful version.
+  -- This signature fails at `p = q`: the left side is `0`, while the right side is `±1`.
+  -- Mathlib's `legendreSym.quadratic_reciprocity` requires `p ≠ q`.
+  -- `ex_1_13_a_FALSE` proves the failure, and `ex_1_13_a_fixed` includes the missing hypothesis.
   sorry
 
 /-- Exercise 1.13(a) as stated is false: at `p = q = 3` the left side is `0`. -/
@@ -604,7 +604,8 @@ theorem ex_1_13_a_FALSE :
   rw [hz, mul_zero] at h3
   norm_num at h3
 
-/-- **Exercise 1.13(a)**, faithful form: quadratic reciprocity for *distinct* odd primes. -/
+/-- **Exercise 1.13(a)** with the missing hypothesis: quadratic reciprocity for
+distinct odd primes. -/
 theorem ex_1_13_a_fixed (p q : ℕ) [Fact p.Prime] [Fact q.Prime] (hp : p ≠ 2) (hq : q ≠ 2)
     (hpq : p ≠ q) :
     legendreSym p (q : ℤ) * legendreSym q (p : ℤ) = (-1) ^ (p / 2 * (q / 2)) := by
@@ -676,7 +677,5 @@ theorem ex_1_15 :
       rw [jacobiSym.mod_right (-21 : ℤ) hodd, h84]
     rw [← legendreSym.eq_one_iff p hne0, jacobiSym.legendreSym.to_jacobiSym p (-21), hmr, hval]
     exact ⟨Or.inr, fun h => h.resolve_left hnot2⟩
-
-/-! ## Target 3 : ex_1_8 is FALSE as stated -/
 
 end PrimesX2NY2.PartI.S1

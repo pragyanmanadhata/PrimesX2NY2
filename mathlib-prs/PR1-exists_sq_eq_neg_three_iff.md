@@ -1,10 +1,10 @@
 # Mathlib PR draft #1 — `ZMod.exists_sq_eq_neg_three_iff`
 
-**Status:** DRAFT — not submitted. Statement is proved and axiom-clean in this project
-as `PrimesX2NY2.Fermat.neg_three_isSquare_iff` (`PrimesX2NY2/PartI_Forms/Fermat.lean`);
-`PrimesX2NY2.PartI.S1.neg_three_isSquare_iff` re-exports it. Downstream it closes
-`prime_sq_add_three_sq` (`p = x² + 3y²` iff `p ≡ 1 mod 3`) and Cox Exercises 1.5,
-1.9(a), 1.4(b) — i.e. it is genuinely load-bearing, not an isolated curiosity.
+**Status:** Draft; not submitted. The project proves the result as
+`PrimesX2NY2.Fermat.neg_three_isSquare_iff` in `PrimesX2NY2/PartI_Forms/Fermat.lean`,
+with no `sorryAx` dependency. `PrimesX2NY2.PartI.S1.neg_three_isSquare_iff`
+re-exports it. It is used in `prime_sq_add_three_sq` (`p = x² + 3y²` iff
+`p ≡ 1 mod 3`) and Cox Exercises 1.5, 1.9(a), and 1.4(b).
 
 ## Title
 
@@ -14,13 +14,12 @@ as `PrimesX2NY2.Fermat.neg_three_isSquare_iff` (`PrimesX2NY2/PartI_Forms/Fermat.
 
 `Mathlib/NumberTheory/LegendreSymbol/QuadraticReciprocity.lean`, in the existing
 `namespace ZMod` block of the `Values` section — immediately after
-`exists_sq_eq_neg_two_iff` (currently line 80–83), so the four small-value
-characterizations sit together.
+`exists_sq_eq_neg_two_iff`, so the four small-value characterizations sit together.
 
 ## Motivation
 
-Mathlib already characterizes when the "small" values are quadratic residues mod an
-odd prime:
+The pinned Mathlib revision characterizes several small quadratic residues modulo
+an odd prime:
 
 | value | lemma | location |
 |---|---|---|
@@ -29,13 +28,12 @@ odd prime:
 | `-2` | `ZMod.exists_sq_eq_neg_two_iff (hp : p ≠ 2) : IsSquare (-2 : ZMod p) ↔ p % 8 = 1 ∨ p % 8 = 3` | `QuadraticReciprocity.lean:80` |
 | `-3` | **missing** | — |
 
-`-3` is the conspicuous omission. It is the discriminant case governing the
+The corresponding result for `-3` is missing. This discriminant case is used for the
 Eisenstein integers `ℤ[ω]`, the representation `p = x² + 3y²`, cubic reciprocity,
-and (via `p ≡ 1 mod 3`) the theory of cubic residues. Anyone formalizing that
-material must re-derive it from `legendreSym.quadratic_reciprocity'` by hand, as we
-did.
+and (via `p ≡ 1 mod 3`) the theory of cubic residues. This project derives it from
+`legendreSym.quadratic_reciprocity'`.
 
-The corresponding `FiniteField.isSquare_neg_three_iff` does not exist either;
+The pinned revision also lacks `FiniteField.isSquare_neg_three_iff`;
 `-1`, `2`, `-2` all have `FiniteField.isSquare_*_iff` counterparts
 (`FiniteField.isSquare_two_iff`, `FiniteField.isSquare_neg_two_iff`). A reviewer may
 prefer the general finite-field version first, with the `ZMod p` statement derived
@@ -61,11 +59,13 @@ The supplementary law gives `(-1/p) = (-1)^(p/2)`. The two sign factors multiply
 `(-1)^(2·(p/2)) = 1`, so `(-3/p) = (p/3)`. Finally `(p/3) = 1` iff `p ≡ 1 mod 3`
 and `= -1` iff `p ≡ 2 mod 3`, by `decide` on `ZMod 3`.
 
-## Proof (verified against Mathlib pinned at Lean v4.31.0)
+## Proof
 
-This is the project's `neg_three_isSquare_iff` with hypotheses restated in the
-`ZMod` house style (`p ≠ 2` in place of `Odd p`). `#print axioms` reports exactly
-`[propext, Classical.choice, Quot.sound]`.
+The project proof was verified with Lean v4.31.0 and the pinned Mathlib revision;
+its `#print axioms` check reports `[propext, Classical.choice, Quot.sound]`.
+The version below restates the hypotheses in the style of the neighbouring `ZMod`
+lemmas, using `p ≠ 2` in place of `Odd p`. The adapted statement, casts, and proof
+still need checking in the proposed target file.
 
 ```lean
 /-- `-3` is a square modulo a prime `p ≠ 2, 3` iff `p` is congruent to `1` mod `3`. -/
@@ -111,7 +111,7 @@ theorem exists_sq_eq_neg_three_iff (hp2 : p ≠ 2) (hp3 : p ≠ 3) :
     omega
 ```
 
-Only pre-existing Mathlib API is used: `legendreSym.eq_one_iff`,
+The proof uses existing Mathlib declarations: `legendreSym.eq_one_iff`,
 `legendreSym.eq_neg_one_iff`, `legendreSym.mul`, `legendreSym.at_neg_one`,
 `legendreSym.quadratic_reciprocity'`, `ZMod.χ₄_eq_neg_one_pow`,
 `ZMod.intCast_zmod_eq_zero_iff_dvd`, `ZMod.natCast_mod`, and the global instance
@@ -129,4 +129,4 @@ Only pre-existing Mathlib API is used: `legendreSym.eq_one_iff`,
    Two separate hypotheses (as here) or a single `3 < p`?
 3. **Naming.** `exists_sq_eq_neg_three_iff` follows the existing family, though the
    `exists_sq_eq_` prefix is now a slight misnomer for an `IsSquare` statement — the
-   whole family shares that, so consistency seems right.
+   proposed name keeps the family consistent.

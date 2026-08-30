@@ -11,12 +11,13 @@ import PrimesX2NY2.PartI_Forms.Forms
 
 Cox, *Primes of the Form x² + ny²*, §1.
 
-The first representation theorems, Euler's Descent and Reciprocity Steps, the
-key Lemmas 1.4 and 1.7, quadratic reciprocity (Euler's form and the Legendre
-form), and the character-theoretic Lemma 1.14 / Corollary 1.19 that solve the
-Reciprocity Step by congruences.
+Representation by `x² + ny²` for `n = 1, 2, 3`, Euler's descent, Lemmas 1.4 and
+1.7, and quadratic reciprocity in its Euler and Legendre forms. Lemma 1.14 and
+Corollary 1.19 describe the reciprocity step in terms of congruence classes.
 
-**Scaffold only:** every proof is `sorry`.
+The representation and descent results are proved, as are Legendre reciprocity
+and its supplements. Euler's formulation, Lemma 1.14, and Corollary 1.19 still
+have `sorry` proofs.
 -/
 
 namespace PrimesX2NY2.Fermat
@@ -50,9 +51,9 @@ theorem prime_sq_add_sq (p : ℕ) (hp : p.Prime) (hodd : Odd p) :
 
 /-- `−3` is a quadratic residue mod an odd prime `p ≠ 3` iff `p ≡ 1 (mod 3)`.
 
-This is not in Mathlib (which has the `−1`, `2`, `−2` characterizations only); it is
-derived here from quadratic reciprocity. Drafted for upstreaming as
-`ZMod.exists_sq_eq_neg_three_iff` — see `mathlib-prs/`. -/
+The pinned Mathlib version supplies the analogous `−1`, `2`, and `−2` criteria.
+The `−3` case follows here from quadratic reciprocity; an upstream draft named
+`ZMod.exists_sq_eq_neg_three_iff` is in `mathlib-prs/`. -/
 theorem neg_three_isSquare_iff (p : ℕ) [Fact p.Prime] (hodd : Odd p) (hp3 : p ≠ 3) :
     IsSquare ((-3 : ℤ) : ZMod p) ↔ p % 3 = 1 := by
   have hp : p.Prime := Fact.out
@@ -427,7 +428,7 @@ theorem descent_step (p : ℕ) (hp : p.Prime) (hodd : Odd p) (x y : ℤ)
 
 /-- **Lemma 1.4.** If `N` is a sum of two relatively prime squares and the prime
 `q = x²+y²` divides `N`, then `N/q` is again a sum of two relatively prime
-squares. This is the inductive heart of the Descent Step. -/
+squares. This gives the induction step in the descent argument. -/
 theorem descent_lemma (N a b x y : ℤ) (q : ℕ) (hq : q.Prime)
     (hN : N = a ^ 2 + b ^ 2) (hcop : IsCoprime a b)
     (hqf : (q : ℤ) = x ^ 2 + y ^ 2) (hdvd : (q : ℤ) ∣ N) :
@@ -583,9 +584,8 @@ theorem legendreSym_first_supplement (p : ℕ) [Fact p.Prime] (hp : p ≠ 2) :
 /-- **Second supplement** to quadratic reciprocity: `(2/p) = (−1)^((p²−1)/8)`.
 (A standard supplement used in §1; *not* part of Cox's numbered (1.11).)
 
-Proof: rewrite `(2/p) = χ₈ p` via `legendreSym.at_two`, then bridge to the closed
-form `(−1)^((p²−1)/8)` by a `Nat`-division parity argument on `(p²−1)/8`,
-reducing to the residue of `p` modulo 16. -/
+Rewrite `(2/p) = χ₈ p` using `legendreSym.at_two`, then check the parity of
+`(p²−1)/8` according to the residue of `p` modulo 16. -/
 theorem legendreSym_second_supplement (p : ℕ) [Fact p.Prime] (hp : p ≠ 2) :
     legendreSym p 2 = (-1) ^ ((p ^ 2 - 1) / 8) := by
   rw [ legendreSym.at_two hp ];

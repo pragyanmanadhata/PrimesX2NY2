@@ -31,14 +31,15 @@ import PrimesX2NY2.PartIII_ComplexMultiplication.WeberFunctions
 /-!
 # Primes of the Form `x² + ny²`
 
-A Lean 4 + Mathlib formalization project following David A. Cox,
+A Lean 4 formalization using Mathlib, following David A. Cox,
 *Primes of the Form x² + ny²: Fermat, Class Field Theory, and Complex
 Multiplication* (2nd ed., Wiley, 2013).
 
-This root module imports every chapter so that `lake build` and the blueprint's
-`checkdecls` see all declarations. The project is currently a **scaffold**: every
-statement is present with a Mathlib-style signature and a `sorry` body.
+This root module imports every chapter for `lake build` and the blueprint's
+`checkdecls`. Part I includes proofs of reduction, Dirichlet composition, and
+several representation theorems. Genus theory, higher reciprocity, and Parts II
+and III still contain unfinished definitions and `sorry` proofs.
 
-See `blueprint/` for the LaTeX blueprint encoding the dependency DAG, and
+See `blueprint/` for the mathematical outline and dependency graph, and
 `ROADMAP.md` for the Mathlib audit.
 -/

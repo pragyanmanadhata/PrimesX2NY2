@@ -15,7 +15,9 @@ Proper equivalence classes of primitive positive definite forms of a fixed
 discriminant `D < 0` form a finite abelian group `C(D)` under Dirichlet
 composition.
 
-**Scaffold only:** every proof is `sorry`.
+This file constructs the quotient and proves the arithmetic lemmas for Dirichlet
+composition, including Proposition 3.8. The group law and its proofs are in
+`Genus.lean`; the finiteness statement here still has a `sorry` proof.
 -/
 
 namespace PrimesX2NY2.Forms
@@ -90,9 +92,9 @@ theorem two_dvd_sub_of_four_dvd_sq_sub_sq (b b' : ℤ) (h : (4:ℤ) ∣ (b^2 - b
   · exact h3
   · obtain ⟨k, hk⟩ := h3; exact ⟨k - b', by linarith⟩
 
-/-- **Uniqueness** for the simultaneous congruences of Lemma 3.5: under the same
-Bézout/coprimality hypothesis the solution of `pᵢ B ≡ qᵢ (mod m)` is unique modulo
-`m`. (The uniqueness half of Cox's Lemma 3.5; consumed by Lemma 3.2.) -/
+/-- Uniqueness for the simultaneous congruences of Lemma 3.5: under the same
+coprimality hypothesis, the solution of `pᵢ B ≡ qᵢ (mod m)` is unique modulo `m`.
+This is the uniqueness part of Cox's Lemma 3.5, used in Lemma 3.2. -/
 theorem simultaneous_congruence_unique (r : ℕ) (p q : Fin r → ℤ) (m : ℤ)
     (hcop : ∃ (t : Fin r → ℤ) (s : ℤ), s * m + ∑ i, t i * p i = 1)
     (B B' : ℤ) (hB : ∀ i, p i * B ≡ q i [ZMOD m]) (hB' : ∀ i, p i * B' ≡ q i [ZMOD m]) :
@@ -270,11 +272,11 @@ theorem lemma_3_2 (a b c a' b' c' D : ℤ)
     · exact f2
   exact (simultaneous_congruence_unique 3 p q m hbez B B' hBlin hB'lin).symm
 
-/-- **Three-way common middle coefficient.** Iterating Lemma 3.2 gives one `B` congruent to
-the middle coefficients of three equal-discriminant forms modulo their respective `2aᵢ`, when
-their leading coefficients are pairwise coprime. The second application uses the intermediate
-form of leading coefficient `a₁a₂`; its congruence modulo `2a₁a₂` weakens to the first two
-moduli. This is the arithmetic core of Dirichlet's united-forms associativity argument. -/
+/-- Three forms with equal discriminant and pairwise coprime leading coefficients
+have a common middle coefficient `B` modulo their respective `2aᵢ`.
+Apply Lemma 3.2 twice, using an intermediate form with leading coefficient `a₁a₂`;
+the resulting congruence modulo `2a₁a₂` implies the first two congruences.
+This supplies the common coefficient for Dirichlet's proof of associativity. -/
 theorem exists_commonB_three (a1 b1 c1 a2 b2 c2 a3 b3 c3 D : ℤ)
     (h1 : b1 ^ 2 - 4 * a1 * c1 = D)
     (h2 : b2 ^ 2 - 4 * a2 * c2 = D)
@@ -311,8 +313,8 @@ theorem exists_commonB_three (a1 b1 c1 a2 b2 c2 a3 b3 c3 D : ℤ)
   · exact (hBB12.of_dvd ⟨a1, by ring⟩).trans hB122
   · simpa [mul_assoc] using hBsq
 
-/-- Materialize the common final coefficient in a united triple. The square congruence supplied
-by `exists_commonB_three` says exactly that the Euclidean division is exact. -/
+/-- The square congruence from `exists_commonB_three` gives an integer final
+coefficient for the united triple: division by `4a₁a₂a₃` is exact. -/
 theorem commonC_three (a1 a2 a3 B D : ℤ)
     (hsq : B ^ 2 ≡ D [ZMOD 4 * a1 * a2 * a3]) :
     let C := (B ^ 2 - D) / (4 * a1 * a2 * a3)
@@ -430,7 +432,7 @@ theorem dirichletForm_primitive (f g : BinaryQF) (D : ℤ) (hf : f.discr = D) (h
   set B := dirichletB f g with hBdef
   set C := (dirichletB f g ^ 2 - f.discr) / (4 * f.a * g.a) with hCdef
   have hdfg : f.discr = g.discr := by rw [hf, hg]
-  -- f-side
+  -- Translate `f` to the common middle coefficient `B`.
   obtain ⟨t1, ht1⟩ := Int.modEq_iff_dvd.mp (dirichletB_spec1 f g D hf hg hcop).symm  -- B - f.b = 2 f.a t1
   have hBt1 : B = f.b + 2 * f.a * t1 := by linarith [ht1]
   have hXt1 : g.a * C = f.a * t1 ^ 2 + f.b * t1 + f.c := by
@@ -440,7 +442,7 @@ theorem dirichletForm_primitive (f g : BinaryQF) (D : ℤ) (hf : f.discr = D) (h
       rw [hBt1, show f.discr = f.b ^ 2 - 4 * f.a * f.c from rfl]; ring
     exact mul_left_cancel₀ h4fa (e1.trans e2.symm)
   have P1 : Int.gcd (Int.gcd f.a B) (g.a * C) = 1 := prim_side f.a f.b f.c B (g.a * C) t1 hfp hBt1 hXt1
-  -- g-side
+  -- The same translation argument applies to `g`.
   obtain ⟨t2, ht2⟩ := Int.modEq_iff_dvd.mp (dirichletB_spec2 f g D hf hg hcop).symm  -- B - g.b = 2 g.a t2
   have hBt2 : B = g.b + 2 * g.a * t2 := by linarith [ht2]
   have hXt2 : f.a * C = g.a * t2 ^ 2 + g.b * t2 + g.c := by
@@ -450,7 +452,7 @@ theorem dirichletForm_primitive (f g : BinaryQF) (D : ℤ) (hf : f.discr = D) (h
       rw [hdfg, hBt2, show g.discr = g.b ^ 2 - 4 * g.a * g.c from rfl]; ring
     exact mul_left_cancel₀ h4ga (e1.trans e2.symm)
   have P2 : Int.gcd (Int.gcd g.a B) (f.a * C) = 1 := prim_side g.a g.b g.c B (f.a * C) t2 hgp hBt2 hXt2
-  -- prime argument
+  -- A prime dividing all three composite coefficients contradicts these two gcds.
   show Int.gcd (Int.gcd (f.a * g.a) B) C = 1
   by_contra hne
   obtain ⟨p, hp, hpe⟩ := Nat.exists_prime_and_dvd hne

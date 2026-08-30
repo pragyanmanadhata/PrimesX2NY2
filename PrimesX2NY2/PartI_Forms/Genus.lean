@@ -8,14 +8,19 @@ import PrimesX2NY2.PartI_Forms.FormClassGroup
 import PrimesX2NY2.PartI_Forms.Fermat
 
 /-!
-# Part I, Chapter 4 - Genus theory and representation
+# Part I, Chapters 2-3 - Representation, composition, and genus theory
 
-Cox, *Primes of the Form x² + ny²*, §3 (genus theory).
+Cox, *Primes of the Form x² + ny²*, §2-3.
 
-Genus theory partitions the form class group; the principal genus is the subgroup
-of squares, and genus characters decide which primes a form represents.
+Representation criteria, direct composition, and the commutative group structure
+on proper classes of positive definite forms. The later genus results describe
+representation by forms within a genus; genus alone does not distinguish the
+individual classes in general.
 
-**Scaffold only:** every proof is `sorry`.
+The composition and group-law proofs are complete. The genus definitions, some
+representation statements, and the count in Proposition 3.11 still contain
+`sorry`. The unrestricted residue criterion below is known to need additional
+hypotheses; counterexamples and a corrected theorem are included.
 -/
 
 namespace PrimesX2NY2.Genus
@@ -44,12 +49,13 @@ def principalGenus (D : ℤ) : Set (ZMod D.natAbs) := sorry
 not dividing `D` is properly represented by some form of discriminant `D` iff `D`
 is a quadratic residue mod `p`.
 
-FLAG (under-hypothesized): FALSE as stated — it needs `D ≡ 0, 1 (mod 4)` and `Odd p`.
-See `properlyRepresents_iff_isSquare_counterexample` (D = 3, p = 11: no form has
-discriminant 3 at all) and `properlyRepresents_iff_isSquare_counterexample_two`
-(D = 5, p = 2), and `properlyRepresents_iff_isSquare_repaired` for the faithful form,
-all proved below. The forward direction needs no hypotheses at all:
-`properlyRepresents_isSquare_forward`. -/
+This statement is false without `D ≡ 0, 1 (mod 4)` and `Odd p`.
+The counterexamples below use `D = 3, p = 11` (no form has discriminant `3`) and
+`D = 5, p = 2`; see `properlyRepresents_iff_isSquare_counterexample` and
+`properlyRepresents_iff_isSquare_counterexample_two`.
+The corrected theorem is `properlyRepresents_iff_isSquare_repaired`.
+The forward direction needs no further hypotheses:
+`properlyRepresents_isSquare_forward'`. -/
 theorem properlyRepresents_iff_isSquare (D : ℤ) (p : ℕ) (hp : p.Prime)
     (hpD : ¬ (p : ℤ) ∣ D) :
     (∃ f : BinaryQF, f.discr = D ∧ ProperlyRepresents f p) ↔ IsSquare (D : ZMod p) := by
@@ -77,10 +83,10 @@ theorem properlyRepresents_iff_properlyEquivalent (f : BinaryQF) (m : ℤ) :
       simpa [BinaryQF.eval] using h.symm
     · exact ⟨M 1 1, -(M 0 1), by rw [Matrix.det_fin_two] at hdet; linear_combination hdet⟩
 
-/-- Per-prime foundation of Cox Lemma 2.25: a primitive form takes, at one of the
-coprime points `(1,0), (0,1), (1,1)`, a value not divisible by a given prime `p`
-(else `p` would divide `a`, `c`, and `a+b+c`, hence `b`, hence `gcd(a,b,c)=1`). The full
-Lemma 2.25 combines these per-prime witnesses across `p ∣ M` by CRT. -/
+/-- A primitive form has a value not divisible by `p` at one of the coprime
+points `(1,0), (0,1), (1,1)`. Otherwise `p` would divide `a`, `c`, and `a+b+c`,
+contradicting primitivity. Lemma 2.25 combines these choices for the prime factors
+of `M` by the Chinese remainder theorem. (Cox §2.) -/
 theorem represents_not_dvd_prime (f : BinaryQF) (hf : f.Primitive) (p : ℕ) (hp : p.Prime) :
     ∃ x y : ℤ, IsCoprime x y ∧ ¬ (p : ℤ) ∣ f.eval x y := by
   by_contra hcon
@@ -99,7 +105,7 @@ theorem represents_not_dvd_prime (f : BinaryQF) (hf : f.Primitive) (p : ℕ) (hp
   rw [hf] at hpc
   exact absurd (Nat.dvd_one.mp hpc) hp.one_lt.ne'
 
-/-- Values of `f` are congruent mod `p` when the inputs are (eval is a polynomial). -/
+/-- Congruent inputs give congruent values of a binary quadratic form. -/
 theorem eval_cong (f : BinaryQF) (x x' y y' p : ℤ) (hx : x ≡ x' [ZMOD p]) (hy : y ≡ y' [ZMOD p]) :
     f.eval x y ≡ f.eval x' y' [ZMOD p] := by
   simp only [BinaryQF.eval]
@@ -114,9 +120,9 @@ theorem coprime_of_all_primes (n M : ℤ) (h : ∀ p : ℕ, p.Prime → (p:ℤ) 
   have hpc : (p:ℤ) ∣ (Int.gcd n M : ℤ) := Int.natCast_dvd_natCast.mpr hpd
   exact h p hp (hpc.trans (Int.gcd_dvd_right n M)) (hpc.trans (Int.gcd_dvd_left n M))
 
-/-- The CRT core of Cox Lemma 2.25: a primitive form takes a value coprime to `M` (`M ≠ 0`),
-combining the per-prime witnesses `(1,0),(0,1),(1,1)` via the Chinese Remainder Theorem over
-the prime factors of `M`. -/
+/-- A primitive form takes a value coprime to any nonzero `M`. Apply the Chinese
+remainder theorem to the choices `(1,0), (0,1), (1,1)` for each prime factor of `M`.
+This is the congruence step in Cox's Lemma 2.25. -/
 theorem exists_eval_coprime (f : BinaryQF) (hf : f.Primitive) (M : ℤ) (hM : M ≠ 0) :
     ∃ x y : ℤ, IsCoprime (f.eval x y) M := by
   set wx : ℕ → ℕ := fun p => if (p:ℤ) ∣ f.a then (if (p:ℤ) ∣ f.c then 1 else 0) else 1 with hwxdef
@@ -130,18 +136,18 @@ theorem exists_eval_coprime (f : BinaryQF) (hf : f.Primitive) (M : ℤ) (hM : M 
   obtain ⟨kx, hkx⟩ := Nat.chineseRemainderOfList wx id M.natAbs.primeFactors.toList hpair
   obtain ⟨ky, hky⟩ := Nat.chineseRemainderOfList wy id M.natAbs.primeFactors.toList hpair
   refine ⟨(kx:ℤ), (ky:ℤ), coprime_of_all_primes _ M (fun p hp hpM hd => ?_)⟩
-  -- p ∈ primeFactors
+  -- A prime divisor of `M` occurs in the finite set used for CRT.
   have hpmem : p ∈ M.natAbs.primeFactors := by
     rw [Nat.mem_primeFactors]
     refine ⟨hp, ?_, Int.natAbs_ne_zero.mpr hM⟩
     have := Int.natAbs_dvd_natAbs.mpr hpM
     simpa using this
   have hmemL := Finset.mem_toList.mpr hpmem
-  -- congruences kx ≡ wx p, ky ≡ wy p (cast to ℤ)
+  -- Read the two CRT congruences in `ℤ`.
   have hkxp : (kx:ℤ) ≡ (wx p : ℤ) [ZMOD (p:ℤ)] := by exact_mod_cast hkx p hmemL
   have hkyp : (ky:ℤ) ≡ (wy p : ℤ) [ZMOD (p:ℤ)] := by exact_mod_cast hky p hmemL
   have hcong := eval_cong f (kx:ℤ) (wx p : ℤ) (ky:ℤ) (wy p : ℤ) (p:ℤ) hkxp hkyp
-  -- witness: ¬ p | f.eval (wx p) (wy p)
+  -- The chosen value at this prime is nonzero modulo `p`.
   have hwit : ¬ (p:ℤ) ∣ f.eval (wx p : ℤ) (wy p : ℤ) := by
     simp only [hwxdef, hwydef]
     by_cases ha : (p:ℤ) ∣ f.a
@@ -163,8 +169,9 @@ theorem exists_eval_coprime (f : BinaryQF) (hf : f.Primitive) (M : ℤ) (hM : M 
   have := dvd_add (Int.modEq_iff_dvd.mp hcong) hd
   simpa using this
 
-/-- **Lemma 2.25** (Cox §2). A primitive form `f` *properly* represents a value coprime to any
-`M ≠ 0` (the per-prime/CRT value, made proper by dividing out `gcd(x,y)`). (Cox §2, Exercise 2.18.) -/
+/-- **Lemma 2.25** (Cox §2, Exercise 2.18). A primitive form `f` properly represents
+a value coprime to any nonzero `M`. Divide the coordinates of the CRT construction
+by their gcd to obtain a proper representation. -/
 theorem lemma_2_25 (f : BinaryQF) (hf : f.Primitive) (M : ℤ) (hM : M ≠ 0) :
     ∃ x y : ℤ, IsCoprime x y ∧ IsCoprime (f.eval x y) M := by
   obtain ⟨x, y, hcop⟩ := exists_eval_coprime f hf M hM
@@ -195,7 +202,7 @@ theorem lemma_2_25 (f : BinaryQF) (hf : f.Primitive) (M : ℤ) (hM : M ≠ 0) :
 
 /-- **Concordance reduction** (Cox Thm 3.9). For a negative discriminant `D`, any primitive
 positive form `g` is properly equivalent to one whose leading coefficient is coprime to `f.a`
-— the prerequisite for Dirichlet composition. (Via Lemma 2.25 + Lemma 2.3.) -/
+as needed for Dirichlet composition. This follows from Lemmas 2.25 and 2.3. -/
 theorem concordance (f g : BinaryQF) (D : ℤ) (hD : D < 0)
     (hfa : 0 < f.a) (hg : g.discr = D) (hgp : g.Primitive) (hga : 0 < g.a) :
     ∃ g' : BinaryQF, ProperlyEquivalent g g' ∧ g'.discr = D ∧ g'.Primitive ∧ 0 < g'.a
@@ -218,19 +225,19 @@ theorem concordance (f g : BinaryQF) (D : ℤ) (hD : D < 0)
 /-- **Gauss composition identity** (Cox §3, (3.1)). For the concordant shapes
 `f = ⟨a, B, a'C⟩`, `g = ⟨a', B, aC⟩`, `F = ⟨a a', B, C⟩`, the bilinear substitution
 `X = x₁x₂ − C y₁y₂`, `Y = a x₁y₂ + a' x₂y₁ + B y₁y₂` realises `F` as the direct
-composition of `f` and `g`: `f(x₁,y₁)·g(x₂,y₂) = F(X,Y)`. (Pure polynomial identity.) -/
+composition of `f` and `g`: `f(x₁,y₁)·g(x₂,y₂) = F(X,Y)`. -/
 theorem dirichlet_compose_repr (a a' B C x₁ y₁ x₂ y₂ : ℤ) :
     (⟨a, B, a' * C⟩ : BinaryQF).eval x₁ y₁ * (⟨a', B, a * C⟩ : BinaryQF).eval x₂ y₂
       = (⟨a * a', B, C⟩ : BinaryQF).eval
           (x₁ * x₂ - C * y₁ * y₂) (a * x₁ * y₂ + a' * x₂ * y₁ + B * y₁ * y₂) := by
   simp only [BinaryQF.eval]; ring
 
-/-- **Representative-level Dirichlet composition** of `F, G : DiscrForms D` (`D < 0`):
-bring `G` to a form `g'` concordant with `F` (leading coeff coprime to `F.a`, via
-`concordance`), then take the Dirichlet composite `dirichletForm F.1 g'`, which is a
-primitive positive form of discriminant `D` by `prop_3_8`. The concordant choice is made by
-`Classical.choice`; well-definedness on classes (Cox Thm 3.9, deferred to the §7 ideal
-correspondence) would neutralise that choice. -/
+/-- Dirichlet composition on representatives `F, G : DiscrForms D`, for `D < 0`.
+Choose a representative `g'` of `G` whose leading coefficient is coprime to `F.a`,
+then form `dirichletForm F.1 g'`. Proposition 3.8 gives its primitivity, positivity,
+and discriminant. Independence of the choice is proved below in
+`concordant_choice_invariant_of_neg`; `composeForm_respects` descends it to classes.
+(Cox, Thm 3.9.) -/
 noncomputable def composeForm (D : ℤ) (hD : D < 0) (F G : DiscrForms D) : DiscrForms D :=
   let hc := concordance F.1 G.1 D hD F.2.2.2 G.2.1 G.2.2.1 G.2.2.2
   ⟨dirichletForm F.1 hc.choose,
@@ -305,9 +312,9 @@ theorem dirichletForm_principal_equiv (D : ℤ) (g' : BinaryQF) (hg : g'.discr =
     have hgd : g'.b ^ 2 - 4 * g'.a * g'.c = D := hg
     rw [hmul]; linarith
 
-/-- **Left identity (form level).** If `P` is the principal class, `composeForm D hD P F` is
-properly equivalent to `F`. Choice-robust: holds for the `Classical`-chosen concordant `g'`,
-since composing with the principal form is a translation. (Cox Thm 3.9, form-level identity.) -/
+/-- Composing a principal-form representative `P` with `F` gives a form properly
+equivalent to `F`. The composition is a translation for any chosen concordant
+representative. (Cox, Thm 3.9.) -/
 theorem composeForm_principal_left (D : ℤ) (hD : D < 0) (F P : DiscrForms D)
     (hP : P.1 = principalForm D) :
     ProperlyEquivalent (composeForm D hD P F).1 F.1 := by
@@ -323,8 +330,9 @@ theorem composeForm_principal_left (D : ℤ) (hD : D < 0) (F P : DiscrForms D)
     (dirichletForm_principal_equiv D g' hgd hga)
     (properlyEquivalent_equivalence.symm hgF)
 
-/-- Projection-friendly form of `translation_equiv`: two forms with equal nonzero leading
-coefficient, equal discriminant, and `g.b ≡ f.b (mod 2 f.a)` are properly equivalent. -/
+/-- A version of `translation_equiv` stated using the coefficient projections:
+two forms with equal nonzero leading coefficient, equal discriminant, and
+`g.b ≡ f.b (mod 2 f.a)` are properly equivalent. -/
 theorem translation_equiv_proj (f g : BinaryQF) (ha : f.a ≠ 0) (haa : f.a = g.a)
     (ht : 2 * f.a ∣ (g.b - f.b)) (hd : f.discr = g.discr) : ProperlyEquivalent f g := by
   obtain ⟨fa, fb, fc⟩ := f
@@ -351,18 +359,17 @@ theorem principal_of_a_one (D : ℤ) (f : BinaryQF) (hd : f.discr = D) (ha : f.a
   · rw [ha]; simpa using hpar
   · rw [hd, hpd]
 
--- **(3i) — concordant-choice invariance.** The Dirichlet composite `dirichletForm F.1 g'` is
--- independent (up to proper equivalence) of which concordant representative `g'` is chosen. This
--- is proved below as `concordant_choice_invariant_of_neg`, which carries the `hD : D < 0` that
--- Cox's Thm 3.9 ambient supplies; the hypothesis is genuinely needed (the minor machinery of Cox
--- Ex 3.1 requires `D ≠ 0`, cf. the `⟨1,0,0⟩` counterexample at `directlyComposes_minors`). The
--- earlier under-hypothesized `sorry` stub (Wave 20 FLAG) has been removed in favour of that form.
+-- Independence of the concordant representative is proved below as
+-- `concordant_choice_invariant_of_neg`. Its hypothesis `D < 0` comes from Cox's
+-- Theorem 3.9 and supplies the nonzero discriminant needed for the minor relations
+-- of Exercise 3.1; see the counterexample at `directlyComposes_minors`.
+-- This replaces an earlier statement that omitted the discriminant hypothesis.
 
 /-- **Direct composition** (Cox §3.A, (3.1)). `F` is the *direct composition* of `f` and `g`
 if there is an integral bilinear substitution `Bᵢ = aᵢxz+bᵢxw+cᵢyz+dᵢyw` with
 `f(x,y)·g(z,w) = F(B₁,B₂)`, whose leading-coefficient minors take the `+` sign of Gauss's
-formulas (3.1): `a₁b₂−a₂b₁ = f(1,0)`, `a₁c₂−a₂c₁ = g(1,0)`. Carrier-neutral (a statement about
-`eval`), so it ports unchanged to any binary-quadratic-form carrier. -/
+formulas (3.1): `a₁b₂−a₂b₁ = f(1,0)`, `a₁c₂−a₂c₁ = g(1,0)`. The definition uses only the
+values of the forms, so it is independent of how their coefficients are stored. -/
 def DirectlyComposes (f g F : BinaryQF) : Prop :=
   ∃ a₁ b₁ c₁ d₁ a₂ b₂ c₂ d₂ : ℤ,
     (∀ x y z w : ℤ, f.eval x y * g.eval z w
@@ -373,10 +380,9 @@ def DirectlyComposes (f g F : BinaryQF) : Prop :=
 
 /-- **Cox 3.5(d) (concordant-shape).** The Gauss composite of the concordant forms
 `⟨a,B,a'C⟩`, `⟨a',B,aC⟩` is their *direct* composition `⟨aa',B,C⟩` (the `+` sign of (3.1) holds).
-The substitution is `(1,0,0,-C ; 0,a,a',B)`, and the composition identity is the Gauss bilinear
-identity `dirichlet_compose_repr`. To lift to arbitrary concordant `f,g` via `dirichletForm f g`
-one bridges `f ~ ⟨a,B,a'C⟩` by `translation_equiv` + the representative-invariance
-`directlyComposes_of_properlyEquivalent_left` (Cox 3.5(c), stated below). -/
+The substitution is `(1,0,0,-C ; 0,a,a',B)`, with identity `dirichlet_compose_repr`.
+The extension to arbitrary concordant forms uses `translation_equiv` and
+`directlyComposes_of_properlyEquivalent_left` (Cox 3.5(c), below). -/
 theorem dirichletForm_directlyComposes_concordant (a a' B C : ℤ) :
     DirectlyComposes (⟨a, B, a' * C⟩ : BinaryQF) ⟨a', B, a * C⟩ ⟨a * a', B, C⟩ :=
   ⟨1, 0, 0, -C, 0, a, a', B,
@@ -400,10 +406,9 @@ theorem directlyComposes_opposite_one (f : BinaryQF) :
 
 /-- **Commutativity of Dirichlet composition up to proper equivalence.** `dirichletForm f g ~
 dirichletForm g f`: the two composites have equal leading coefficient `f.a·g.a` and their
-`B`-values agree modulo `2 f.a g.a` (both solve the same simultaneous congruences, so are equal
-by Lemma 3.2's uniqueness), so they are related by a translation. This is the symmetry lemma
-that lets first-argument invariance follow from second-argument invariance in the respect
-proof. -/
+`B`-values agree modulo `2 f.a g.a` by the uniqueness in Lemma 3.2. A translation
+therefore identifies the two forms. This symmetry is used to prove that composition
+respects proper equivalence in both arguments. -/
 theorem dirichletForm_comm_equiv (f g : BinaryQF) (D : ℤ) (hf : f.discr = D) (hg : g.discr = D)
     (hfa : 0 < f.a) (hga : 0 < g.a)
     (hcop_fg : Int.gcd (Int.gcd f.a g.a) ((f.b + g.b) / 2) = 1)
@@ -428,18 +433,18 @@ theorem dirichletForm_comm_equiv (f g : BinaryQF) (D : ℤ) (hf : f.discr = D) (
 /-- **Gauss' minor relations (Cox Exercise 3.1 / [Gauss §235]).** If `G` is a direct composition
 of `h` and `k` with bilinear coefficients `a₁ … d₂` — the `+` sign `a₁b₂−a₂b₁ = h.a` of (3.1)
 holding — and the two forms `k`, `G` share a **nonzero** discriminant, then the remaining Gauss
-minors are pinned: `(a₁d₂−a₂d₁)−(b₁c₂−b₂c₁) = h.b` and `c₁d₂−c₂d₁ = h.c`.
+minors satisfy `(a₁d₂−a₂d₁)−(b₁c₂−b₂c₁) = h.b` and `c₁d₂−c₂d₁ = h.c`.
 
-The nonzero-discriminant hypothesis is essential — Cox states it verbatim in Exercise 3.1 ("all
-three forms have discriminant `D ≠ 0`"); the degenerate `h=k=G=⟨1,0,0⟩` with witness
+The nonzero-discriminant hypothesis is essential, as in Cox's Exercise 3.1. The
+degenerate `h=k=G=⟨1,0,0⟩` with witness
 `(1,0,0,0,0,1,1,5)` is a direct composition for which `(a₁d₂−a₂d₁)−(b₁c₂−b₂c₁)=5≠0=h.b`.
 
-Proof: the composition identity read as a form in `(z,w)` gives, for every `x,y`, the
+Viewing the composition identity as a form in `(z,w)` gives, for every `x,y`, the
 discriminant identity `(h(x,y))²·disc k = Ψ(x,y)²·disc G` with `Ψ = (a₁b₂−a₂b₁)x² +
 ((a₁d₂−a₂d₁)−(b₁c₂−b₂c₁))xy + (c₁d₂−c₂d₁)y²` (Cox 3.1(a),(b)); cancelling the common nonzero
 discriminant yields `h(x,y)² = Ψ(x,y)²` as a polynomial identity, and comparing the `x³y`- and
-`x²y²`-coefficients (evaluating at `x∈{−2,…,2}, y=1`) pins the two minors, the `+` sign carried
-over from `a₁b₂−a₂b₁ = h.a`. -/
+`x²y²`-coefficients (evaluating at `x∈{−2,…,2}, y=1`) determines the two minors. The
+sign is fixed by `a₁b₂−a₂b₁ = h.a`. -/
 theorem directlyComposes_minors (h k G : BinaryQF) (a₁ b₁ c₁ d₁ a₂ b₂ c₂ d₂ : ℤ)
     (hid : ∀ x y z w : ℤ, h.eval x y * k.eval z w
       = G.eval (a₁*x*z+b₁*x*w+c₁*y*z+d₁*y*w) (a₂*x*z+b₂*x*w+c₂*y*z+d₂*y*w))
@@ -488,13 +493,12 @@ If `G` is the direct composition of `h` and `k`, `h` is properly equivalent to `
 forms have the nonzero common discriminant of Cox's setting (`h.a ≠ 0`, `k.discr = G.discr ≠ 0`),
 then `G` is also the direct composition of `h'` and `k`.
 
-This is the faithful form of Cox's Exercise 3.5(c): §3.A works throughout with primitive positive
-definite forms of a fixed discriminant `D < 0`, so `h.a > 0` and `disc = D ≠ 0` hold there. The
-proof pre-composes the bilinear substitution with the `SL₂(ℤ)` matrix `M` carrying `h → h'`
-(giving the new coefficients `āᵢ = aᵢ·M₀₀ + cᵢ·M₁₀`, …); the composition identity and the
-`k`-side `(3.1)` sign are elementary (`eval_action`/`Matrix.det`/`ring`), while the `h`-side sign
-`ā₁b̄₂−ā₂b̄₁ = h'(1,0)` reduces via `directlyComposes_minors` to `M₀₀²·h.a + M₀₀M₁₀·h.b +
-M₁₀²·h.c = h(M₀₀,M₁₀) = h'(1,0)`. -/
+Cox's §3.A works with primitive positive definite forms of fixed discriminant
+`D < 0`, so the hypotheses hold there. Pre-compose the bilinear substitution with
+the `SL₂(ℤ)` matrix `M` carrying `h` to `h'`; the new coefficients include
+`āᵢ = aᵢ·M₀₀ + cᵢ·M₁₀`. The determinant condition preserves the `k`-side sign in
+(3.1). For the `h`-side sign, `directlyComposes_minors` identifies the new minor
+with `M₀₀²·h.a + M₀₀M₁₀·h.b + M₁₀²·h.c = h'(1,0)`. -/
 theorem directlyComposes_of_properlyEquivalent_left_of_discr (h k G h' : BinaryQF)
     (hDC : DirectlyComposes h k G) (he : ProperlyEquivalent h h')
     (hha : h.a ≠ 0) (hkG : k.discr = G.discr) (hG0 : G.discr ≠ 0) :
@@ -515,12 +519,13 @@ theorem directlyComposes_of_properlyEquivalent_left_of_discr (h k G h' : BinaryQ
     linear_combination (M 0 0^2)*hsign + (M 0 0*M 1 0)*hbmin + (M 1 0^2)*hcmin
   · linear_combination (M 0 0*M 1 1 - M 0 1*M 1 0)*hc + (k.eval 1 0)*hdet2
 
-/-- **Gauss' minor relations, `g`-side mirror (Cox Exercise 3.1 / [Gauss §235]).** The companion
+/-- **Gauss' minor relations in the second argument (Cox Exercise 3.1 / [Gauss §235]).**
+The companion
 of `directlyComposes_minors`: reading the composition identity as a form in `(x,y)` (rather than
 `(z,w)`) gives `(k(z,w))²·disc h = Φ(z,w)²·disc G` with `Φ = m₁₃·z² + (m₁₄+m₂₃)·zw + m₂₄·w²`;
-cancelling the common nonzero discriminant and comparing coefficients pins the remaining two
-minors. Note the **`+` sign** in `m₁₄+m₂₃ = k.b` (against the `−` in `m₁₄−m₂₃ = h.b`), and that
-this mirror cancels `disc h` rather than `disc k`.
+cancelling the common nonzero discriminant and comparing coefficients determines the
+remaining two minors. Here `m₁₄+m₂₃ = k.b`, whereas `m₁₄−m₂₃ = h.b` in the first
+argument. The cancelled discriminant is `disc h`.
 
 Together with `directlyComposes_minors` and the two `(3.1)` sign conditions, this completes the
 Plücker vector: all six `2×2` minors of the substitution matrix are determined by `(h,k)` alone —
@@ -577,10 +582,9 @@ theorem binaryQF_ext (p q : BinaryQF) (h1 : p.a = q.a) (h2 : p.b = q.b) (h3 : p.
 composition of `h` and `k`, and `h` is properly equivalent to `h'`, then `G` is also the direct
 composition of `h'` and `k`.
 
-The discriminant hypotheses match Cox's Exercise 3.1 verbatim ("all three forms have discriminant
-`D ≠ 0`") and are essential — see the degenerate `⟨1,0,0⟩` counterexample recorded at
-`directlyComposes_minors`. In Cox's §3.A ambient (primitive positive definite forms of a fixed
-`D < 0`) both hold automatically. Discharged by
+The nonzero-discriminant hypotheses come from Cox's Exercise 3.1; the example at
+`directlyComposes_minors` explains why they cannot be omitted. They hold for the
+primitive positive definite forms in §3.A. This is a specialization of
 `directlyComposes_of_properlyEquivalent_left_of_discr`. -/
 theorem directlyComposes_of_properlyEquivalent_left (h k G h' : BinaryQF)
     (hDC : DirectlyComposes h k G) (he : ProperlyEquivalent h h')
@@ -589,14 +593,14 @@ theorem directlyComposes_of_properlyEquivalent_left (h k G h' : BinaryQF)
   directlyComposes_of_properlyEquivalent_left_of_discr h k G h' hDC he hha hkG hG0
 
 /-- **Uniqueness of direct composition up to proper equivalence** (Cox 4b / [Gauss §§236–240];
-Cox defers this to §7, see Theorem 3.9's proof: *"we will assume that (i) and (ii) are true"*).
+Cox defers this result to §7 in the proof of Theorem 3.9).
 
 Two direct compositions `F`, `F'` of the same pair `(f,g)` of discriminant `D < 0` with
 `gcd(f.a, g.a) = 1` are properly equivalent.
 
-Proof (equal-Plücker → `SL₂` → transport). By `directlyComposes_minors` and
-`directlyComposes_minors_right`, **all six minors of the substitution matrix are determined by
-`(f,g)`**, so the two witnesses `M`, `M'` have identical Plücker vectors (in particular
+By `directlyComposes_minors` and `directlyComposes_minors_right`, all six minors of
+the substitution matrix are determined by `(f,g)`. The two witnesses `M`, `M'`
+therefore have identical Plücker vectors (in particular
 `m₂₃ = m₂₃'`, obtained by halving `(m₁₄+m₂₃) − (m₁₄−m₂₃) = g.b − f.b`). Setting `y = 0` collapses
 the composition identity onto the first two columns, so it suffices to produce `S` with `S·T = T'`
 for `T = !![a₁,b₁;a₂,b₂]` (`det T = m₁₂ = f.a`). Bézout `u·f.a + v·g.a = 1` gives the *integral*
@@ -709,12 +713,12 @@ theorem directlyComposes_unique_of_coprime (f g F F' : BinaryQF) (D : ℤ)
 /-- **Uniqueness of direct composition up to proper equivalence** (Cox 4b). Two direct
 compositions of the same pair are properly equivalent.
 
-Hypothesis divergence (resolved, Wave 20): Cox omits `D < 0` and `gcd(f.a,g.a)=1` because §3.A
-carries them ambiently (Thm 3.9: "Let `D ≡ 0,1 mod 4` be **negative**"; and its proof replaces `g`
-by a properly equivalent form "where `gcd(a,a') = 1`"). Both are genuinely needed — `D ≠ 0` by the
-`⟨1,0,0⟩` counterexample at `directlyComposes_minors`, and coprimality by the Bézout that makes the
-transition matrix integral. `F.Primitive` and `0 < F.a` turn out to be unnecessary and were dropped.
-Discharged by `directlyComposes_unique_of_coprime`. -/
+The hypotheses `D < 0` and `gcd(f.a,g.a)=1` are explicit here. Cox's §3.A works
+with negative discriminants and, in the proof of Theorem 3.9, replaces `g` by a
+properly equivalent form with coprime leading coefficient. Nonzero discriminant
+is needed for the minor relations (see `directlyComposes_minors`); coprimality
+makes the transition matrix integral by Bézout. No primitivity or positivity
+assumption on `F` is needed. The proof is `directlyComposes_unique_of_coprime`. -/
 theorem directlyComposes_unique (f g F F' : BinaryQF) (D : ℤ)
     (hD : D < 0) (hcop : IsCoprime f.a g.a)
     (hf : f.discr = D) (hg : g.discr = D)
@@ -743,7 +747,8 @@ private theorem represents_of_properlyEquivalent' {f g : BinaryQF} (h : Properly
     linear_combination y * hd
   rw [e1, e2]; exact hxy
 
-/-- Exercise 2.1 (copied from `Exercises/S2.lean`, which imports `Genus`). -/
+/-- Exercise 2.1, repeated here because `Exercises/S2.lean` imports this file:
+every represented integer is a square times a properly represented integer. -/
 private theorem rep_eq_sq_mul' (f : BinaryQF) (m : ℤ) (h : Represents f m) :
     ∃ d m' : ℤ, m = d ^ 2 * m' ∧ ProperlyRepresents f m' := by
   obtain ⟨x, y, hxy⟩ := h
@@ -761,8 +766,8 @@ private theorem rep_eq_sq_mul' (f : BinaryQF) (m : ℤ) (h : Represents f m) :
       rw [hme]; simp only [BinaryQF.eval]; ring
     · exact Int.isCoprime_iff_gcd_eq_one.mpr hcop
 
-/-- If a form of discriminant `D` *properly* represents a prime `p`, then `D` is a square
-mod `p`. (No hypotheses on `D` or `p` needed.) -/
+/-- If a form of discriminant `D` properly represents a natural number `p`, then
+`D` is a square mod `p`. Primality and parity assumptions are unnecessary. -/
 private theorem isSquare_of_properlyRepresents' (D : ℤ) (p : ℕ) (f : BinaryQF)
     (hdiscr : f.discr = D) (hrep : ProperlyRepresents f (p : ℤ)) :
     IsSquare (D : ZMod p) := by
@@ -824,9 +829,9 @@ private theorem isSquare_four_mul' (p : ℕ) (hp : p.Prime) (hodd : Odd p) (x : 
   · rintro ⟨z, hz⟩
     exact ⟨2 * z, by rw [hz]; ring⟩
 
-/-! ## Target 1 : `properlyRepresents_iff_isSquare` -/
+/-! ## The residue criterion and its necessary hypotheses -/
 
-/-- The forward (`→`) half of `properlyRepresents_iff_isSquare` holds with no hypotheses. -/
+/-- The forward implication of the residue criterion needs no further hypotheses. -/
 
 theorem properlyRepresents_isSquare_forward' (D : ℤ) (p : ℕ)
     (h : ∃ f : BinaryQF, f.discr = D ∧ ProperlyRepresents f (p : ℤ)) :
@@ -834,8 +839,8 @@ theorem properlyRepresents_isSquare_forward' (D : ℤ) (p : ℕ)
   obtain ⟨f, hd, hrep⟩ := h
   exact isSquare_of_properlyRepresents' D p f hd hrep
 
-/-- COUNTEREXAMPLE to `properlyRepresents_iff_isSquare` as stated (`D = 3`, `p = 11`):
-`3` is a square mod `11`, but no binary quadratic form has discriminant `3` at all. -/
+/-- The unrestricted residue criterion fails at `D = 3`, `p = 11`:
+`3` is a square mod `11`, but no binary quadratic form has discriminant `3`. -/
 
 theorem properlyRepresents_iff_isSquare_counterexample :
     IsSquare (((3 : ℤ)) : ZMod 11) ∧
@@ -849,7 +854,7 @@ theorem properlyRepresents_iff_isSquare_counterexample :
     rw [hd] at h
     norm_num at h
 
-/-- COUNTEREXAMPLE showing `Odd p` is also needed (`D = 5`, `p = 2`). -/
+/-- The residue criterion also needs `Odd p`, as shown by `D = 5`, `p = 2`. -/
 
 theorem properlyRepresents_iff_isSquare_counterexample_two :
     IsSquare (((5 : ℤ)) : ZMod 2) ∧
@@ -871,7 +876,7 @@ theorem properlyRepresents_iff_isSquare_counterexample_two :
     have hkey : ∀ b : ZMod 8, b ^ 2 ≠ ((5 : ℤ) : ZMod 8) := by decide
     exact hkey _ hcast.symm
 
-/-- REPAIRED `properlyRepresents_iff_isSquare` (adds `D ≡ 0,1 mod 4` and `Odd p`). -/
+/-- The residue criterion with the missing assumptions `D ≡ 0,1 (mod 4)` and `Odd p`. -/
 
 theorem properlyRepresents_iff_isSquare_repaired (D : ℤ) (hD : D % 4 = 0 ∨ D % 4 = 1)
     (p : ℕ) (hp : p.Prime) (hodd : Odd p) (hpD : ¬ (p : ℤ) ∣ D) :
@@ -883,7 +888,7 @@ theorem properlyRepresents_iff_isSquare_repaired (D : ℤ) (hD : D % 4 = 0 ∨ D
       PrimesX2NY2.Fermat.exists_form_of_isSquare D hD p hp hodd hpD hsq
     exact ⟨⟨(p : ℤ), b, c⟩, hdiscr, 1, 0, by simp [BinaryQF.eval], isCoprime_one_left⟩
 
-/-! ## Target 2 : `properlyRepresents_iff_isSquare_general` -/
+/-! ## Representation of odd integers -/
 
 theorem properlyRepresents_iff_isSquare_general (D : ℤ) (hD : D % 4 = 0 ∨ D % 4 = 1)
     (m : ℤ) (hm : Odd m) (hco : IsCoprime m D) :
@@ -919,7 +924,7 @@ theorem properlyRepresents_iff_isSquare_general (D : ℤ) (hD : D % 4 = 0 ∨ D 
     have hnodd : Odd m.natAbs := Int.natAbs_odd.mpr hm
     obtain ⟨j, hj⟩ := hnodd
     have hjz : ((m.natAbs : ℤ)) = 2 * (j : ℤ) + 1 := by exact_mod_cast hj
-    -- pick `b ≡ t.val (mod |m|)` of the same parity as `D`
+    -- Choose `b ≡ t.val (mod |m|)` with the same parity as `D`.
     obtain ⟨b, hbn, hbpar⟩ : ∃ b : ℤ, ((m.natAbs : ℤ) ∣ (b - (t.val : ℤ))) ∧ (2 ∣ (b - D)) := by
       rcases Int.even_or_odd ((t.val : ℤ) - D) with he | ho
       · obtain ⟨k, hk⟩ := he
@@ -979,7 +984,7 @@ theorem properlyRepresents_iff_isSquare_general (D : ℤ) (hD : D % 4 = 0 ∨ D 
       omega
     · exact ⟨1, 0, by simp [BinaryQF.eval], isCoprime_one_left⟩
 
-/-! ## Targets 3,4,5 : `cor_2_6`, `prop_2_15`, `thm_2_16` -/
+/-! ## Prime representation and reduced forms -/
 
 /-- **Corollary 2.6.** For an odd prime `p ∤ n`, `(−n/p) = 1` iff `p` is
 represented by a primitive form of discriminant `−4n`. (Cox §2.) -/
@@ -1056,7 +1061,7 @@ theorem prop_2_15 (n : ℕ) (hn : 0 < n) (p : ℕ) (hp : p.Prime) (hodd : Odd p)
   rw [← hsq4]
   exact thm_2_16 (-4 * (n : ℤ)) hD4 hDneg p hp hodd hpD
 
-/-! ## Target 6 : `principalForm_values_subgroup` -/
+/-! ## Residues represented by the principal form -/
 
 /-- A prime dividing `N` cannot divide an integer whose residue mod `N` is a unit. -/
 private theorem not_prime_dvd_of_isUnit' (N : ℕ) (v : ℤ) (hv : IsUnit ((v : ℤ) : ZMod N))
@@ -1132,7 +1137,7 @@ theorem principalForm_values_subgroup (D : ℤ) (hD : D % 4 = 0 ∨ D % 4 = 1)
   have hn0 : D.natAbs ≠ 0 := fun hh => hD0 (Int.natAbs_eq_zero.mp hh)
   haveI : NeZero D.natAbs := ⟨hn0⟩
   have hfa : (principalForm D).a = 1 := by simp only [principalForm]; split <;> rfl
-  -- membership predicate
+  -- Use proper representation modulo `D` as the subgroup predicate.
   set P : (ZMod D.natAbs)ˣ → Prop := fun u => ∃ x y : ℤ, IsCoprime x y ∧
       (((principalForm D).eval x y : ℤ) : ZMod D.natAbs) = (u : ZMod D.natAbs) with hPdef
   have hone : P 1 := by
@@ -1213,8 +1218,8 @@ theorem thm_2_26 (D : ℤ) (hD : D % 4 = 0 ∨ D % 4 = 1) (hDneg : D < 0)
 a form of discriminant `−4n` in the principal genus iff `p ≡ β²` or `β² + n`
 `(mod 4n)` for some `β`. (Cox §2.)
 
-(Replaces an earlier vacuous statement whose right-hand side `∃ S, p ∈ S` was
-always true.) -/
+This replaces an earlier statement whose condition `∃ S, p ∈ S` was always true
+and therefore imposed no congruence restriction. -/
 theorem represents_principal_iff_congruence (n : ℕ) (hn : 0 < n) (p : ℕ)
     (hp : p.Prime) (hodd : Odd p) (hpn : ¬ (p : ℤ) ∣ (n : ℤ)) :
     (p : ZMod ((-4 * (n : ℤ)).natAbs)) ∈ principalGenus (-4 * (n : ℤ))
@@ -1244,20 +1249,20 @@ theorem directlyComposes_of_properlyEquivalent_right (h k G k' : BinaryQF)
     (directlyComposes_of_properlyEquivalent_left k h G k' (directlyComposes_symm h k G hDC)
       he hka hhG hG0)
 
-/-- Discriminant of the Dirichlet composite of a **two-way coprime** pair (the concordant case). -/
+/-- Discriminant of the Dirichlet composite when the leading coefficients are coprime. -/
 theorem dirichletForm_discr_of_coprime (f g : BinaryQF) (D : ℤ) (hf : f.discr = D)
     (hg : g.discr = D) (hcop : Int.gcd f.a g.a = 1) : (dirichletForm f g).discr = D :=
   dirichletForm_discr f g D hf hg (by rw [hcop]; simp)
 
-/-- **The Dirichlet composite IS a direct composition of its (concordant) pair** — the linchpin
-tying Cox's explicit formula (3.7) to Gauss's relation (3.1).
+/-- For concordant forms, Cox's explicit Dirichlet composite (3.7) satisfies
+Gauss's direct-composition relation (3.1).
 
 With `B := dirichletB f g` and `C := (B²−D)/(4·f.a·g.a)`, `dirichletForm f g = ⟨f.a·g.a, B, C⟩`,
 and the translations `f ~ ⟨f.a, B, g.a·C⟩`, `g ~ ⟨g.a, B, f.a·C⟩` (Cox 3.5(a), via
 `dirichletB_spec1/2` and `translation_equiv_proj`) put the pair into the concordant shape of
 `dirichletForm_directlyComposes_concordant` (Cox 3.5(b)); transporting both arguments back by
-Cox 3.5(c) gives the claim. This is on the critical path for BOTH well-definedness of `compose`
-and (via united forms) associativity. -/
+Cox 3.5(c) gives the claim. This result is used to prove that `compose` is
+well-defined and, through united forms, associative. -/
 theorem dirichletForm_directlyComposes (f g : BinaryQF) (D : ℤ) (hD : D < 0)
     (hf : f.discr = D) (hg : g.discr = D) (hfa : 0 < f.a) (hga : 0 < g.a)
     (hcop : Int.gcd f.a g.a = 1) :
@@ -1314,9 +1319,9 @@ theorem composeForm_directlyComposes (D : ℤ) (hD : D < 0) (F G : DiscrForms D)
     (properlyEquivalent_equivalence.symm he) ha.ne'
     (by rw [F.2.1, hE]) (by rw [hE]; exact ne_of_lt hD)
 
-/-- **(3i) Concordant-choice invariance** — the Dirichlet composite does not depend (up to `~`) on
-which concordant representative is chosen. This is the canonical form of `(3i)`, carrying the
-`hD : D < 0` that Cox's Thm 3.9 ambient supplies and that the minor machinery genuinely requires. -/
+/-- The Dirichlet composite is independent, up to proper equivalence, of the
+concordant representative chosen. As in Cox's Theorem 3.9, the discriminant is
+negative; this supplies the nonzero discriminant needed for the minor relations. -/
 theorem concordant_choice_invariant_of_neg (D : ℤ) (hD : D < 0) (F : DiscrForms D)
     (g₁ g₂ : BinaryQF) (he : ProperlyEquivalent g₁ g₂)
     (hd₁ : g₁.discr = D) (ha₁ : 0 < g₁.a) (hc₁ : Int.gcd F.1.a g₁.a = 1)
@@ -1337,7 +1342,7 @@ theorem concordant_choice_invariant_of_neg (D : ℤ) (hD : D < 0) (F : DiscrForm
   exact directlyComposes_unique_of_coprime F.1 g₂ _ _ D hD hFd hd₂
     (Int.isCoprime_iff_gcd_eq_one.mpr hc₂) hdc₁' hE1 hdc₂ hE2
 
-/-- **Class-level respect** — the `Quotient.lift₂` obligation for `compose`:
+/-- Composition respects proper equivalence, as required for `Quotient.lift₂`:
 `f ~ f'` and `g ~ g'` imply `composeForm f g ~ composeForm f' g'`. Proved by transporting the
 direct-composition witness through both arguments (Cox 3.5(c) left and right) and then invoking
 uniqueness on the common pair. -/
@@ -1494,10 +1499,9 @@ end PrimesX2NY2.Genus
 
 /-! ## The class group operation
 
-`compose` and the Cox §3 class-group theorems live here rather than in `FormClassGroup.lean`
-because defining `compose` requires `composeForm`/`concordance`/`DirectlyComposes`, which are
-downstream of that file in the import DAG. The declarations keep their fully-qualified
-`PrimesX2NY2.Forms.*` names, so blueprint nodes and callers are unaffected. -/
+The class-group operation uses `composeForm`, `concordance`, and `DirectlyComposes`,
+so it is defined here after those results. Its declarations belong to
+`PrimesX2NY2.Forms`, together with the quotient defined in `FormClassGroup.lean`. -/
 
 namespace PrimesX2NY2.Forms
 
@@ -1505,14 +1509,13 @@ open PrimesX2NY2.Genus
 
 /-- **Dirichlet composition** of two classes of forms of discriminant `D`. (Cox, §3, Thm 3.9.)
 
-Well-defined: `composeForm` is lifted through the quotient by `composeForm_respects`.
+`composeForm_respects` allows `composeForm` to descend to the quotient.
 
-Cox defines `C(D)` only for **negative** `D` (Thm 3.9: "Let `D ≡ 0,1 mod 4` be negative"), and the
-composition genuinely needs `D < 0` (concordance, and `D ≠ 0` for the Gauss minor relations). Since
-`compose`'s signature carries no `hD`, the definition branches: on `D < 0` it is the honest
-Dirichlet composition, and off that domain it is the junk projection `fun a _ => a`. Every Cox
-theorem about `compose` carries `hD : D < 0`, so the junk branch is never observed; use
-`compose_mk` to reduce. (Junk-value convention, as with `x / 0 = 0` in Mathlib.) -/
+Cox's Theorem 3.9 concerns negative discriminants. That assumption is used for
+concordance and supplies `D ≠ 0` for Gauss's minor relations. The definition is
+total: when `D < 0` it gives Dirichlet composition, and otherwise it returns its
+first argument. The group-law theorems apply only to `D < 0`, so they do not use
+the fallback branch. Use `compose_mk` to compute on representatives. -/
 noncomputable def compose (D : ℤ) : FormClassGroup D → FormClassGroup D → FormClassGroup D :=
   if hD : D < 0 then
     Quotient.lift₂ (fun F G => Quotient.mk (properSetoid D) (composeForm D hD F G))
@@ -1680,7 +1683,7 @@ theorem opposite_properlyEquivalent {f g : BinaryQF}
       Matrix.empty_val', Matrix.cons_val_fin_one]
     refine ⟨?_, ?_, ?_⟩ <;> ring
 
-/-- The opposite of a positive primitive discriminant-`D` form, packaged with its invariants. -/
+/-- The opposite form together with its discriminant, primitivity, and positivity proofs. -/
 def oppositeDiscrForm (D : ℤ) (F : DiscrForms D) : DiscrForms D :=
   ⟨F.1.opposite,
     (opposite_discr F.1).trans F.2.1,
@@ -1768,7 +1771,7 @@ theorem isCommGroup (D : ℤ) (hD : D < 0) (hD4 : D % 4 = 0 ∨ D % 4 = 1) :
   inv_mul_cancel := classInverse_mul D hD hD4
   mul_comm := compose_comm D hD
 
-/-- The class group instance is available exactly in the intended negative-discriminant context. -/
+/-- The class group instance for negative `D ≡ 0,1 (mod 4)`. -/
 noncomputable instance (D : ℤ) [hneg : Fact (D < 0)]
     [hdisc : Fact (D % 4 = 0 ∨ D % 4 = 1)] : CommGroup (FormClassGroup D) :=
   formClassCommGroup D hneg.out hdisc.out

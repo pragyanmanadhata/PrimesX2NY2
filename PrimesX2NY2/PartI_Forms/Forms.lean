@@ -13,7 +13,8 @@ Cox, *Primes of the Form x² + ny²*, §2.
 Integral binary quadratic forms, the action of `SL₂(ℤ)`, proper equivalence, and
 the reduction theory of positive definite forms.
 
-**Scaffold only:** every proof is `sorry`.
+The reduction theorem and finiteness of reduced forms are proved here. Landau's
+classification of discriminants with class number one remains unproved.
 -/
 
 namespace PrimesX2NY2.Forms

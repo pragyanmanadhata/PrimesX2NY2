@@ -1,57 +1,65 @@
 # Conventions
 
-This project follows Mathlib conventions. Summary of what that means here.
+The project follows Mathlib’s naming and source conventions.
 
 ## Naming
 
-- **Declarations** use Mathlib naming: `lowerCamelCase` for `def`s producing data
-  and for functions, `UpperCamelCase` for types/structures/classes and for
-  `Prop`-valued predicates (e.g. `Reduced`, `ProperlyEquivalent`, `PosDef`,
-  `IsModularFunction`, `IsCMPoint`).
-- **Theorem names** describe the statement in words, in `snake_case` built from
-  the camelCased pieces, e.g. `prime_sq_add_sq`, `exists_unique_reduced`,
-  `properlyRepresents_iff_isSquare`, `isIntegral_jFunction_of_cm`.
-- **Namespaces** mirror the mathematical object, not the file. The base objects
-  live in chapter namespaces: `PrimesX2NY2.Fermat`, `PrimesX2NY2.Forms`,
-  `PrimesX2NY2.Genus`, `PrimesX2NY2.Order`, `PrimesX2NY2.Bridge`,
-  `PrimesX2NY2.RingClassField`, `PrimesX2NY2.MainTheorem`, `PrimesX2NY2.Elliptic`,
-  `PrimesX2NY2.Modular`, `PrimesX2NY2.Weber`. A structure `Foo` is declared in its
-  chapter namespace and its API lives in the nested `Foo.` namespace (so e.g.
-  `PrimesX2NY2.Forms.BinaryQF` and `PrimesX2NY2.Forms.BinaryQF.discr`). We avoid
-  doubled names such as `Forms.Forms`.
+Use `lowerCamelCase` for data definitions and functions, and `UpperCamelCase`
+for types, structures, classes, and predicates such as `Reduced`,
+`ProperlyEquivalent`, `PosDef`, `IsModularFunction`, and `IsCMPoint`.
+Theorem names use `snake_case`, retaining camel case within the names they
+refer to: `prime_sq_add_sq`, `exists_unique_reduced`,
+`properlyRepresents_iff_isSquare`, and `isIntegral_jFunction_of_cm`.
 
-## Layout
+Namespaces follow the mathematical objects. The chapter namespaces include
+`PrimesX2NY2.Fermat`, `Forms`, `Genus`, `Genera`, `CubicReciprocity`,
+`BiquadraticReciprocity`, `Order`, `Bridge`, `RingClassField`, `MainTheorem`,
+`Elliptic`, `Modular`, and `Weber`. A structure’s API lives beneath its name:
+for example, `PrimesX2NY2.Forms.BinaryQF.discr`. Avoid doubled names such as
+`Forms.Forms`.
 
-- One Mathlib-style **copyright header** at the top of every file, then `import`s,
-  then a `/-! ... -/` **module docstring**, then the content.
-- Every public declaration carries a **docstring** (`/-- ... -/`), usually citing
-  the corresponding Cox section/theorem number.
-- **100-column** limit on source lines (Mathlib's `linter.style.longLine`).
-- Unicode math is fine (it is enabled via `unicode-math` in the blueprint and is
-  standard in Mathlib).
+## Source layout
 
-## `sorry` policy (current phase)
+Start each Lean file with the Mathlib-style copyright header, followed by
+imports and a module docstring. Public declarations should have docstrings
+that explain the statement and cite the relevant Cox section or theorem when
+applicable. Comments should explain a mathematical choice or a non-obvious
+proof step, rather than repeat the code.
 
-- This repository is a **scaffold**. Every proof body and every "deep" definition
-  body is `sorry`. `lake build` succeeds; `sorry` produces warnings, not errors.
-- We deliberately do **not** set `warningAsError`, so the project builds while the
-  `sorry`s remain. Do not remove a `sorry` without supplying a real proof.
-- Statements are meant to be *mathematically faithful* even while unproved: we
-  avoid stating anything literally false (e.g. the provisional `℘'` is a named
-  `sorry` def rather than a free variable in the differential equation).
-- As proofs are filled in, **narrow the imports**: files currently `import Mathlib`
-  for convenience; replace with the specific modules actually used.
+Keep source lines within 100 columns, as required by
+`linter.style.longLine`. Unicode mathematical notation is welcome in both Lean
+and the blueprint. As files become self-contained, replace broad
+`import Mathlib` declarations with the modules they use.
 
-## Blueprint discipline
+## Unfinished proofs and definitions
 
-- Each blueprint node carries `\label`, `\lean{<fully-qualified Lean name>}`,
-  `\uses{...}` for its DAG dependencies, and `\leanok` on the statement
-  (its Lean *signature* typechecks).
-- `\leanok` is **never** placed inside a `\begin{proof}`: no proof is done yet.
-- `leanblueprint checkdecls` must pass, i.e. every `\lean{...}` name must resolve
-  in the built Lean environment. Keep the LaTeX `\lean{...}` and the Lean
-  declaration names in sync.
+Unfinished proofs and definitions use `sorry`. Replace each one with a real
+proof or construction; do not hide a gap behind an axiom or a weaker statement.
+Keep known problems with statement hypotheses documented until they are fixed.
+The intended mathematics must remain clear even where its formalization is
+incomplete.
+
+The build allows warnings while these gaps remain, so `warningAsError` is not
+set. Typechecking a statement is distinct from proving it. A proof can also
+inherit an unfinished dependency: use `#print axioms` to check for `sorryAx`
+before describing a result as complete.
+
+## Blueprint annotations
+
+Give each node a `\label`, a `\lean{...}` reference when it has a Lean
+declaration, and `\uses{...}` entries for its dependencies. Use fully qualified
+Lean names and keep them in sync with the source.
+
+A statement’s `\leanok` records that its Lean signature typechecks. A
+`\leanok` inside a proof records a completed formal proof; add it only after
+checking the proof and its dependencies. Keep `\notready` on nodes whose
+formalization is still pending, and explain any missing hypotheses or machinery
+in the surrounding text.
+
+Run `leanblueprint checkdecls` after changing declaration links. Every
+`\lean{...}` reference must resolve in the built Lean environment.
 
 ## Versions
 
-Pinned; see `README.md`. Do not float onto `nightly` or Mathlib `main`.
+Use the versions pinned in [README.md](README.md), `lean-toolchain`, and
+`lake-manifest.json`. Do not switch to `nightly` or Mathlib’s `main` branch.

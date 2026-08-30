@@ -1,84 +1,84 @@
-# Mathlib PR drafts — and what actually blocks this project
+# Mathlib contribution drafts
 
-**Read [AI-DISCLOSURE-AND-DECISIONS.md](AI-DISCLOSURE-AND-DECISIONS.md) before opening any of
-these.** Mathlib's contribution policy requires disclosure of AI use and requires the
-submitter to justify every design decision unaided; that file is the decision record.
+[AI-DISCLOSURE-AND-DECISIONS.md](AI-DISCLOSURE-AND-DECISIONS.md) records the provenance,
+design choices, and submission requirements for these proposals. The quoted Mathlib
+policy requires disclosure of AI use and an unaided understanding of each design decision.
 
-Drafts only — nothing here has been submitted. All four are now proved and axiom-clean.
+Nothing here has been submitted. All four proposals have supporting proofs in this
+project with no `sorryAx` dependency. That verification does not establish that the
+drafts are ready for upstream review; API choices, placement, and human review remain.
 
-| # | Contribution | Proved? | Blocks us? |
+| # | Contribution | In-project verification | Needed to continue? |
 |---|---|---|---|
-| [1](PR1-exists_sq_eq_neg_three_iff.md) | `ZMod.exists_sq_eq_neg_three_iff` — `−3` is a QR mod `p` iff `p ≡ 1 mod 3` | Yes, axiom-clean | No |
-| [2](PR2-jacobiSym-discriminant-periodicity.md) | `J(D \| ·)` has period `\|D\|` for `D ≡ 0, 1 mod 4` | Yes, axiom-clean, pure Mathlib | No |
-| [3](PR3-binary-quadratic-forms-reduction.md) | Gauss reduction theory of binary quadratic forms (a series) | Yes, axiom-clean | No |
-| 4 | `Zsqrtd.prime_of_norm_prime` — an element of `ℤ[i]` whose norm is a rational prime is prime | Yes, axiom-clean (`ℤ[i]` only — see correction) | No |
+| [1](PR1-exists_sq_eq_neg_three_iff.md) | `ZMod.exists_sq_eq_neg_three_iff` — `−3` is a square mod a prime `p ≠ 2, 3` iff `p ≡ 1 mod 3` | Proved; no `sorryAx` | No |
+| [2](PR2-jacobiSym-discriminant-periodicity.md) | `J(D \| ·)` has period `\|D\|` on odd arguments for `D ≡ 0, 1 mod 4` | Proved using only Mathlib; no `sorryAx` | No |
+| [3](PR3-binary-quadratic-forms-reduction.md) | Gauss reduction theory of binary quadratic forms (a series) | Proposed results proved; no `sorryAx` | No |
+| 4 | `Zsqrtd.prime_of_norm_prime` — an element of `ℤ[i]` whose norm is a rational prime is prime | Proved for `ℤ[i]`; no `sorryAx` (see correction) | No |
 
-**PR4 (small).** While proving Cox's Proposition 4.18 we needed "norm is a rational
-prime ⟹ the element is prime" for `ℤ[i]` and found Mathlib has no such lemma, despite
-having the `EuclideanDomain ℤ[i]` instance and `Zsqrtd.norm_eq_one_iff'` next door. Our
-proof (`PrimesX2NY2/PartI_Forms/BiquadraticReciprocity.lean`, `prime_of_norm_prime`) is
-six lines over `irreducible_iff_prime` plus multiplicativity of the norm.
+**PR4.** Cox's Proposition 4.18 uses "norm is a rational prime ⟹ the element is prime"
+for `ℤ[i]`. The pinned Mathlib revision has the `EuclideanDomain ℤ[i]` instance and
+`Zsqrtd.norm_eq_one_iff'`, but the draft's search found no corresponding lemma. The
+proof (`PrimesX2NY2/PartI_Forms/BiquadraticReciprocity.lean`, `prime_of_norm_prime`)
+uses `irreducible_iff_prime` and multiplicativity of the norm.
 
 **Correction.** An earlier version of this file claimed the proof "generalizes verbatim to
-any `ℤ√d` with `d ≤ 0`. That is false. `irreducible_iff_prime` needs a
+any `ℤ√d` with `d ≤ 0`." That claim was incorrect. `irreducible_iff_prime` needs a
 `[DecompositionMonoid]` instance, which `ℤ[i]` has (via `EuclideanDomain → PID → UFD`) but
-a general `ℤ√d` does not — and this project itself supplies the counterexample: `ex_4_6_b`
+a general `ℤ√d` does not. The project supplies a counterexample: `ex_4_6_b`
 proves `2` is irreducible but not prime in `ℤ[√−3]`, so that ring is not a UFD. The
 correct scope is `ℤ[i]`, or any `ℤ√d` known to be a UFD. Whether the *statement* still
 holds in non-UFD cases is a separate question, not settled here.
 
-## The honest summary
+## Relation to the remaining work
 
-**No Mathlib PR is a prerequisite for any work remaining in Part I.** Every gap we
-hit was derivable in-project from existing Mathlib, and we derived it. PRs 1 and 3
-are things Mathlib is *missing that we happen to have built*, not things we were
-waiting on. Upstreaming them would help the next person; it would not unblock us.
+None of these contributions is a prerequisite for continuing Part I. Their proofs
+already live in the project. Upstreaming would make the results available to other
+formalizations without changing what this project can currently prove.
 
-That answers the question directly: the PR-shaped opportunities are worth filing,
-but "we need a Mathlib PR to continue" is not currently true of Part I.
-
-## What actually blocks Parts II and III (and is *not* PR-shaped)
+## Dependencies in Parts II and III
 
 The remaining `sorry`s in `PartII_ClassFieldTheory/` and
-`PartIII_ComplexMultiplication/` are of two kinds, neither fixable by a small PR:
+`PartIII_ComplexMultiplication/` fall into two groups.
 
-**(a) Project scaffolding we must write ourselves.** `QuadOrder.ProperIdeal`,
+**Project definitions.** `QuadOrder.ProperIdeal`,
 `QuadOrder.idealClassGroup`, `orderOfDiscr`, `hilbertClassField`, `ringClassField`,
 `galoisGroup`, `SplitsCompletely`, `classPolynomial` are all `sorry`-bodied *`def`s*.
-These are definitions this project owes, buildable on Mathlib's existing
-`IsDedekindDomain`, `ClassGroup`, `NumberField`, and Galois theory. No upstream
-change is required — just work. Roughly 30 downstream theorems are gated behind
-them, so this is the highest-leverage direction after Part I.
+These need implementations using Mathlib's existing `IsDedekindDomain`, `ClassGroup`,
+`NumberField`, and Galois theory. The downstream statements depend on those
+definitions; the contribution drafts here do not address them.
 
-**(b) Genuine Mathlib absences far too large for a PR from here.** Verified by
-searching the tree:
+**Larger library developments.** The search of the pinned Mathlib tree recorded
+in these drafts identified the following gaps:
 
 - **Global class field theory.** No Artin reciprocity, no existence theorem.
-  (`grep -rli "artin.*reciprocity" Mathlib/` finds only unrelated Tate-cohomology
-  files.) Cox's Part II is *about* this; Mathlib not having it is a known,
-  multi-year gap.
-- **Chebotarev density.** Absent entirely (`grep -rli chebotarev` → nothing).
-- **The modular `j`-invariant and complex multiplication.** Mathlib has a real
+  The search for Artin reciprocity found only unrelated Tate-cohomology files.
+  These are central to Cox's Part II and require a substantial development.
+- **Chebotarev density.** The search found no theorem.
+- **The modular `j`-invariant and complex multiplication.** Mathlib has a
   modular-forms library (`EisensteinSeries`, `Delta`, `DedekindEta`,
   `Discriminant`, level-one theory) but no `j`, and no CM theory. Part III needs
   both.
 
-For (b) the right posture is to keep the statements as faithful `sorry`-bodied
-theorems (never axioms — see the project's GAP-NOT-AXIOM rule) and revisit as
-Mathlib grows, or to contribute to those efforts separately rather than as a
-side-quest of this formalization.
+Until those developments are available, the project keeps the corresponding
+statements as explicit `sorry`-bodied theorems rather than adding axioms, as described
+in [CONVENTIONS.md](../CONVENTIONS.md).
+Any work on these larger dependencies needs a separate scope from the four
+contributions listed here.
 
-## If you want to file these
+## Preparation for submission
 
-PR1 is ready to open as-is: single lemma, complete proof, fits an existing family in
-`Mathlib/NumberTheory/LegendreSymbol/QuadraticReciprocity.lean`. Start there — it is
-small enough to settle the naming/placement questions cheaply, and it is a
-self-contained win.
+PR1 is a small candidate for initial review: a single lemma intended to fit the
+family in `Mathlib/NumberTheory/LegendreSymbol/QuadraticReciprocity.lean`. Its draft
+still raises questions about placement, hypotheses, and a possible finite-field
+generalization. The submitter also needs to complete the review and disclosure
+checklist in the decision record.
 
-PR3 is the valuable one but needs a design conversation first (see its "Open
-questions" — chiefly whether `BinaryQuadraticForm` should be a standalone structure
-or a layer over `QuadraticForm`, and which way the `SL₂(ℤ)`-action should compose).
-Best opened as a Zulip thread in `#mathlib4` before any code.
+PR2's proof was developed in a file importing only `Mathlib`. It has no project
+dependencies, but its statement, helper lemmas, and namespace assumptions still
+need review in the target file.
 
-PR2 is also ready: its proof is complete, axiom-clean, and was developed in a file
-importing only `Mathlib`, so it lifts into `JacobiSymbol.lean` verbatim.
+PR3 needs a design discussion in `#mathlib4` on Zulip before a code submission.
+The main questions are whether `BinaryQuadraticForm` should be a standalone
+structure or a layer over `QuadraticForm`, and how the `SL₂(ℤ)` action should
+compose. Its proposed series begins with definitions and equivalence; reduction
+would follow once those conventions are settled.

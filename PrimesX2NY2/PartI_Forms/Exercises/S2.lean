@@ -10,13 +10,14 @@ import PrimesX2NY2.PartI_Forms.Fermat
 /-!
 # Part I, §2 - Exercises
 
-Faithful `sorry`-bodied statements of the exercises of Cox §2 (Exercises 2.1-2.27),
-one node per sub-part, cited by number only.
+Statements and proofs for the exercises of Cox §2 (Exercises 2.1-2.27),
+cited by exercise number.
 
-Flagged in the blueprint as `\notready` (no Lean signature): 2.9(a), 2.9(b),
-2.17(d), 2.19, 2.20 - see the §2 FLAG LIST in the report.
+Exercises 2.9(a), 2.9(b), 2.17(d), 2.19, and 2.20 are recorded in the blueprint
+as `\notready`, without Lean signatures.
 
-**Scaffold only:** every proof is `sorry`.
+Most results have proofs. Six declarations still use `sorry`, including two
+statements whose missing hypotheses are explained by counterexamples below.
 -/
 
 namespace PrimesX2NY2.PartI.S2
@@ -393,7 +394,7 @@ theorem ex_2_10_c (D : ℤ) (hD : 0 < D) (hns : ¬ IsSquare D) :
       exact mul_left_cancel₀ (mul_ne_zero (by norm_num) h0) h4
     exact qf_ext ha hbq hc
 
-/-! ### quadratic residues mod 7 (hoisted `decide` facts) -/
+/-! ### Quadratic residues modulo 7 -/
 
 private theorem sq7_1 : IsSquare (((1:ℕ) : ZMod 7)) := by decide
 private theorem sq7_2 : IsSquare (((2:ℕ) : ZMod 7)) := by decide
@@ -459,7 +460,7 @@ private theorem neg_seven_isSquare_iff' (p : ℕ) [Fact p.Prime] (hodd : Odd p) 
   · rw [if_pos hC]; exact ⟨fun _ => hC, fun _ => rfl⟩
   · rw [if_neg hC]; exact ⟨fun h => absurd h (by norm_num), fun h => absurd h hC⟩
 
-/-! ### the reduced primitive forms of discriminant `−28` -/
+/-! ### Reduced primitive forms of discriminant `−28` -/
 
 /-- The only reduced *primitive* form of discriminant `−28` is `x² + 7y²`. -/
 private theorem reduced_neg_28' (g : BinaryQF) (hred : g.Reduced) (hprim : g.Primitive)
@@ -499,7 +500,7 @@ private theorem reduced_neg_28' (g : BinaryQF) (hred : g.Reduced) (hprim : g.Pri
     rcases (show b = -3 ∨ b = -2 ∨ b = -1 ∨ b = 0 ∨ b = 1 ∨ b = 2 ∨ b = 3 by omega)
       with rfl | rfl | rfl | rfl | rfl | rfl | rfl <;> omega
 
-/-! ### the reduced forms of discriminant `−56` -/
+/-! ### Reduced forms of discriminant `−56` -/
 
 private theorem reduced_neg_56' (g : BinaryQF) (hred : g.Reduced) (hd : g.discr = -56) :
     g = ⟨1, 0, 14⟩ ∨ g = ⟨2, 0, 7⟩ ∨ g = ⟨3, 2, 5⟩ ∨ g = ⟨3, -2, 5⟩ := by
@@ -547,7 +548,7 @@ private theorem reduced_neg_56' (g : BinaryQF) (hred : g.Reduced) (hd : g.discr 
     rcases (show b = -4 ∨ b = -3 ∨ b = -2 ∨ b = -1 ∨ b = 0 ∨ b = 1 ∨ b = 2 ∨ b = 3 ∨ b = 4
       by omega) with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;> omega
 
-/-! ### the reduced forms of discriminant `−24` -/
+/-! ### Reduced forms of discriminant `−24` -/
 
 private theorem reduced_neg_24' (g : BinaryQF) (hred : g.Reduced) (hd : g.discr = -24) :
     g = ⟨1, 0, 6⟩ ∨ g = ⟨2, 0, 3⟩ := by
@@ -581,7 +582,7 @@ private theorem reduced_neg_24' (g : BinaryQF) (hred : g.Reduced) (hd : g.discr 
     · omega
     · omega
 
-/-! ### hoisted residue facts -/
+/-! ### Congruences used in the representation criteria -/
 
 private theorem m7_a3 : ∀ X Y : ZMod 7, ((3:ℕ) : ZMod 7) ≠ X ^ 2 + 14 * Y ^ 2 := by decide
 private theorem m7_a5 : ∀ X Y : ZMod 7, ((5:ℕ) : ZMod 7) ≠ X ^ 2 + 14 * Y ^ 2 := by decide
@@ -662,7 +663,7 @@ theorem ex_2_11 (p : ℕ) (hp : p.Prime) (hodd : Odd p) (hp7 : p ≠ 7) :
     simp only [BinaryQF.eval]
     ring
 
-/-! ### Exercise 2.15 -/
+/-! ### Exercises 2.12-2.15 -/
 
 /-- **Exercise 2.12(a).** An integer `> 1` that is not a prime power factors as
 `m = ac` with `1 < a < c` and `gcd(a,c) = 1`. -/
@@ -823,7 +824,7 @@ theorem ex_2_13 (p : ℕ) (hp : p.Prime) (hodd : Odd p) (hp5 : ¬ (p : ℤ) ∣ 
       _ = (-1 : ℤ) ^ (p / 2) * legendreSym 5 (p : ℤ) := by
           rw [show (5 : ℕ) / 2 = 2 from rfl, pow_mul]
           norm_num
-  -- residues
+  -- Evaluate the character for each possible residue modulo 20.
   have hmod5 : p % 5 = 1 ∨ p % 5 = 2 ∨ p % 5 = 3 ∨ p % 5 = 4 := by
     have : ¬ (5 ∣ p) := by
       intro h
@@ -1065,7 +1066,7 @@ theorem ex_2_15 (p : ℕ) (hp : p.Prime) (hodd : Odd p) (hp7 : p ≠ 7) :
       · rw [h] at hz8; exact m8_d1 _ _ hz8
       · rw [h] at hz8; exact m8_d7 _ _ hz8
 
-/-! ### Exercise 2.21 -/
+/-! ### Exercises 2.16-2.18 -/
 
 /-- **Exercise 2.16.** For `D ≡ 1 (mod 4)`, the form `x² + xy + ((1−D)/4)y²` has
 discriminant `D` and is reduced when `D < 0`. -/
@@ -1147,10 +1148,9 @@ theorem ex_2_18_a (f : BinaryQF) (hf : f.Primitive) (p : ℕ) (hp : p.Prime) :
 /-- **Exercise 2.18(b).** Proof of Lemma 2.25. -/
 theorem ex_2_18_b (f : BinaryQF) (M : ℤ) :
     ∃ x y : ℤ, IsCoprime x y ∧ IsCoprime (f.eval x y) M := by
-  -- FLAG (under-hypothesized): FALSE as stated — Cox's Lemma 2.25 assumes `f` primitive
-  -- and `M ≠ 0`. See `ex_2_18_b_FALSE` for a proof that the unrestricted statement fails
-  -- (take `f = ⟨2,0,2⟩`, `M = 2`: every value `2(x²+y²)` is even), and
-  -- `ex_2_18_b_correct` for the faithful version.
+  -- Cox's Lemma 2.25 assumes `f` is primitive and `M ≠ 0`; this signature omits both.
+  -- `ex_2_18_b_FALSE` gives a counterexample: `f = ⟨2,0,2⟩`, `M = 2`, since every
+  -- represented value is even. `ex_2_18_b_correct` includes the necessary hypotheses.
   sorry
 
 /-- The unrestricted form of Exercise 2.18(b) is false: without primitivity of `f`
@@ -1166,8 +1166,8 @@ theorem ex_2_18_b_FALSE :
   have : (2 : ℤ) ∣ 1 := ⟨u * (x ^ 2 + y ^ 2) + v, by linarith⟩
   norm_num at this
 
-/-- **Exercise 2.18(b)**, faithful form (Cox, Lemma 2.25): a *primitive* form properly
-represents some value coprime to a *nonzero* `M`. -/
+/-- **Exercise 2.18(b)** with the hypotheses of Cox's Lemma 2.25: a primitive form
+properly represents some value coprime to a nonzero `M`. -/
 theorem ex_2_18_b_correct (f : BinaryQF) (hf : f.Primitive) (M : ℤ) (hM : M ≠ 0) :
     ∃ x y : ℤ, IsCoprime x y ∧ IsCoprime (f.eval x y) M := by
   obtain ⟨x, y, hcop⟩ := exists_eval_coprime f hf M hM
@@ -1331,11 +1331,11 @@ theorem ex_2_23_d (p : ℕ) (hp : p.Prime) (hodd : Odd p)
   rw [← ZMod.exists_sq_eq_two_iff hp2]
   have hpne : (p : ℤ) ≠ 0 := by exact_mod_cast hp.ne_zero
   have hpZ : Prime (p : ℤ) := Nat.prime_iff_prime_int.1 hp
-  -- Key: from  x² − 2y² = ±p  derive that 2 is a square mod p.
+  -- The representation `x² − 2y² = ±p` makes `2` a square modulo `p`.
   have key : ∀ (x y : ℤ), x ^ 2 - 2 * y ^ 2 = (p : ℤ) ∨ x ^ 2 - 2 * y ^ 2 = -(p : ℤ) →
       IsSquare (2 : ZMod p) := by
     intro x y hpm
-    -- Step 1: p ∤ y.
+    -- First rule out `p ∣ y`, so division by `y` is possible modulo `p`.
     have hydvd : ¬ (p : ℤ) ∣ y := by
       intro hy
       have hx2 : (p : ℤ) ∣ x ^ 2 := by
@@ -1363,7 +1363,7 @@ theorem ex_2_23_d (p : ℕ) (hp : p.Prime) (hodd : Odd p)
       have hle := Int.le_of_dvd one_pos hpK
       have hge : (2 : ℤ) ≤ p := by exact_mod_cast hp.two_le
       omega
-    -- Step 2: x² = 2 y² in ZMod p, with y ≠ 0.
+    -- Reduce the representation to `x² = 2y²` in `ZMod p`.
     have hY : (y : ZMod p) ≠ 0 := fun hy0 =>
       hydvd ((ZMod.intCast_zmod_eq_zero_iff_dvd y p).mp hy0)
     have hcast : (x : ZMod p) ^ 2 - 2 * (y : ZMod p) ^ 2 = 0 := by
@@ -1372,7 +1372,7 @@ theorem ex_2_23_d (p : ℕ) (hp : p.Prime) (hodd : Odd p)
           push_cast at hc
           simpa [ZMod.natCast_self] using hc
     have hXY : (x : ZMod p) ^ 2 = 2 * (y : ZMod p) ^ 2 := by linear_combination hcast
-    -- Step 3: 2 = (x·y⁻¹)².
+    -- Then `2 = (x · y⁻¹)²`.
     refine ⟨(x : ZMod p) * (y : ZMod p)⁻¹, ?_⟩
     have hYinv : (y : ZMod p) * (y : ZMod p)⁻¹ = 1 := mul_inv_cancel₀ hY
     calc (2 : ZMod p)
@@ -1550,9 +1550,9 @@ theorem ex_2_26 :
 /-- **Exercise 2.27(a).** An odd prime represented by two forms `f, g` of the same
 discriminant forces `f` and `g` to be equivalent.
 
-Note: Cox's exercise text states this without an oddness hypothesis, but his proof
-(examining the middle coefficient mod `p` via Lemma 2.3) uses `p` odd, so we keep
-the hypothesis `Odd p` and flag the divergence. -/
+Cox's exercise text does not state the oddness hypothesis. The proof used here
+examines the middle coefficient modulo `p` via Lemma 2.3 and requires `Odd p`,
+so the formal statement includes that additional assumption. -/
 private theorem pe_to_eq {f g : BinaryQF} (h : ProperlyEquivalent f g) : Equivalent f g := by
   obtain ⟨M, hM, hact⟩ := h
   exact ⟨M, Or.inl hM, hact⟩
@@ -1640,14 +1640,14 @@ theorem ex_2_27_a (f g : BinaryQF) (hfg : f.discr = g.discr) (p : ℕ) (hp : p.P
     exact equivalent_equivalence.trans e1
       (equivalent_equivalence.trans e2 (equivalent_equivalence.trans e3 e4))
 
-/-! ## Target 2 : ex_1_15 -/
+/-! ### A reduced form equivalent to the principal form -/
 
 /-- **Exercise 2.27(b).** A reduced form equivalent to `x² + ny²` equals it. -/
 theorem ex_2_27_b (n : ℤ) (g : BinaryQF) (hg : g.Reduced) (h : Equivalent ⟨1, 0, n⟩ g) :
     g = ⟨1, 0, n⟩ := by
-  -- FLAG (under-hypothesized): FALSE as stated for `n = 0`, where `⟨0,0,1⟩` is reduced and
-  -- equivalent to `⟨1,0,0⟩` (via the determinant `−1` swap) yet different from it; see
-  -- `ex_2_27_b_FALSE`. Cox's context supplies `n > 0`, i.e. positive definiteness.
+  -- This signature fails at `n = 0`: `⟨0,0,1⟩` is reduced and equivalent to
+  -- `⟨1,0,0⟩` by the determinant `−1` swap, but the forms are distinct.
+  -- See `ex_2_27_b_FALSE`. Cox's context supplies `n > 0`, hence positive definiteness.
   sorry
 
 /-- Exercise 2.27(b) fails without positivity of `n`: at `n = 0` the reduced form

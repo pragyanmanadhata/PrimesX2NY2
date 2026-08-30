@@ -9,14 +9,12 @@ import PrimesX2NY2.PartI_Forms.Genera
 /-!
 # Part I, §3 - Exercises (Cox, *Primes of the Form x² + ny²*, §3.E)
 
-Faithful statements for the concrete, self-contained parts of Exercises 3.1-3.25.
-Sub-parts that merely ask to *prove* a spine lemma, *complete a proof*, *enumerate*
-forms of a given discriminant, or that need machinery not yet built (the
-direct-composition predicate, `ℚ`/`ℤ_p`-equivalence, the abstract group structure
-on `C(D)`, or the Kronecker symbol) are recorded as `\notready` blueprint nodes
-only - see ROADMAP.
+Selected parts of Exercises 3.1-3.25, including composition identities, full and
+proper equivalence, and representation uniqueness. Parts without Lean statements
+are tracked as `\notready` nodes in the blueprint; see `ROADMAP.md`.
 
-**Scaffold only:** every proof is `sorry`.
+Six declarations still have `sorry` proofs. Exercise 3.1(c) also has a corrected
+version with the necessary discriminant hypotheses.
 -/
 
 namespace PrimesX2NY2.PartI.S3
@@ -65,16 +63,16 @@ theorem ex_3_1_c (a b c a' b' c' A B C a₁ b₁ c₁ d₁ a₂ b₂ c₂ d₂ :
               * (a₂ * x * z + b₂ * x * w + c₂ * y * z + d₂ * y * w)
           + C * (a₂ * x * z + b₂ * x * w + c₂ * y * z + d₂ * y * w) ^ 2) :
     a' = a₁ * c₂ - a₂ * c₁ ∨ a' = -(a₁ * c₂ - a₂ * c₁) := by
-  -- FLAG (under-hypothesized): FALSE as stated. The composition hypothesis alone does not
-  -- pin `a'` down to sign; one must also know the two discriminants agree and are nonzero.
+  -- The composition hypothesis alone does not determine `a'` up to sign.
+  -- The missing assumptions are equality and nonvanishing of the two discriminants.
   -- Counterexample: `f = x² − y²`, `g = z² − w²`, `F(X,Y) = X·Y` with
   -- `X = (x−y)(z−w)`, `Y = (x+y)(z+w)` — i.e. `a₁=1, b₁=c₁=−1, d₁=1`, `a₂=b₂=c₂=d₂=1`,
   -- `A=C=0, B=1`. Then `h` holds identically but `a' = 1` while `a₁c₂ − a₂c₁ = 2`.
-  -- (Here `disc f = 4` but `disc F = 1`.) See `ex_3_1_c_fixed` for the faithful version.
+  -- Here `disc f = 4` but `disc F = 1`. See `ex_3_1_c_fixed` for the corrected statement.
   sorry
 
-/-- **Exercise 3.1(c)**, faithful form: `a' = ±(a₁c₂ − a₂c₁)` once the two discriminants
-are known to agree and be nonzero. The identity `key` below is the symmetric partner of
+/-- **Exercise 3.1(c)** with the discriminant hypotheses: `a' = ±(a₁c₂ − a₂c₁)` when
+the two discriminants agree and are nonzero. The identity `key` below is the symmetric partner of
 `ex_3_1_b` and holds unconditionally. -/
 theorem ex_3_1_c_fixed (a b c a' b' c' A B C a₁ b₁ c₁ d₁ a₂ b₂ c₂ d₂ : ℤ)
     (h : ∀ x y z w : ℤ,

@@ -13,12 +13,13 @@ import PrimesX2NY2.PartII_ClassFieldTheory.RingClassField
 
 Cox, *Primes of the Form x² + ny²*, **Theorem 9.2** (and Cor 9.4).
 
-The synthesis of Part I and II: for suitable `n`, a prime `p ∤ n` is of the form
+For suitable `n`, a prime `p ∤ n` is of the form
 `x² + ny²` iff it splits completely in the ring class field, iff a class
 polynomial `f_n` has a root mod `p` together with the residue condition
 `(−n / p) = 1`.
 
-**Scaffold only:** every proof is `sorry`.
+The class polynomial and proofs are unfinished. The theorem signatures are
+provisional and still need the hypotheses discussed in their comments.
 -/
 
 namespace PrimesX2NY2.MainTheorem
@@ -38,18 +39,20 @@ theorem classPolynomial_natDegree (n : ℕ) :
     (classPolynomial n).natDegree =
       Nat.card (PrimesX2NY2.Forms.FormClassGroup (-4 * n)) := sorry
 
-/-- **Main Theorem - splitting form** (Cox, Thm 9.2). For the order `𝒪` of
+/-- Main theorem in terms of splitting (Cox, Thm 9.2). For the order `𝒪` of
 discriminant `−4n`, an odd prime `p` not dividing `n` (nor the conductor) is
 represented as `p = x² + n y²` iff `p` splits completely in the ring class
-field. -/
+field. The current signature does not yet relate `O.discr` to `−4n` or require
+`p` to be odd. -/
 theorem prime_repr_iff_splits (n : ℕ) (O : QuadOrder) (p : ℕ) (hp : p.Prime)
     (hpn : ¬ (p : ℤ) ∣ n) :
     (∃ x y : ℤ, (p : ℤ) = x ^ 2 + n * y ^ 2) ↔ SplitsCompletely O p := by
   sorry
 
-/-- **Main Theorem - class polynomial form** (Cox, Cor 9.4). Representability is
+/-- Main theorem in terms of the class polynomial (Cox, Cor 9.4). Representability is
 detected by a root of the class polynomial mod `p` together with the quadratic
-residue condition `(−n / p) = 1`. This is the computational criterion. -/
+residue condition `(−n / p) = 1`. The current signature still needs the
+restrictions on `n` and on the primes to which this criterion applies. -/
 theorem prime_repr_iff_classPoly_root (n : ℕ) (p : ℕ) (hp : p.Prime) :
     (∃ x y : ℤ, (p : ℤ) = x ^ 2 + n * y ^ 2) ↔
       IsSquare ((-(n : ℤ)) : ZMod p) ∧

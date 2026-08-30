@@ -10,15 +10,16 @@ import PrimesX2NY2.PartI_Forms.BiquadraticReciprocity
 /-!
 # Part I, §4 - Exercises (Cox, *Primes of the Form x² + ny²*, §4.D)
 
-Faithful statements for the concrete, self-contained parts of Exercises 4.1-4.29.
-Sub-parts that *prove* a spine result, complete a proof, or require machinery not
-yet built (Gaussian periods/sums, the quotient residue fields, the full character
-constructions) are recorded as `\notready` blueprint nodes only - see ROADMAP.
+Selected parts of Exercises 4.1-4.29. The blueprint tracks the parts without Lean
+statements, including those requiring Gaussian periods and sums, residue fields,
+or the full residue-character constructions; see `ROADMAP.md`.
 
 Exercise 4.6 (that `ℤ[√−3]` is neither a PID nor a UFD) is formalized over
-Mathlib's `Zsqrtd (-3)` - precisely the ring we must *not* use for `ℤ[ω]`.
+Mathlib's `Zsqrtd (-3)`. This is the order `ℤ[√−3]`, which is strictly contained
+in the Eisenstein integers `ℤ[ω]`.
 
-**Scaffold only:** every proof is `sorry`.
+The arithmetic and ideal-theoretic exercises are proved. Four statements about
+residue characters and cubic representation still have `sorry` proofs.
 -/
 
 namespace PrimesX2NY2.PartI.S4
@@ -72,7 +73,7 @@ theorem ex_4_6_a (x : Zsqrtd (-3)) : IsUnit x ↔ (x = 1 ∨ x = -1) := by
     · right; rw [Zsqrtd.ext_iff]; exact ⟨by simpa using hr, by simpa using him⟩
   · rintro (rfl | rfl) <;> decide
 
-/-- Norm on `ℤ[√-3]` in the convenient form `a² + 3b²`. -/
+/-- The norm on `ℤ[√−3]` is `a² + 3b²`. -/
 lemma norm_val (a b : ℤ) : (⟨a, b⟩ : Zsqrtd (-3)).norm = a * a + 3 * (b * b) := by
   rw [Zsqrtd.norm_def]; ring
 
@@ -144,7 +145,7 @@ theorem ex_4_6_c :
   set I : Ideal (Zsqrtd (-3)) :=
     Ideal.span {(2 : Zsqrtd (-3)), (⟨1, 1⟩ : Zsqrtd (-3))} with hI
   set d : Zsqrtd (-3) := Submodule.IsPrincipal.generator I with hdgen
-  -- every element of the ideal has coordinates of equal parity
+  -- Every element of the ideal has coordinates of equal parity.
   have hpar : ∀ x : Zsqrtd (-3), x ∈ I → 2 ∣ (x.re + x.im) := by
     intro x hx
     rw [hI, Ideal.mem_span_pair] at hx
@@ -154,33 +155,33 @@ theorem ex_4_6_c :
     simp only [Zsqrtd.re_add, Zsqrtd.im_add, Zsqrtd.re_mul, Zsqrtd.im_mul,
       Zsqrtd.re_ofNat, Zsqrtd.im_ofNat] at hre him
     omega
-  -- the generator divides both generators of the ideal
+  -- A principal generator would divide both `2` and `1 + √−3`.
   have hd2 : d ∣ 2 :=
     (Submodule.IsPrincipal.mem_iff_generator_dvd I).mp
       (Ideal.subset_span (Set.mem_insert _ _))
   have hd11 : d ∣ (⟨1, 1⟩ : Zsqrtd (-3)) :=
     (Submodule.IsPrincipal.mem_iff_generator_dvd I).mp
       (Ideal.subset_span (Set.mem_insert_of_mem _ rfl))
-  -- the generator's coordinates have equal parity, so 4 ∣ norm d
+  -- Equal parity of its coordinates makes its norm divisible by `4`.
   have hdpar : 2 ∣ (d.re + d.im) := hpar d (Submodule.IsPrincipal.generator_mem I)
   have h4dvd : (4 : ℤ) ∣ d.norm := by
     obtain ⟨k, hk⟩ := hdpar
     refine ⟨k * k - k * d.im + d.im * d.im, ?_⟩
     have hre : d.re = 2 * k - d.im := by omega
     rw [Zsqrtd.norm_def, hre]; ring
-  -- norm d divides norm 2 = 4
+  -- Its norm also divides `N(2) = 4`.
   obtain ⟨c, hc⟩ := hd2
   have hprod : d.norm * c.norm = 4 := by
     rw [← Zsqrtd.norm_mul, ← hc]
     decide
   have hdvd4 : d.norm ∣ 4 := ⟨c.norm, hprod.symm⟩
-  -- hence norm d = 4 and c is a unit
+  -- Thus the generator has norm `4`, and its complementary factor `c` is a unit.
   have hnd4 : d.norm = 4 :=
     Int.dvd_antisymm (Zsqrtd.norm_nonneg (by norm_num) d) (by norm_num) hdvd4 h4dvd
   have hnc1 : c.norm = 1 := by
     rw [hnd4] at hprod; omega
   have hcu : IsUnit c := (Zsqrtd.norm_eq_one_iff' (by norm_num) c).mp hnc1
-  -- so d is an associate of 2, whence 2 ∣ ⟨1,1⟩, absurd
+  -- It would be associated to `2`, forcing `2 ∣ 1 + √−3`, a contradiction.
   obtain ⟨cu, rfl⟩ := hcu
   have hd2' : (2 : Zsqrtd (-3)) ∣ d := by
     refine ⟨(↑cu⁻¹ : Zsqrtd (-3)), ?_⟩
@@ -269,7 +270,7 @@ theorem ex_4_14 (p : ℕ) (hp : p.Prime) (h2 : p % 3 = 2) (a : ℤ) :
     exact ⟨(v : ZMod p), by rw [← Units.val_pow_eq_pow_val, hv', hu]⟩
 
 /-- **Exercise 4.15(d).** `4p = x² + 243y²` iff `p ≡ 1 (mod 3)` and `3` is a cubic
-residue mod `p` (Euler). **Deep / GAP** - `notready`. -/
+residue mod `p` (Euler). Proof deferred; marked `notready` in the blueprint. -/
 theorem ex_4_15_d (p : ℕ) (hp : p.Prime) :
     (∃ x y : ℤ, 4 * (p : ℤ) = x ^ 2 + 243 * y ^ 2)
       ↔ (p % 3 = 1 ∧ EisensteinInt.IsCubicResidue 3 p) := by

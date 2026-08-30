@@ -10,12 +10,12 @@ import Mathlib
 
 Cox, *Primes of the Form x² + ny²*, §4.B.
 
-Unlike the Eisenstein case, the relevant ring is Mathlib's `GaussianInt`
-(`= Zsqrtd (-1) = ℤ[i]`), which **is** the maximal order, so we reuse its
-`CommRing`/`EuclideanDomain` structure (units, primes, `Associated`, `∣`, `norm`)
-directly. Only the quartic residue character is hand-rolled.
+Mathlib's `GaussianInt` (`Zsqrtd (-1)`, or `ℤ[i]`) supplies the ring and Euclidean
+domain structures, including units, primes, associates, divisibility, and norm.
+The quartic residue character is introduced here.
 
-**Scaffold only:** every proof is `sorry`.
+The rational prime factorization results are proved. The quartic character,
+Fermat's little theorem in `ℤ[i]`, and the reciprocity statements still use `sorry`.
 -/
 
 namespace PrimesX2NY2.BiquadraticReciprocity
@@ -36,7 +36,7 @@ def quarticChar (π α : GaussianInt) : GaussianInt := sorry
 /-- `a` is a **biquadratic residue** mod `p` if `x⁴ ≡ a` is solvable in `ℤ/pℤ`. -/
 def IsBiquadraticResidue (a : ℤ) (p : ℕ) : Prop := ∃ x : ZMod p, x ^ 4 = (a : ZMod p)
 
-/-- **Proposition 4.18(i).** For `p = 2`, `1 + i` is prime and `2 = i³(1 + i)²`. -/
+/-- The parameter `−1` is nonpositive, as required by the norm lemmas for `Zsqrtd`. -/
 theorem dle : (-1 : ℤ) ≤ 0 := by norm_num
 
 /-- An element of `ℤ[i]` whose norm is a rational prime is prime. -/
@@ -96,7 +96,7 @@ theorem prop_4_18_split (p : ℕ) (hp : p.Prime) (h1 : p % 4 = 1) :
       linear_combination -hp2
     · simp only [Zsqrtd.im_mul, conj, Zsqrtd.im_natCast]
       ring
-  -- a and b are nonzero, since p is not a perfect square
+  -- Neither coordinate vanishes, since `p` is not a square.
   have hsq : ∀ c : ℕ, p = c * c → False := by
     intro c hc
     have h2 := hp.two_le
@@ -114,27 +114,27 @@ theorem prop_4_18_split (p : ℕ) (hp : p.Prime) (h1 : p % 4 = 1) :
     rw [Zsqrtd.norm_def]
     linear_combination hp2
   · rintro ⟨u, hu⟩
-    -- π² · u = π · (π · u) = π · conj π = p
+    -- If the conjugates were associates, `π² · u = π · conj π = p`.
     have key : ((⟨a, b⟩ : GaussianInt) * ⟨a, b⟩) * (u : GaussianInt) = (p : GaussianInt) := by
       rw [mul_assoc, hu, ← hprod]
-    -- hence π² = p · u⁻¹, so p divides both components of π²
+    -- Thus `p` divides both coordinates of `π²`.
     have hinv : ((u : GaussianInt)) * ((↑u⁻¹ : GaussianInt)) = 1 := u.mul_inv
     have hsq2 : (⟨a, b⟩ : GaussianInt) * ⟨a, b⟩
         = (p : GaussianInt) * ((↑u⁻¹ : GaussianInt)) := by
       rw [← key, mul_assoc, hinv, mul_one]
     have him2 := congrArg Zsqrtd.im hsq2
     simp only [Zsqrtd.im_mul, Zsqrtd.re_natCast, Zsqrtd.im_natCast] at him2
-    -- p ∣ 2ab
+    -- The imaginary coordinate gives `p ∣ 2ab`.
     have hdvd : (p : ℤ) ∣ 2 * ((a : ℤ) * (b : ℤ)) :=
       ⟨((↑u⁻¹ : GaussianInt)).im, by linarith [him2]⟩
     have hdvdN : p ∣ 2 * (a * b) := by exact_mod_cast hdvd
-    -- p is odd, so p ∣ a or p ∣ b
+    -- Since `p` is odd, it divides `a` or `b`.
     have hp2' : p ≠ 2 := by omega
     have hpab : p ∣ a * b := by
       rcases (Nat.Prime.dvd_mul hp).mp hdvdN with h | h
       · exact absurd (Nat.le_of_dvd (by norm_num) h) (by omega)
       · exact h
-    -- but 0 < a, b < p
+    -- Both coordinates lie strictly between `0` and `p`, a contradiction.
     have halt : a < p := by nlinarith [hp2, hab, Nat.one_le_iff_ne_zero.mpr hane,
       Nat.one_le_iff_ne_zero.mpr hbne]
     have hblt : b < p := by nlinarith [hp2, hab, Nat.one_le_iff_ne_zero.mpr hane,
@@ -174,8 +174,8 @@ theorem quarticChar_eq_one_iff (π α : GaussianInt) (hπ : Prime π) (hα : ¬ 
   sorry
 
 /-- **Theorem 4.21** (Biquadratic Reciprocity). For distinct primary primes `π, θ`,
-`(π/θ)₄ = (θ/π)₄ · (−1)^{(N(π)−1)(N(θ)−1)/16}`. **Deep / GAP** - `notready`, never an
-axiom. -/
+`(π/θ)₄ = (θ/π)₄ · (−1)^{(N(π)−1)(N(θ)−1)/16}`.
+Proof deferred; marked `notready` in the blueprint. -/
 theorem thm_4_21 (π θ : GaussianInt) (hπ : Prime π) (hθ : Prime θ)
     (hpπ : IsPrimaryG π) (hpθ : IsPrimaryG θ) (hne : ¬ Associated π θ) :
     quarticChar θ π
@@ -184,22 +184,22 @@ theorem thm_4_21 (π θ : GaussianInt) (hπ : Prime π) (hθ : Prime θ)
   sorry
 
 /-- **(4.22)** Supplementary laws. For primary `π = a + bi`,
-`(i/π)₄ = i^{−(a−1)/2}` and `((1+i)/π)₄ = i^{(a−b−1−b²)/4}`. **Deep / GAP** -
-`notready`. -/
+`(i/π)₄ = i^{−(a−1)/2}` and `((1+i)/π)₄ = i^{(a−b−1−b²)/4}`.
+Proof deferred; marked `notready` in the blueprint. -/
 theorem supplementary_4_22 (a b : ℤ) (hpr : IsPrimaryG ⟨a, b⟩) :
     quarticChar ⟨a, b⟩ gaussI = gaussI ^ (((-(a - 1)) / 2 % 4).toNat)
       ∧ quarticChar ⟨a, b⟩ ⟨1, 1⟩ = gaussI ^ (((a - b - 1 - b ^ 2) / 4 % 4).toNat) := by
   sorry
 
-/-- **Theorem 4.23(i).** For primary `π = a + bi`, `(2/π)₄ = i^{ab/2}`. **Deep /
-GAP** - `notready`. -/
+/-- **Theorem 4.23(i).** For primary `π = a + bi`, `(2/π)₄ = i^{ab/2}`.
+Proof deferred; marked `notready` in the blueprint. -/
 theorem thm_4_23_i (a b : ℤ) (hpr : IsPrimaryG ⟨a, b⟩) :
     quarticChar ⟨a, b⟩ (2 : GaussianInt) = gaussI ^ ((a * b / 2 % 4).toNat) := by
   sorry
 
 /-- **Theorem 4.23(ii)** (Euler's conjecture). `p = x² + 64y²` iff `p ≡ 1 (mod 4)`
-and `2` is a biquadratic residue mod `p`. **Deep / GAP** - `notready`, never an
-axiom. -/
+and `2` is a biquadratic residue mod `p`.
+Proof deferred; marked `notready` in the blueprint. -/
 theorem thm_4_23_ii (p : ℕ) (hp : p.Prime) :
     (∃ x y : ℤ, (p : ℤ) = x ^ 2 + 64 * y ^ 2)
       ↔ (p % 4 = 1 ∧ IsBiquadraticResidue 2 p) := by

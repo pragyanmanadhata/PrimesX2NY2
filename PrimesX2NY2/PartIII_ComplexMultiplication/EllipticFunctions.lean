@@ -13,7 +13,8 @@ Cox, *Primes of the Form x² + ny²*, §10.
 Lattices in `ℂ`, the Weierstrass `℘`-function and its differential equation, the
 Eisenstein series `g₂, g₃`, and the `j`-invariant of a lattice.
 
-**Scaffold only:** every proof is `sorry`.
+The lattice structure and formula for the `j`-invariant are defined below.
+The Weierstrass functions, Eisenstein series, and their properties still use `sorry`.
 -/
 
 namespace PrimesX2NY2.Elliptic

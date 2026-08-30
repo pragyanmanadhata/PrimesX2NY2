@@ -13,31 +13,33 @@ import PrimesX2NY2.PartII_ClassFieldTheory.Orders
 
 Cox, *Primes of the Form x² + ny²*, **Theorem 7.7**.
 
-The central structural result of Part II: for a negative discriminant
-`D = f² d_K`, the form class group `C(D)` is isomorphic to the ideal class group
+For a negative discriminant `D = f² d_K`, the form class group `C(D)` is
+isomorphic to the ideal class group
 of the order `𝒪` of discriminant `D`, intertwining Dirichlet composition with
 ideal multiplication.
 
-**Scaffold only:** every proof is `sorry`.
+The order construction and equivalence proofs are unfinished. The signatures
+below use provisional ideal-class carriers from `Orders.lean`.
 -/
 
 namespace PrimesX2NY2.Bridge
 
 open PrimesX2NY2.Forms PrimesX2NY2.Order
 
-/-- The order whose discriminant equals a given negative discriminant `D`
-(conductor and field discriminant extracted from `D`). Placeholder. (Cox, §7.) -/
+/-- Placeholder for the order obtained by extracting the conductor and field
+discriminant from a negative discriminant `D`. The signature does not yet impose
+these conditions on `D`. (Cox, §7.) -/
 def orderOfDiscr (D : ℤ) : QuadOrder := sorry
 
-/-- **The bridge (Cox, Theorem 7.7).** For the order `𝒪` of discriminant `D < 0`,
-the form class group `C(D)` is isomorphic, as a group, to the ideal class group
-`C(𝒪)`. Stated as a multiplicative equivalence built from a bijection. -/
+/-- The underlying equivalence in Cox's Theorem 7.7, which identifies form
+classes with ideal classes of the order. This provisional statement uses an
+equivalence of types; it does not yet express a group isomorphism. -/
 theorem formClassGroup_equiv_idealClassGroup (O : QuadOrder) :
     Nonempty (FormClassGroup O.discr ≃ O.idealClassGroup) := sorry
 
-/-- The bridge intertwines Dirichlet composition on forms with ideal
-multiplication on ideal classes: there is an equivalence `e` and an ideal-class
-multiplication `mul` with `e (f ∘ g) = mul (e f) (e g)`. (Cox, Thm 7.7.) -/
+/-- A provisional compatibility statement for Cox's Theorem 7.7: an equivalence
+`e` carries Dirichlet composition to an operation `mul` on ideal classes. The
+operation still needs to be identified with multiplication of ideals. -/
 theorem bridge_respects_composition (O : QuadOrder) :
     ∃ (e : FormClassGroup O.discr ≃ O.idealClassGroup)
       (mul : O.idealClassGroup → O.idealClassGroup → O.idealClassGroup),

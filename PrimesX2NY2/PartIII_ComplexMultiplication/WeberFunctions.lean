@@ -13,11 +13,12 @@ import PrimesX2NY2.PartIII_ComplexMultiplication.ModularFunctions
 
 Cox, *Primes of the Form x² + ny²*, §12 (2nd ed.).
 
-Weber's modular functions give smaller generators of ring class fields than `j`,
-yielding explicit, lower-height class polynomials; Shimura reciprocity computes
+Weber's modular functions give generators of smaller height than `j` and can
+simplify class polynomials. Shimura reciprocity describes
 the Galois action on their CM values.
 
-**Scaffold only:** every proof is `sorry`.
+The Weber function, class polynomial, and all theorem proofs are unfinished.
+Their definitions and proofs use `sorry`.
 -/
 
 namespace PrimesX2NY2.Weber
@@ -49,10 +50,10 @@ theorem isIntegral_weber_of_cm (τ : ℂ) (hτ : IsCMPoint τ) :
     IsIntegral ℤ (weber τ) := by
   sorry
 
-/-- **Shimura reciprocity** (Cox, §12, 2nd-ed. addition). The idèle/idele class
-group acts on CM values of modular functions, giving an explicit description of
-the Galois action `C(𝒪) → Gal(L/K)` on Weber values. Stated as the existence of
-such a compatible action on the ideal class group. **Deep - cite/assume.** -/
+/-- Placeholder for Shimura reciprocity (Cox, §12, 2nd-ed. addition). The intended
+result describes the action of the idèle class group on CM values and the Galois
+action `C(𝒪) → Gal(L/K)` on Weber values. The current signature is only a
+self-equivalence of the ideal-class carrier; it does not yet express either action. -/
 theorem shimuraReciprocity (O : QuadOrder) :
     Nonempty (O.idealClassGroup ≃ O.idealClassGroup) := sorry
 

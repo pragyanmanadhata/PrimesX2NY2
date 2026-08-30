@@ -17,7 +17,8 @@ The `j`-function on the upper half-plane, modular functions for `SL₂(ℤ)`, an
 theory of complex multiplication: CM values `j(τ)` are algebraic integers
 generating ring class fields.
 
-**Scaffold only:** every proof is `sorry`.
+Only the Möbius action is defined explicitly. The modular function and CM-point
+predicates, the `j`-function, and all theorem proofs remain unfinished.
 -/
 
 namespace PrimesX2NY2.Modular
@@ -55,10 +56,10 @@ theorem isIntegral_jFunction_of_cm (τ : ℂ) (hτ : IsCMPoint τ) :
     IsIntegral ℤ (jFunction τ) := by
   sorry
 
-/-- **`j` generates the ring class field** (Cox, Thm 11.1 / §11). For the order
-`𝒪` there is a CM point `τ` whose value `j(τ)` is an algebraic integer generating
-the ring class field `L = K(j(τ))` over `K`. Stated here as the existence of such
-a CM generator (the field-generation part is the deep content of §11). -/
+/-- Preliminary statement toward generation of the ring class field by `j`
+(Cox, Thm 11.1 / §11). The intended result is `L = K(j(τ))` for a CM point
+associated with `𝒪`. The current signature only asks for a CM point with integral
+`j`-value; it does not yet relate that point to `O` or express field generation. -/
 theorem jFunction_generates_ringClassField (O : QuadOrder) :
     ∃ τ : ℂ, IsCMPoint τ ∧ IsIntegral ℤ (jFunction τ) := sorry
 

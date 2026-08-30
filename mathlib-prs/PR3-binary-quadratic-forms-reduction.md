@@ -1,9 +1,9 @@
 # Mathlib PR draft #3 — Gauss reduction theory of binary quadratic forms
 
-**Status:** DRAFT — not submitted. The mathematical content is proved and axiom-clean
-in this project (`PrimesX2NY2/PartI_Forms/Forms.lean`). This is the largest and most
-valuable of the three drafts, and the only one that adds a genuinely missing *area*
-rather than a missing lemma. It would need to be split into a series of PRs.
+**Status:** Draft; not submitted. The proposed results are proved in
+`PrimesX2NY2/PartI_Forms/Forms.lean` without `sorryAx` dependencies. The contribution
+would add definitions, equivalence, reduction, and finiteness results across a series
+of PRs. Its design needs discussion and human review before submission.
 
 ## Titles (a series, in dependency order)
 
@@ -17,10 +17,10 @@ rather than a missing lemma. It would need to be split into a series of PRs.
 New directory `Mathlib/NumberTheory/BinaryQuadraticForm/` with `Defs.lean`,
 `Equivalence.lean`, `Reduction.lean`, `Finiteness.lean`.
 
-## Motivation: the gap
+## Motivation
 
-Mathlib currently has **no binary quadratic forms in the classical (Gauss) sense**.
-Searching the tree confirms:
+The search of the pinned Mathlib tree found no treatment of binary quadratic forms
+in the classical Gauss sense:
 
 - `Mathlib/LinearAlgebra/QuadraticForm/*` — abstract quadratic forms over modules.
   Nothing about integral binary forms, their discriminant `b² − 4ac`, the
@@ -28,22 +28,23 @@ Searching the tree confirms:
 - `Mathlib/NumberTheory/ClassNumber/*`, `Mathlib/RingTheory/ClassGroup/*` — class
   groups of Dedekind domains (i.e. *maximal* orders), via ideals. This is the
   ideal-theoretic side of the correspondence; the form-theoretic side is absent.
-- `grep -rl "binary quadratic" Mathlib/` returns only an unrelated comment in
+- A search for "binary quadratic" found only an unrelated comment in
   `LegendreSymbol/Basic.lean`.
 
-So the classical theory — Gauss's `Disquisitiones` Art. 171 ff., the content of
-Cox, *Primes of the Form x²+ny²* §2 — is missing entirely, despite being the
-historical origin of class field theory and a standard undergraduate topic.
+This proposal covers the classical theory in Gauss's *Disquisitiones*, Art. 171 ff.,
+and Cox, *Primes of the Form x²+ny²*, §2.
 
-What it unlocks: class numbers `h(D)` as a computable object, the form/ideal class
-group correspondence (bridging to Mathlib's existing `ClassGroup`), genus theory,
-and the representation theorems `p = x² + ny²` (two of which this project proved on
-top of exactly this machinery — see "Downstream evidence").
+This provides a basis for computable class numbers `h(D)`, the form/ideal class
+group correspondence with Mathlib's `ClassGroup`, genus theory, and representation
+theorems `p = x² + ny²`. The project already uses the reduction results to prove two
+such representation theorems, listed below.
 
 ## Contents
 
-Statements below are the project's, modulo renaming into Mathlib style
-(`BinaryQF` → `BinaryQuadraticForm`, namespaced lemmas). All are proved.
+The statements below summarize results proved in the project, with proposed
+Mathlib names (`BinaryQF` → `BinaryQuadraticForm`, namespaced lemmas). Some snippets
+abbreviate arguments and definitions; they are an API outline, not a standalone
+Lean file.
 
 ### 1. Definitions
 
@@ -86,7 +87,7 @@ theorem discr_eq_of_properlyEquivalent {f g} (h : ProperlyEquivalent f g) : f.di
 theorem primitive_action_iff (M) (f) (hM : M.det = 1) : (action M f).Primitive ↔ f.Primitive
 ```
 
-### 3. Reduction — the keystone (Gauss; Cox Thm 2.8)
+### 3. Reduction (Gauss; Cox Thm 2.8)
 
 ```lean
 /-- Every positive definite form is properly equivalent to a *unique* reduced form. -/
@@ -94,7 +95,7 @@ theorem exists_unique_reduced (f : BinaryQuadraticForm) (hf : f.PosDef) :
     ∃! g, g.Reduced ∧ ProperlyEquivalent f g
 ```
 
-with the two halves also stated separately, since both get used on their own:
+The uniqueness result and the elementary equivalences are also available separately:
 
 ```lean
 theorem reduced_eq_of_properlyEquivalent (f g) (hf : f.Reduced) (hg : g.Reduced)
@@ -104,9 +105,10 @@ theorem translate_equiv (a b c t : ℤ) :
 theorem swap_equiv (a b c : ℤ) : ProperlyEquivalent ⟨a, b, c⟩ ⟨c, -b, a⟩
 ```
 
-Proof shape: translate by `T = !![1, t; 0, 1]` into `|b| ≤ a`, then swap by
-`S = !![0, -1; 1, 0]` whenever `c < a`; strong induction on `a.natAbs`. Uniqueness is
-a rigidity argument on the values `f.eval` takes at `±(1,0)` and `±(0,1)`.
+For existence, translate by `T = !![1, t; 0, 1]` to obtain `|b| ≤ a`, then swap by
+`S = !![0, -1; 1, 0]` whenever `c < a`. The proof uses strong induction on
+`a.natAbs`. Uniqueness follows by comparing the values of `f.eval` at `±(1,0)`
+and `±(0,1)`.
 
 ### 4. Finiteness
 
@@ -115,29 +117,32 @@ theorem finite_reduced_of_discr (D : ℤ) (hD : D < 0) :
     {f : BinaryQuadraticForm | f.discr = D ∧ f.Reduced ∧ f.PosDef}.Finite
 ```
 
-which with (3) gives finiteness of the class number `h(D)` — the form-side analogue
-of Mathlib's `NumberField.classNumber` finiteness.
+Together with reduction, this gives finiteness of the class number `h(D)`, the
+form-side analogue of Mathlib's `NumberField.classNumber` finiteness.
 
-## Downstream evidence that the API is usable
+## Uses in this project
 
-Built on exactly these lemmas, this project proved (all axiom-clean):
+The project uses these lemmas in the following results, all checked without
+`sorryAx` dependencies:
 
 - `p = x² + 2y² ↔ p ≡ 1, 3 (mod 8)` for odd primes `p`;
 - `p = x² + 3y² ↔ p ≡ 1 (mod 3)` for primes `p > 3`;
 - `(D/p) = 1 ↔ p` is represented by a primitive form of discriminant `D` (Cox Lemma 2.3);
 - distinctness of the four composition classes of discriminant `−1076`.
 
-The first two are the classical results this area exists to prove, and they came out
-of the reduction theorem plus a two-line enumeration of reduced forms of
-discriminant `−8` and `−12`. That is decent evidence the interface is the right one.
+The first two combine reduction with an enumeration of reduced forms of
+discriminant `−8` and `−12`. They exercise the proposed interface in concrete
+representation proofs, though the interface still needs upstream review.
 
 ## Verification status
 
-`Mathlib/NumberTheory/BinaryQuadraticForm/` content above corresponds to
-`PrimesX2NY2/PartI_Forms/Forms.lean`, whose **only** remaining `sorry` is Landau's
-theorem `class_number_one` (`h(−4n) = 1 ↔ n ∈ {1,2,3,4,7}`) — deliberately out of
-scope here and not part of this PR series. Everything listed above compiles and
-`#print axioms` reports exactly `[propext, Classical.choice, Quot.sound]`.
+The proposed `Mathlib/NumberTheory/BinaryQuadraticForm/` content comes from
+`PrimesX2NY2/PartI_Forms/Forms.lean`. That file still contains one `sorry`, in
+Landau's theorem `class_number_one` (`h(−4n) = 1 ↔ n ∈ {1,2,3,4,7}`), which is
+outside this proposed series. The supporting results listed here compile in the
+project; their recorded `#print axioms` checks report
+`[propext, Classical.choice, Quot.sound]`. The renamed and reorganized upstream
+files have not yet been prepared or checked.
 
 ## Open questions for the reviewer
 
@@ -146,16 +151,17 @@ scope here and not part of this PR series. Everything listed above compiles and
    `a, b, c` accessible for `decide`/`omega`-style arguments), or a bundled
    `QuadraticForm ℤ (Fin 2 → ℤ)` with an API layer? The standalone version made the
    reduction proofs tractable; the bundled version integrates with existing
-   `LinearAlgebra` machinery. A conversion lemma between the two seems the honest
-   answer, but which is the primary definition matters for naming.
+   `LinearAlgebra` machinery. A conversion between the two may be useful, but the
+   choice of primary definition still matters for naming and the interface.
 2. **The action's variance.** This project uses
    `action N (action M f) = action (M * N) f` (contravariant). Mathlib may prefer a
-   genuine `MulAction` of `SL(2, ℤ)` (or its opposite) on forms; that means either
-   flipping the convention or acting through `Mᵀ`. Worth settling before the first PR.
+   `MulAction` of `SL(2, ℤ)` (or its opposite) on forms; that means either
+   changing the convention or acting through `Mᵀ`. This needs settling before the
+   first PR because it affects downstream proofs.
 3. **`Reduced`'s boundary condition.** The `((|b| = a ∨ a = c) → 0 ≤ b)` clause is
    what makes the reduced representative *unique*. Some sources fold this into a
-   normalization instead. Keeping uniqueness seems clearly right, but the clause
-   should be documented prominently since it is easy to get wrong.
+   normalization instead. The definition needs to make this convention clear
+   whichever formulation is chosen.
 4. **Indefinite forms.** This project's `Reduced` is the positive-definite notion.
    The indefinite theory (period/cycle of reduced forms, continued fractions) is a
    separate and larger development, not proposed here — but the naming should leave

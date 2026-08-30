@@ -10,13 +10,16 @@ import Mathlib
 
 Cox, *Primes of the Form x² + ny²*, §4.A.
 
-Mathlib has no Eisenstein integers, so we define a **lightweight** `EisensteinInt`
-structure `{a + bω}` (`ω = e^{2πi/3}`, a root of `x² + x + 1`) with explicit
-arithmetic and norm. We deliberately do **not** use `Zsqrtd (-3)`: that is the
-order `ℤ[√−3]` of conductor `2`, *not* the maximal order `ℤ[ω] = ℤ[(−1+√−3)/2]`
-(see Exercise 4.6, which shows `ℤ[√−3]` is neither a PID nor a UFD).
+`EisensteinInt` represents `a + bω`, where `ω = e^{2πi/3}` satisfies
+`ω² + ω + 1 = 0`, with explicit arithmetic and norm. The pinned Mathlib version
+does not provide this ring. Its `Zsqrtd (-3)` represents the smaller order
+`ℤ[√−3]` of conductor `2`; the maximal order needed here is
+`ℤ[ω] = ℤ[(−1+√−3)/2]`. Exercise 4.6 shows why the distinction matters:
+`ℤ[√−3]` is neither a PID nor a UFD.
 
-**Scaffold only:** every proof is `sorry`.
+Euclidean division, the unit and prime criteria, and rational prime splitting
+are proved below. The cubic character, its properties, and the reciprocity
+theorems remain unfinished, with `sorry` definitions and proofs.
 -/
 
 namespace PrimesX2NY2.CubicReciprocity
@@ -76,7 +79,7 @@ theorem neg_three_isSquare_iff' (p : ℕ) [Fact p.Prime] (hodd : Odd p) (hp3 : p
     rw [hneg]
     omega
 
-/-! ### Small arithmetic helpers (kept context-free so `omega` is safe) -/
+/-! ### Integer arithmetic -/
 
 theorem int_eq_one_of_toNat (n : ℤ) (h0 : 0 ≤ n) (h : n.toNat = 1) : n = 1 := by omega
 
@@ -127,7 +130,7 @@ def norm (x : EisensteinInt) : ℤ := x.a ^ 2 - x.a * x.b + x.b ^ 2
 /-- Complex conjugation: `conj(a + bω) = (a − b) − bω`. -/
 def conj (x : EisensteinInt) : EisensteinInt := ⟨x.a - x.b, -x.b⟩
 
-/-- The `n`-th power (our `EisensteinInt` is not registered as a `Monoid`). -/
+/-- Natural-number powers, defined directly since `EisensteinInt` has no `Monoid` instance. -/
 def power (x : EisensteinInt) : ℕ → EisensteinInt
   | 0 => 1
   | n + 1 => x * power x n
@@ -149,9 +152,9 @@ def IsPrimeE (π : EisensteinInt) : Prop :=
 /-- `α ≡ β (mod π)`. -/
 def ModEq (π α β : EisensteinInt) : Prop := π ∣ (α - β)
 
-/-- A prime `π` is **primary** if `π ≡ ±1 (mod 3)`. (This is Cox's normalization;
-Ireland-Rosen use `π ≡ −1 (mod 3)`, which since `(−1/π)₃ = 1` does not affect cubic
-reciprocity. See the report's FLAG LIST.) -/
+/-- A prime `π` is primary if `π ≡ ±1 (mod 3)`, following Cox's normalization.
+Ireland-Rosen use `π ≡ −1 (mod 3)`; the difference does not affect cubic
+reciprocity because `(−1/π)₃ = 1`. -/
 def IsPrimary (π : EisensteinInt) : Prop :=
   ModEq (ofInt 3) π 1 ∨ ModEq (ofInt 3) π (-1)
 
@@ -159,7 +162,7 @@ def IsPrimary (π : EisensteinInt) : Prop :=
 cube root of unity with `α^{(N(π)−1)/3} ≡ (α/π)₃ (mod π)`. -/
 def cubicChar (π α : EisensteinInt) : EisensteinInt := sorry
 
-/-- `2` is a **cubic residue** mod `p` if `x³ ≡ a` is solvable in `ℤ/pℤ`. -/
+/-- `a` is a cubic residue mod `p` if `x³ ≡ a` is solvable in `ℤ/pℤ`. -/
 def IsCubicResidue (a : ℤ) (p : ℕ) : Prop := ∃ x : ZMod p, x ^ 3 = (a : ZMod p)
 
 /-- **Norm is multiplicative.** (Cox §4.A.) -/
@@ -388,7 +391,7 @@ theorem dvd_mul_right' (d x y : EisensteinInt) (h : d ∣ x) : d ∣ (x * y) := 
   obtain ⟨c, hc⟩ := h
   exact ⟨c * y, by rw [hc, mul_assoc']⟩
 
-/-! ### Bezout via the Euclidean algorithm -/
+/-! ### Bézout's identity from the Euclidean algorithm -/
 
 theorem bezout_aux : ∀ (n : ℕ) (x y : EisensteinInt), (EisensteinInt.norm y).natAbs < n →
     ∃ d s t : EisensteinInt, d = s * x + t * y ∧ d ∣ x ∧ d ∣ y := by
@@ -415,8 +418,9 @@ theorem bezout (x y : EisensteinInt) :
 
 /-! ### Corollary 4.4 -/
 
-/-- **Corollary 4.4.** `ℤ[ω]` is a PID and a UFD; in particular irreducible
-elements coincide with primes. -/
+/-- **Corollary 4.4.** A nonzero Eisenstein integer is irreducible iff it is prime.
+Cox obtains this from the PID and UFD properties of `ℤ[ω]`; this statement records
+the equivalence needed below, without introducing those typeclass instances. -/
 theorem cor_4_4 (x : EisensteinInt) (hx : x ≠ 0) : IsIrreducibleE x ↔ IsPrimeE x := by
   constructor
   · rintro ⟨hnu, hfac⟩
@@ -463,7 +467,7 @@ theorem cor_4_4 (x : EisensteinInt) (hx : x ≠ 0) : IsIrreducibleE x ↔ IsPrim
         rw [e1, ← hw, ← hyz, mul_one']
       exact ⟨w, mul_left_cancel' x _ _ hne hkey⟩
 
-/-! ### Lemma 4.6 -/
+/-! ### Units and the prime norm criterion -/
 
 /-- **Lemma 4.5(i).** `x` is a unit iff `N(x) = 1`. -/
 theorem lemma_4_5_i (x : EisensteinInt) : IsUnitE x ↔ norm x = 1 := by
@@ -508,7 +512,7 @@ theorem lemma_4_5_ii (x : EisensteinInt) :
   · rintro (⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩) <;>
       norm_num
 
-/-- **Lemma 4.6.** If `N(α)` is a rational prime then `α` is prime in `ℤ[ω]`. -/
+/-- If `N(y) N(z) = p²` for a rational prime `p` and neither norm is `1`, then `N(y) = p`. -/
 theorem norm_eq_p_of_factor (p : ℕ) (hp : p.Prime) (y z : EisensteinInt)
     (hprod : EisensteinInt.norm y * EisensteinInt.norm z = (p : ℤ) ^ 2)
     (hy : EisensteinInt.norm y ≠ 1) (hz : EisensteinInt.norm z ≠ 1) :
@@ -533,8 +537,9 @@ theorem norm_eq_p_of_factor (p : ℕ) (hp : p.Prime) (y z : EisensteinInt)
       Nat.eq_of_mul_eq_mul_left hpos (by rw [mul_one]; exact hmn)
     exact absurd (int_eq_one_of_toNat _ hz0 hz1) hz
 
-/-! ### Proposition 4.7(i) -/
+/-! ### Prime norm criterion -/
 
+/-- **Lemma 4.6.** If `N(α)` is a rational prime then `α` is prime in `ℤ[ω]`. -/
 theorem lemma_4_6 (α : EisensteinInt) (p : ℕ) (hp : p.Prime)
     (h : EisensteinInt.norm α = (p : ℤ)) : IsPrimeE α := by
   have hne : α ≠ 0 := by
@@ -566,7 +571,7 @@ theorem lemma_4_6 (α : EisensteinInt) (p : ℕ) (hp : p.Prime)
       Nat.eq_of_mul_eq_mul_left hp.pos (by rw [mul_one]; exact hmn)
     exact Or.inr ((lemma_4_5_i z).mpr (int_eq_one_of_toNat _ hz0 hz1))
 
-/-! ### Norm of a nontrivial factor of `p` -/
+/-! ### Ramification at 3 -/
 
 /-- **Proposition 4.7(i).** For `p = 3`, `1 − ω` is prime and `3 = −ω²(1 − ω)²`. -/
 theorem prop_4_7_ramified :
@@ -574,10 +579,9 @@ theorem prop_4_7_ramified :
   refine ⟨lemma_4_6 (1 - omega) 3 (by norm_num) ?_, by decide⟩
   rw [norm_one_sub_omega]; norm_num
 
-/-! ### Proposition 4.7(iii) -/
+/-! ### Conjugate factors -/
 
-/-- **Proposition 4.7(ii).** For `p ≡ 1 (mod 3)`, `p = π·π̄` splits into nonassociate
-primes. -/
+/-- An Eisenstein integer of prime norm `p ≡ 1 (mod 3)` is not associated to its conjugate. -/
 theorem not_associated_conj (p : ℕ) (hp : p.Prime) (h1 : p % 3 = 1)
     (y : EisensteinInt) (hny : EisensteinInt.norm y = (p : ℤ)) :
     ¬ AssociatedE y (conj y) := by
@@ -619,8 +623,10 @@ theorem not_associated_conj (p : ℕ) (hp : p.Prime) (h1 : p % 3 = 1)
     have hh : A = -B := by linarith
     exact h3d (B ^ 2) (by rw [← hny, hh]; ring)
 
-/-! ### Proposition 4.7(ii) -/
+/-! ### Splitting and inert primes -/
 
+/-- **Proposition 4.7(ii).** For `p ≡ 1 (mod 3)`, `p = π·π̄` splits into nonassociate
+primes. -/
 theorem prop_4_7_split (p : ℕ) (hp : p.Prime) (h1 : p % 3 = 1) :
     ∃ π : EisensteinInt, IsPrimeE π ∧ ofInt (p : ℤ) = π * conj π
       ∧ ¬ AssociatedE π (conj π) := by
@@ -738,8 +744,8 @@ theorem prop_4_7_inert (p : ℕ) (hp : p.Prime) (h2 : p % 3 = 2) :
 /-! ### Lemma 4.8 -/
 
 /-- **Lemma 4.8.** For a prime `π` lying over `p`, `N(π) = p` or `p²` (and the
-residue field `ℤ[ω]/π` has `N(π)` elements). The residue-field cardinality is
-deferred; here the norm dichotomy. -/
+residue field `ℤ[ω]/π` has `N(π)` elements). Only the norm dichotomy is proved here;
+the residue-field cardinality statement is deferred. -/
 theorem lemma_4_8 (π : EisensteinInt) (hπ : IsPrimeE π) (p : ℕ) (hp : p.Prime)
     (hover : π ∣ ofInt (p : ℤ)) :
     EisensteinInt.norm π = (p : ℤ) ∨ EisensteinInt.norm π = (p : ℤ) ^ 2 := by
@@ -754,7 +760,7 @@ theorem lemma_4_8 (π : EisensteinInt) (hπ : IsPrimeE π) (p : ℕ) (hp : p.Pri
   · left
     exact norm_eq_p_of_factor p hp π γ hnorm hπ1 hγ1
 
-/-! ### Non-associate conjugates -/
+/-! ### Cubic characters and reciprocity -/
 
 /-- **Corollary 4.9** (Fermat's little theorem in `ℤ[ω]`). If `π ∤ α` then
 `α^{N(π)−1} ≡ 1 (mod π)`. -/
@@ -780,14 +786,15 @@ theorem cubicChar_eq_one_iff (π α : EisensteinInt) (hπ : IsPrimeE π) (hα : 
   sorry
 
 /-- **Theorem 4.12** (Cubic Reciprocity). For primary primes `π, θ` of unequal norm,
-`(π/θ)₃ = (θ/π)₃`. **Deep / GAP** - `notready`, never an axiom. -/
+`(π/θ)₃ = (θ/π)₃`. Proof deferred; marked `notready` in the blueprint. -/
 theorem thm_4_12 (π θ : EisensteinInt) (hπ : IsPrimeE π) (hθ : IsPrimeE θ)
     (hpπ : IsPrimary π) (hpθ : IsPrimary θ) (hne : norm π ≠ norm θ) :
     cubicChar θ π = cubicChar π θ := by
   sorry
 
 /-- **(4.13)** Supplementary laws. For `π = −1 + 3m + 3nω` primary,
-`(ω/π)₃ = ω^{m+n}` and `((1−ω)/π)₃ = ω^{2m}`. **Deep / GAP** - `notready`. -/
+`(ω/π)₃ = ω^{m+n}` and `((1−ω)/π)₃ = ω^{2m}`.
+Proof deferred; marked `notready` in the blueprint. -/
 theorem supplementary_4_13 (m n : ℤ) :
     cubicChar ⟨-1 + 3 * m, 3 * n⟩ omega = power omega (((m + n) % 3).toNat)
       ∧ cubicChar ⟨-1 + 3 * m, 3 * n⟩ (1 - omega) = power omega ((2 * m % 3).toNat) := by
@@ -801,7 +808,7 @@ theorem eq_4_14 (p : ℕ) (hp : p.Prime) (h1 : p % 3 = 1) (a : ℤ) (hpa : ¬ (p
   sorry
 
 /-- **Theorem 4.15** (Euler's conjecture). `p = x² + 27y²` iff `p ≡ 1 (mod 3)` and
-`2` is a cubic residue mod `p`. **Deep / GAP** - `notready`, never an axiom. -/
+`2` is a cubic residue mod `p`. Proof deferred; marked `notready` in the blueprint. -/
 theorem thm_4_15 (p : ℕ) (hp : p.Prime) :
     (∃ x y : ℤ, (p : ℤ) = x ^ 2 + 27 * y ^ 2) ↔ (p % 3 = 1 ∧ IsCubicResidue 2 p) := by
   sorry

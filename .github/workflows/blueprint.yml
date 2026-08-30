@@ -3,8 +3,8 @@ name: Build and deploy blueprint
 on:
   push:
     branches:
-      - main # Trigger on pushes to the default branch
-  workflow_dispatch: # Allow manual triggering from the Actions tab
+      - main
+  workflow_dispatch:
 
 # Cancel previous runs on the same ref
 concurrency:
@@ -38,17 +38,15 @@ jobs:
         with:
           fetch-depth: 0 # full history (lean-action / blueprint need tags)
 
-      # Fetches the pinned Mathlib cache (`lake exe cache get`) and runs `lake build`.
+      # Use the cache for the pinned Mathlib version.
       - name: Build Lean project
         uses: leanprover/lean-action@434f25c2f80ded67bba02502ad3a86f25db50709 # 2025-07-02
         with:
           build: true
-          lint: false # scaffold uses `sorry`; enable once proofs land
+          lint: false # Unfinished proofs still produce warnings.
           test: false
 
-      # Builds the blueprint (PDF via xelatex + web via plasTeX, incl. checkdecls
-      # and the dependency graph) and deploys it to GitHub Pages.
-      # `api-docs: false` avoids requiring a doc-gen4 dependency for now.
+      # Publish the PDF and web blueprint without generating separate API docs.
       - name: Build blueprint and deploy to Pages
         uses: leanprover-community/docgen-action@deed0cdc44dd8e5de07a300773eb751d33e32fc8 # 2025-10-26
         with:

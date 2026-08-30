@@ -1,27 +1,23 @@
 % Blueprint content for "Primes of the Form x^2 + ny^2" (Cox, 2nd ed.).
 %
-% Each node carries \label, \lean (the matching Lean declaration), \uses (its
-% dependencies in the DAG), and \leanok on every statement whose Lean signature
-% typechecks. A node whose Lean proof is complete (no `sorry`, verified by
-% `#print axioms`) additionally carries `\begin{proof}\leanok\end{proof}`, which
-% recolors it "proved" in the dependency graph. Nodes still backed by a `sorry`
-% proof carry no proof `\leanok` (Pass B is discharging these incrementally).
+% Nodes use \label, \lean for the matching declaration, and \uses for dependencies.
+% A statement's \leanok means its Lean signature typechecks. A \leanok inside
+% the proof means the proof has no `sorry`, as checked by `#print axioms`.
+% Keep these two status markers separate when updating the dependency graph.
 %
-% See ROADMAP.md for the Mathlib audit of each node.
+% See ROADMAP.md for the available Mathlib results and outstanding work.
 
 \chapter{Part I - From Fermat to Gauss}
 
-This part is largely formalizable with current Mathlib (quadratic forms, \texttt{ZMod},
-quadratic reciprocity). It develops the classical theory of binary quadratic forms,
-their class group, and genus theory, culminating in congruence criteria for
-representation by the principal form.
+Binary quadratic forms, their class group, and genus theory give congruence
+criteria for representation by the principal form. The formalization uses
+Mathlib's arithmetic of residues (\texttt{ZMod}) and quadratic reciprocity results.
 
 \section{Fermat, Euler, and quadratic reciprocity}
 
-This section follows Cox \S1. The three Fermat theorems are obtained from Euler's
-two-step strategy (Descent Step plus Reciprocity Step); the Reciprocity Step is
-solved in general by quadratic reciprocity, packaged through the character
-$\chi$ of Lemma 1.14 and Corollary 1.19.
+Following Cox \S1, we obtain Fermat's three representation theorems by Euler's
+descent and reciprocity arguments. Quadratic reciprocity supplies the character
+$\chi$ of Lemma 1.14 and the general reciprocity step of Corollary 1.19.
 
 \begin{theorem}[Two-square identity; Cox (1.3)]
   \label{eq:mul_sq_add_sq}
@@ -73,9 +69,9 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \uses{thm:descent, thm:legendre_supplementary}
   Reciprocity shows $-1$ is a quadratic residue mod $p$ exactly when
   $p \equiv 1 \pmod 4$; descent (\ref{thm:descent}) then produces the
-  representation. (The Lean proof wires the backward direction to Mathlib's
+  representation. The Lean proof uses Mathlib's
   \texttt{Nat.Prime.sq\_add\_sq} and proves the forward $\bmod 4$ obstruction
-  directly.)
+  directly.
 \end{proof}
 
 \begin{theorem}[$x^2 + 2y^2$]
@@ -144,8 +140,8 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \label{thm:legendre_supplementary}
   \lean{PrimesX2NY2.Fermat.legendreSym_first_supplement}
   \leanok
-  $(-1/p) = (-1)^{(p-1)/2}$. (This is the first line of Cox's (1.11), which pairs it
-  with multiplicativity $(ab/p)=(a/p)(b/p)$, not with the second supplement below.)
+  $(-1/p) = (-1)^{(p-1)/2}$. Cox's (1.11) gives this formula together with
+  multiplicativity $(ab/p)=(a/p)(b/p)$; the second supplement appears below.
 \end{theorem}
 \begin{proof}\leanok
   \uses{def:legendre_symbol}
@@ -157,10 +153,10 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \leanok
   \notready
   \uses{def:legendre_symbol}
-  $(2/p) = (-1)^{(p^2-1)/8}$. (A standard supplement used in §1; \emph{not} part of
-  Cox's numbered (1.11). Mathlib provides only $\chi_8\,p$ by $p \bmod 8$; the
-  closed form $(-1)^{(p^2-1)/8}$ needs a nonlinear $\mathbb N$-division parity
-  bridge --- a tracked C-bucket target, not deep-GAP.)
+  $(2/p) = (-1)^{(p^2-1)/8}$. This supplement is used in Cox \S1, but is not part
+  of (1.11). Mathlib gives $\chi_8\,p$ in terms of $p \bmod 8$. The closed form
+  $(-1)^{(p^2-1)/8}$ requires a parity calculation with division in $\mathbb N$.
+  \emph{Proof pending.}
 \end{theorem}
 
 \begin{theorem}[Cox Lemma 1.14]
@@ -354,15 +350,15 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
 \begin{theorem}[Exercise 1.12(b)]
   \label{exr:s1_12_b}
   \notready
-  $\chi([-1]) = 1$ if $D > 0$ and $-1$ if $D < 0$. \emph{UNVERIFIED: a faithful
-  self-contained statement must fix the specific $\chi$ of Lemma 1.14; flagged.}
+  $\chi([-1]) = 1$ if $D > 0$ and $-1$ if $D < 0$. \emph{The Lean statement
+  is pending; it must specify the character $\chi$ of Lemma 1.14.}
 \end{theorem}
 
 \begin{theorem}[Exercise 1.12(c)]
   \label{exr:s1_12_c}
   \notready
-  Value of $\chi([2])$ when $D \equiv 1 \pmod 4$. \emph{UNVERIFIED: same reason as
-  1.12(b); flagged.}
+  Value of $\chi([2])$ when $D \equiv 1 \pmod 4$. \emph{The Lean statement
+  is pending for the same reason as Exercise 1.12(b).}
 \end{theorem}
 
 \begin{theorem}[Exercise 1.13(a)]
@@ -401,8 +397,8 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \label{exr:s1_16}
   \notready
   When $D = 4q$ ($q$ an odd prime), properties (i) and (ii) suffice to determine
-  $K = \ker\chi$. \emph{UNVERIFIED: a faithful statement of the uniqueness
-  characterization of the index-two subgroup is delicate; flagged.}
+  $K = \ker\chi$. \emph{The Lean statement is pending; the uniqueness
+  characterization of this index-two subgroup still needs to be specified.}
 \end{theorem}
 
 \section{Binary quadratic forms and reduction}
@@ -428,8 +424,8 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   \lean{PrimesX2NY2.Forms.ProperlyEquivalent}
   \leanok
   \uses{def:binary_qf}
-  Two forms are properly equivalent if related by a determinant-one integer change
-  of variables, i.e.\ by an element of $\mathrm{SL}_2(\mathbb Z)$.
+  Two forms are properly equivalent if related by an integer change of variables
+  of determinant one, i.e.\ by an element of $\mathrm{SL}_2(\mathbb Z)$.
 \end{definition}
 
 \begin{definition}[Reduced form]
@@ -551,10 +547,11 @@ $\chi$ of Lemma 1.14 and Corollary 1.19.
   $f$ properly represents $m$ iff $f \sim [m,b,c]$ for some $b,c$.
 \end{theorem}
 \begin{proof}\leanok
-If $f(p,q)=m$ with $\gcd(p,q)=1$, pick $u,v$ with $up+vq=1$; then $M=\left(\begin{smallmatrix}p&-v\\q&u\end{smallmatrix}\right)$
-has $\det M=1$ and $(\mathrm{action}\,M\,f)(x,y)=f(px-vy,\,qx+uy)$ has leading coefficient
-$f(p,q)=m$, so $f\sim[m,b,c]$. Conversely $[m,b,c]$ represents $m$ at $(1,0)$, and $\det M=1$
-makes the first column of $M$ coprime, so $f$ properly represents $m$.
+If $f(p,q)=m$ with $\gcd(p,q)=1$, choose $u,v$ with $up+vq=1$. Then
+$M=\left(\begin{smallmatrix}p&-v\\q&u\end{smallmatrix}\right)$ has $\det M=1$, and
+$(\mathrm{action}\,M\,f)(x,y)=f(px-vy,\,qx+uy)$ has leading coefficient $f(p,q)=m$,
+so $f\sim[m,b,c]$. Conversely, $[m,b,c]$ represents $m$ at $(1,0)$, and $\det M=1$
+ensures that the first column of $M$ is coprime. Thus $f$ properly represents $m$.
 \end{proof}
 
 \begin{theorem}[Cox Lemma 2.5]
@@ -656,7 +653,7 @@ $\tfrac{b+b'}{2} B\equiv\tfrac{bb'+D}{2}\ (2aa')$; existence is Lemma 3.5 (the
 compatibility (3.6) follows from the equal discriminants), recovering $B\equiv b\
 (2a)$, $B\equiv b'\ (2a')$ by cancelling $a', a$, and $B^2\equiv D\ (4aa')$ from
 $(B-b)(B-b')\equiv 0$. Uniqueness is the companion simultaneous-congruence lemma.
-The degenerate $a=0$ and $a'=0$ cases are dispatched directly.
+The cases $a=0$ and $a'=0$ follow directly.
 \end{proof}
 
 \begin{lemma}[Cox Lemma 3.5]
@@ -667,8 +664,8 @@ The degenerate $a=0$ and $a'=0$ cases are dispatched directly.
   solvable iff $p_i q_j \equiv p_j q_i\ (m)$ for all $i,j$.
 \end{lemma}
 \begin{proof}\leanok
-  Forward: a solution $B$ gives $p_i q_j \equiv p_i p_j B \equiv p_j p_i B \equiv
-  p_j q_i$. Backward: from $\sum_i t_i p_i \equiv 1\ (m)$ set $B = \sum_i t_i q_i$;
+  A solution $B$ gives $p_i q_j \equiv p_i p_j B \equiv p_j p_i B \equiv
+  p_j q_i$. Conversely, from $\sum_i t_i p_i \equiv 1\ (m)$ set $B = \sum_i t_i q_i$;
   then $p_j B - q_j = \sum_i t_i (p_j q_i - p_i q_j) - q_j(\sum_i t_i p_i - 1)$ is a
   sum of multiples of $m$.
 \end{proof}
@@ -692,8 +689,9 @@ The degenerate $a=0$ and $a'=0$ cases are dispatched directly.
 \end{proposition}
 \begin{proof}\leanok
 \uses{lem:l3_2}
-Discriminant $D$ is the exact-division calculation $B^2-4aa'\cdot\frac{B^2-D}{4aa'}=D$;
-positivity is $aa'>0$. For primitivity, $f$ is properly equivalent to $\langle a,B,a'C\rangle$
+The discriminant is $D$ by $B^2-4aa'\cdot\frac{B^2-D}{4aa'}=D$,
+and positivity follows from $aa'>0$. For primitivity, $f$ is properly equivalent to
+$\langle a,B,a'C\rangle$
 and $g$ to $\langle a',B,aC\rangle$ (translation by $(B-b)/2a$), so $\gcd(a,B,a'C)=1$ and
 $\gcd(a',B,aC)=1$; a prime dividing $aa'$, $B$, $C$ would then divide neither $a$ nor $a'$,
 contradicting $p\mid aa'$ (Cox Exercise 3.6).
@@ -705,9 +703,9 @@ contradicting $p\mid aa'$ (Cox Exercise 3.6).
   \leanok
   \uses{def:dirichlet_composition}
   For $D<0$, Dirichlet composition is associative and commutative, the principal
-  class is an identity, and every class has an inverse. (Faithful replacement of
-  the earlier $\mathrm{Nonempty}(\mathrm{CommGroup}\,C(D))$, which holds for any
-  nonempty type and was therefore vacuous.)
+  class is an identity, and every class has an inverse. The assertion concerns
+  Dirichlet composition itself: $\mathrm{Nonempty}(\mathrm{CommGroup}\,C(D))$
+  alone would only assert the existence of some group structure.
 \end{theorem}
 \begin{proof}\leanok
   \uses{prop:p3_8, thm:t3_9_inverse}
@@ -816,8 +814,8 @@ square of the class as the principal class.
   \lean{PrimesX2NY2.Genus.properlyRepresents_coprime}
   \leanok
   \uses{def:form_eval}
-  Every \emph{primitive} form properly represents some value relatively prime to a given
-  nonzero $M$. (The primitivity and $M\neq 0$ hypotheses are necessary.)
+  Every primitive form properly represents some value relatively prime to a given
+  nonzero $M$. Both primitivity and $M\neq 0$ are necessary.
 \end{theorem}
 \begin{proof}\leanok
 For each prime $p\mid M$, one of $(1,0),(0,1),(1,1)$ gives $f\not\equiv 0\ (p)$ (else
@@ -842,7 +840,6 @@ made proper by dividing out $\gcd(x,y)$.
   \uses{def:principal_genus, lem:l2_24}
   For $n>0$ and odd prime $p \nmid n$, $p$ is represented by a form of disc $-4n$
   in the principal genus iff $p \equiv \beta^2$ or $\beta^2 + n \pmod{4n}$.
-  (Replaces an earlier vacuous/false statement.)
 \end{theorem}
 
 \subsection{Exercises}
@@ -965,16 +962,15 @@ and equality of discriminants fixes the final coefficient.
 \begin{theorem}[Exercise 2.9(a)]
   \label{exr:s2_9_a}
   \notready
-  Verify the table (2.14) of class numbers and reduced forms. \emph{UNVERIFIED:
-  computational verification of a table, not a single proposition; flagged.}
+  Verify the table (2.14) of class numbers and reduced forms. \emph{Formalization
+  is pending; each table entry needs a verified enumeration.}
 \end{theorem}
 
 \begin{theorem}[Exercise 2.9(b)]
   \label{exr:s2_9_b}
   \notready
-  Compute the reduced forms of discriminants $-3,-15,-24,-31,-52$. \emph{UNVERIFIED:
-  a per-discriminant enumeration, not a single faithfully-stateable proposition;
-  flagged.}
+  For discriminants $-3,-15,-24,-31,-52$, enumerate the reduced forms.
+  \emph{Formalization is pending; each discriminant needs a verified enumeration.}
 \end{theorem}
 
 \begin{theorem}[Exercise 2.10(a)]
@@ -1083,9 +1079,9 @@ and equality of discriminants fixes the final coefficient.
 \begin{theorem}[Exercise 2.17(d)]
   \label{exr:s2_17_d}
   \notready
-  The values represented by $f$ form a coset of $H$. \emph{UNVERIFIED: a faithful
-  coset statement requires fixing the square subgroup and a representative;
-  flagged (same delicacy as Lemma 2.24(ii)).}
+  The values represented by $f$ form a coset of $H$. \emph{The Lean statement
+  is pending; it must specify the square subgroup and a representative,
+  as in Lemma 2.24(ii).}
 \end{theorem}
 
 \begin{theorem}[Exercise 2.18(a)]
@@ -1107,16 +1103,15 @@ and equality of discriminants fixes the final coefficient.
 \begin{theorem}[Exercise 2.19]
   \label{exr:s2_19}
   \notready
-  Work out the genus theory of Theorem 2.26 for $D=-15,-24,-31,-52$.
-  \emph{UNVERIFIED: produces four separate congruence theorems, not one
-  proposition; flagged.}
+  For $D=-15,-24,-31,-52$, determine the genera using Theorem 2.26.
+  \emph{Formalization is pending for the four resulting congruence criteria.}
 \end{theorem}
 
 \begin{theorem}[Exercise 2.20]
   \label{exr:s2_20}
   \notready
-  Corollary 2.27 for negative $D \equiv 1 \pmod 4$. \emph{UNVERIFIED: Cox does not
-  give the explicit congruence for this case and I will not guess it; flagged.}
+  Corollary 2.27 for negative $D \equiv 1 \pmod 4$. \emph{The Lean statement
+  is pending; the explicit congruence for this case still needs to be derived.}
 \end{theorem}
 
 \begin{theorem}[Exercise 2.21]
@@ -1303,7 +1298,8 @@ and equality of discriminants fixes the final coefficient.
   \uses{def:genus}
   For primitive positive definite forms, same genus $\iff$ same values in
   $(\mathbb Z/m\mathbb Z)^\times$ for all nonzero $m$ (Cox's conditions (i)-(ii);
-  the $\mathbb Z_p$/$\mathbb Q$ conditions (iii)-(vi) are deferred - see ROADMAP).
+  the $\mathbb Z_p$/$\mathbb Q$ conditions (iii)-(vi) are not yet formalized;
+  see ROADMAP.md).
 \end{theorem}
 
 \begin{theorem}[Convenient-number characterization; Cox Thm 3.22]
@@ -1313,7 +1309,8 @@ and equality of discriminants fixes the final coefficient.
   \uses{def:genus_map, def:mu, thm:landau}
   For $n>0$: every genus of disc $-4n$ is a single class $\iff$ every reduced form
   has $b=0,a=b,a=c$ $\iff$ equivalence $=$ proper equivalence $\iff h(-4n)=2^{\mu-1}$
-  (the group-isomorphism condition $C(-4n)\cong(\mathbb Z/2\mathbb Z)^k$ deferred).
+  (the group-isomorphism condition $C(-4n)\cong(\mathbb Z/2\mathbb Z)^k$ is not
+  yet formalized).
 \end{theorem}
 
 \begin{definition}[Euler's convenient (idoneal) number]
@@ -1383,31 +1380,33 @@ and equality of discriminants fixes the final coefficient.
   \label{exr:s3_2}
   \notready
   \uses{eq:comp_2_30, eq:comp_2_31}
-  The compositions (2.30) and (2.31) are not direct compositions. (Needs the
-  direct-composition predicate (3.1); deferred.)
+  The compositions (2.30) and (2.31) are not direct compositions.
+  \emph{Formalization pending, using the direct-composition predicate (3.1).}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.3]
   \label{exr:s3_3}
   \notready
   \uses{lem:l3_5}
-  Prove Lemma 3.5. (Proof of a spine lemma; deferred.)
+  Prove Lemma 3.5. \emph{No separate Lean declaration yet.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.4]
   \label{exr:s3_4}
   \notready
   \uses{lem:l3_5}
-  Verify the congruences (3.4) satisfy the compatibility of Lemma 3.5. (Internal to
-  the composition construction; deferred.)
+  Verify that the congruences (3.4) satisfy the compatibility condition of
+  Lemma 3.5, as required for the composition construction.
+  \emph{No separate Lean declaration yet.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.5(a)]
   \label{exr:s3_5_a}
   \notready
   \uses{def:dirichlet_form, def:proper_equiv}
-  $f$ is properly equivalent to $ax^2+Bxy+a'Cy^2$. (Step in showing Dirichlet
-  composition is a direct composition; deferred.)
+  $f$ is properly equivalent to $ax^2+Bxy+a'Cy^2$. This is a step in proving
+  that Dirichlet composition is a direct composition.
+  \emph{No separate Lean declaration yet.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.5(b)]
@@ -1423,14 +1422,16 @@ and equality of discriminants fixes the final coefficient.
   \label{exr:s3_5_c}
   \notready
   \uses{def:dirichlet_form}
-  Direct composition is preserved under proper equivalence of a factor. (Deferred.)
+  Direct composition is preserved under proper equivalence of a factor.
+  \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.5(d)]
   \label{exr:s3_5_d}
   \notready
   \uses{def:dirichlet_form}
-  Dirichlet composition is a direct composition. (Deferred; combines (a)-(c).)
+  Dirichlet composition is a direct composition. Combine (a)-(c).
+  \emph{No separate Lean declaration yet.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.5(e)]
@@ -1445,16 +1446,16 @@ and equality of discriminants fixes the final coefficient.
   \label{exr:s3_6_a}
   \notready
   \uses{def:dirichlet_form, eq:comp_2_31}
-  Dirichlet's formula matches Legendre's (2.32) when $\gcd(a,a')=1$. (Needs both
-  composition formulas; deferred.)
+  Dirichlet's formula is Legendre's (2.32) when $\gcd(a,a')=1$.
+  \emph{The comparison of the two formulas is not yet formalized.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.6(b)]
   \label{exr:s3_6_b}
   \notready
   \uses{def:dirichlet_form}
-  Which of $126x^2\pm74xy+13y^2$ is the direct composition. (Needs the
-  direct-composition predicate; deferred.)
+  Determine which of $126x^2\pm74xy+13y^2$ is the direct composition.
+  \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.7]
@@ -1479,59 +1480,59 @@ and equality of discriminants fixes the final coefficient.
   \leanok
   \uses{def:equivalent, thm:t3_9_inverse}
   Equivalent conditions for the Lagrangian class to equal the proper class (Cox's
-  order-$\le2$ condition deferred).
+  order-$\le2$ condition is not yet formalized).
 \end{theorem}
 
 \begin{theorem}[Exercise 3.9(a)]
   \label{exr:s3_9_a}
   \notready
   \uses{def:form_class_group}
-  Legendre's ``almost'' multiplication on $G/\!\sim$. (Abstract quotient structure;
-  deferred.)
+  Legendre's ``almost'' multiplication on $G/\!\sim$.
+  \emph{Formalization of the quotient construction is pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.9(b)]
   \label{exr:s3_9_b}
   \notready
   \uses{def:form_class_group}
-  The structure of $G/\!\sim$ for $G$ cyclic of order $8$. (Deferred.)
+  The structure of $G/\!\sim$ for $G$ cyclic of order $8$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.9(c)]
   \label{exr:s3_9_c}
   \notready
   \uses{def:form_class_group, def:equivalent}
-  $C(D)/\!\sim$ is the set of Lagrangian classes. (Deferred.)
+  $C(D)/\!\sim$ is the set of Lagrangian classes. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.10]
   \label{exr:s3_10}
   \notready
   \uses{prop:p3_11}
-  Complete the proof of Proposition 3.11 in the remaining cases. (Proof of a spine
-  proposition; deferred.)
+  Complete the proof of Proposition 3.11 in the remaining cases.
+  \emph{No separate Lean declaration yet.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.11(a)]
   \label{exr:s3_11_a}
   \notready
   \uses{lem:l3_17}
-  The map (3.18) is surjective with kernel the squares. (Internal to Lemma 3.17;
-  deferred.)
+  The map (3.18) is surjective with kernel the squares, as used in Lemma 3.17.
+  \emph{No separate Lean declaration yet.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.11(b)]
   \label{exr:s3_11_b}
   \notready
   \uses{lem:l3_17}
-  Prove Lemma 3.17 when $D=-4n$. (Proof of a spine lemma; deferred.)
+  Prove Lemma 3.17 when $D=-4n$. \emph{No separate Lean declaration yet.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.12(a)]
   \label{exr:s3_12_a}
   \notready
   \uses{def:genus_map}
-  The genus map $\Phi'$ for a general nonsquare discriminant. (Deferred.)
+  The genus map $\Phi'$ for a general nonsquare discriminant. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.12(b)]
@@ -1546,28 +1547,29 @@ and equality of discriminants fixes the final coefficient.
   \label{exr:s3_13_a}
   \notready
   \uses{lem:l3_17}
-  Lemma 3.17 holds for all nonzero discriminants. (Deferred.)
+  Lemma 3.17 holds for all nonzero discriminants. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.13(b)]
   \label{exr:s3_13_b}
   \notready
   \uses{lem:repr_iff_isSquare_general}
-  $(p^*/q)=1 \Rightarrow (q/p)=1$ via genus counting. (Deferred.)
+  $(p^*/q)=1 \Rightarrow (q/p)=1$ via genus counting. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.13(c)]
   \label{exr:s3_13_c}
   \notready
   \uses{thm:quadratic_reciprocity}
-  The case $p\equiv1$ or $q\equiv1 \pmod 4$. (Deferred.)
+  The case $p\equiv1$ or $q\equiv1 \pmod 4$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.13(d)]
   \label{exr:s3_13_d}
   \notready
   \uses{thm:quadratic_reciprocity}
-  The case $p\equiv q\equiv3 \pmod 4$, completing quadratic reciprocity. (Deferred.)
+  The case $p\equiv q\equiv3 \pmod 4$, completing quadratic reciprocity.
+  \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.13(e)]
@@ -1583,8 +1585,8 @@ and equality of discriminants fixes the final coefficient.
   \label{exr:s3_14}
   \notready
   \uses{def:genus}
-  Divide the forms of discriminant $-164$ into genera. (Computational enumeration;
-  deferred - see ROADMAP.)
+  Divide the forms of discriminant $-164$ into genera. \emph{The enumeration is not yet
+  formalized; see ROADMAP.md.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.15]
@@ -1592,7 +1594,7 @@ and equality of discriminants fixes the final coefficient.
   \notready
   \uses{thm:t3_21}
   Prove the implications $(vi)\Rightarrow(iii)\Rightarrow(ii)\Rightarrow(i)$ and
-  $(vi)\Rightarrow(v)\Rightarrow(i)$ of Theorem 3.21. (Deferred.)
+  $(vi)\Rightarrow(v)\Rightarrow(i)$ of Theorem 3.21. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.16]
@@ -1607,7 +1609,7 @@ and equality of discriminants fixes the final coefficient.
   \label{exr:s3_17_a}
   \notready
   \uses{exr:s2_1}
-  A rationally equivalent form represents $d^2m$. (Step; deferred.)
+  A rationally equivalent form represents $d^2m$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.17(b)]
@@ -1615,29 +1617,30 @@ and equality of discriminants fixes the final coefficient.
   \notready
   \uses{lem:repr_iff_equiv}
   Rationally equivalent forms of a field discriminant lie in the same genus.
-  (Needs $\mathbb Q$-equivalence; deferred.)
+  \emph{Formalization is pending; it requires $\mathbb Q$-equivalence.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.18(a)]
   \label{exr:s3_18_a}
   \notready
   \uses{thm:t3_21}
-  A principal-genus form represents an odd square $a^2$ coprime to $n$. (Step;
-  deferred.)
+  A principal-genus form represents an odd square $a^2$ coprime to $n$.
+  \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.18(b)]
   \label{exr:s3_18_b}
   \notready
   \uses{def:dirichlet_form}
-  The associated form $ax^2+2bxy+acy^2$ is primitive of disc $-4n$. (Step; deferred.)
+  The associated form $ax^2+2bxy+acy^2$ is primitive of disc $-4n$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.18(c)]
   \label{exr:s3_18_c}
   \notready
   \uses{thm:t3_15_ii, def:dirichlet_form}
-  A principal-genus form is a Dirichlet square. (Deferred; re-proves Thm 3.15(ii).)
+  A principal-genus form is a Dirichlet square. This gives another proof of Theorem 3.15(ii).
+  \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.19]
@@ -1645,7 +1648,8 @@ and equality of discriminants fixes the final coefficient.
   \notready
   \uses{thm:t3_22, def:genus_map}
   Equivalent conditions for one class per genus, incl. $C(D)\cong\{\pm1\}^{\mu-1}$.
-  (Group-isomorphism condition; deferred - subsumes Thm 3.22.)
+  This includes the group-isomorphism condition of Theorem 3.22.
+  \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.20(a)]
@@ -1661,35 +1665,35 @@ and equality of discriminants fixes the final coefficient.
   \notready
   \uses{lem:l3_25}
   Forms $mx^2+2bxy+cy^2$ correspond to solutions of $x^2\equiv-n \pmod m$.
-  (Deferred.)
+  \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.20(c)]
   \label{exr:s3_20_c}
   \notready
   \uses{lem:l3_25}
-  Construction of the form $g_{u,v}$ from a proper representation. (Deferred.)
+  Construction of the form $g_{u,v}$ from a proper representation. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.20(d)]
   \label{exr:s3_20_d}
   \notready
   \uses{lem:l3_25}
-  The map from representations to forms is onto. (Deferred.)
+  The map from representations to forms is onto. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.20(e)]
   \label{exr:s3_20_e}
   \notready
   \uses{lem:l3_25, thm:reduction}
-  Fibres of the map use uniqueness of reduction. (Deferred.)
+  Fibres of the map use uniqueness of reduction. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.20(f)]
   \label{exr:s3_20_f}
   \notready
   \uses{lem:l3_25}
-  The map is exactly two-to-one, proving Lemma 3.25. (Deferred.)
+  The map is exactly two-to-one, proving Lemma 3.25. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.21(a)]
@@ -1697,7 +1701,7 @@ and equality of discriminants fixes the final coefficient.
   \notready
   \uses{lem:l3_25}
   $m=x^2+2y^2$ and $m^3=x^2+2y^2$ have the same number of proper solutions.
-  (Deferred.)
+  \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.21(b)]
@@ -1719,7 +1723,7 @@ and equality of discriminants fixes the final coefficient.
   \label{exr:s3_21_d}
   \notready
   \uses{lem:l3_25, exr:s3_21_b}
-  All proper representations of $m^3$ arise from those of $m$. (Deferred.)
+  All proper representations of $m^3$ arise from those of $m$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.22]
@@ -1742,22 +1746,22 @@ and equality of discriminants fixes the final coefficient.
   \label{exr:s3_24_a}
   \notready
   \uses{def:legendre_symbol}
-  Reciprocity for the extended Jacobi symbol (odd, coprime, signed). (Needs the
-  Kronecker symbol; deferred.)
+  Reciprocity for the extended Jacobi symbol (odd, coprime, signed). \emph{Formalization is
+  pending; it requires the Kronecker symbol.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.24(b)]
   \label{exr:s3_24_b}
   \notready
   \uses{def:legendre_symbol}
-  Gauss's count-of-nonresidue version of (a). (Deferred.)
+  Gauss's count-of-nonresidue version of (a). \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.24(c)]
   \label{exr:s3_24_c}
   \notready
   \uses{def:legendre_symbol}
-  Supplementary laws for the extended symbol. (Deferred.)
+  Supplementary laws for the extended symbol. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.25(a)]
@@ -1765,21 +1769,22 @@ and equality of discriminants fixes the final coefficient.
   \notready
   \uses{thm:t3_15_i}
   $C(-4p)\cong(\mathbb Z/2^a\mathbb Z)\times G$ with $G$ of odd order, so $2\mid h(-4p)$.
-  (Group structure; deferred.)
+  \emph{The group structure is not yet formalized.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.25(b)]
   \label{exr:s3_25_b}
   \notready
   \uses{def:genus}
-  $2x^2+2xy+\tfrac{p+1}{2}y^2$ lies in the principal genus. (Computational; deferred.)
+  $2x^2+2xy+\tfrac{p+1}{2}y^2$ lies in the principal genus.
+  \emph{The computation is not yet formalized.}
 \end{theorem}
 
 \begin{theorem}[Exercise 3.25(c)]
   \label{exr:s3_25_c}
   \notready
   \uses{thm:t3_15_ii}
-  $C(-4p)$ has an element of order $4$, so $4\mid h(-4p)$. (Deferred.)
+  $C(-4p)$ has an element of order $4$, so $4\mid h(-4p)$. \emph{Formalization pending.}
 \end{theorem}
 
 \section{Cubic and biquadratic reciprocity}
@@ -1790,8 +1795,8 @@ and equality of discriminants fixes the final coefficient.
   \label{def:eisenstein_int}
   \lean{PrimesX2NY2.CubicReciprocity.EisensteinInt}
   \leanok
-  The ring $\mathbb Z[\omega]$, $\omega = e^{2\pi i/3}$, as a lightweight structure
-  $\{a + b\omega\}$ (Mathlib has no Eisenstein integers; see ROADMAP).
+  The ring $\mathbb Z[\omega]$, $\omega = e^{2\pi i/3}$, represented by expressions
+  $\{a + b\omega\}$. The implementation is local to this project; see ROADMAP.md.
 \end{definition}
 
 \begin{definition}[Eisenstein norm]
@@ -1824,8 +1829,8 @@ and equality of discriminants fixes the final coefficient.
   \lean{PrimesX2NY2.CubicReciprocity.EisensteinInt.cor_4_4}
   \leanok
   \uses{prop:p4_3}
-  $\mathbb Z[\omega]$ is a PID and a UFD. Formalized as the hallmark consequence
-  irreducible $\iff$ prime; the full PID/UFD typeclass is deferred.
+  $\mathbb Z[\omega]$ is a PID and a UFD. The current Lean statement asserts
+  irreducible $\iff$ prime; the PID and UFD instances are not yet provided.
 \end{theorem}
 
 \begin{lemma}[Cox Lemma 4.5(i)]
@@ -1881,9 +1886,9 @@ and equality of discriminants fixes the final coefficient.
   \lean{PrimesX2NY2.CubicReciprocity.EisensteinInt.lemma_4_8}
   \leanok
   \uses{def:eisenstein_norm}
-  For a prime $\pi$ over $p$, $N(\pi) = p$ or $p^2$. Formalized as this norm
-  dichotomy; the residue-field cardinality $|\mathbb Z[\omega]/\pi| = N(\pi)$ is
-  deferred.
+  For a prime $\pi$ over $p$, $N(\pi) = p$ or $p^2$. The Lean statement covers
+  this norm dichotomy. The residue-field cardinality
+  $|\mathbb Z[\omega]/\pi| = N(\pi)$ is not yet formalized.
 \end{lemma}
 
 \begin{theorem}[Cox Corollary 4.9; Eisenstein Fermat]
@@ -1942,7 +1947,7 @@ and equality of discriminants fixes the final coefficient.
   \notready
   \uses{def:cubic_char, def:primary_eisenstein}
   For primary primes $\pi,\theta$ of unequal norm, $(\pi/\theta)_3 = (\theta/\pi)_3$.
-  (Deep; GAP, never an axiom.)
+  \emph{Proof pending.}
 \end{theorem}
 
 \begin{lemma}[Cubic supplementary laws; Cox (4.13)]
@@ -1952,7 +1957,7 @@ and equality of discriminants fixes the final coefficient.
   \notready
   \uses{def:cubic_char, def:primary_eisenstein}
   $(\omega/\pi)_3 = \omega^{m+n}$, $((1-\omega)/\pi)_3 = \omega^{2m}$ for
-  $\pi = -1 + 3m + 3n\omega$. (Deep; GAP.)
+  $\pi = -1 + 3m + 3n\omega$. \emph{Proof pending.}
 \end{lemma}
 
 \begin{lemma}[Cubic residues of integers; Cox (4.14)]
@@ -1970,7 +1975,7 @@ and equality of discriminants fixes the final coefficient.
   \notready
   \uses{thm:cubic_reciprocity, lem:cubic_int_residue}
   $p = x^2 + 27y^2$ iff $p \equiv 1 \pmod 3$ and $2$ is a cubic residue mod $p$.
-  (Deep; GAP, never an axiom.)
+  \emph{Proof pending.}
 \end{theorem}
 
 \subsection{Gaussian integers and biquadratic reciprocity}
@@ -2010,7 +2015,7 @@ and equality of discriminants fixes the final coefficient.
   If $\pi \nmid \alpha$ then $\alpha^{N(\pi)-1} \equiv 1 \pmod \pi$.
 \end{lemma}
 
-\begin{definition}[Quartic residue character; Cox (4.20)]
+\begin{definition}[Quartic character; Cox (4.20)]
   \label{def:quartic_char}
   \lean{PrimesX2NY2.BiquadraticReciprocity.quarticChar}
   \leanok
@@ -2050,7 +2055,7 @@ and equality of discriminants fixes the final coefficient.
   \notready
   \uses{def:quartic_char, def:gaussian_primary}
   For distinct primary primes, $(\pi/\theta)_4 = (\theta/\pi)_4
-  (-1)^{(N(\pi)-1)(N(\theta)-1)/16}$. (Deep; GAP, never an axiom.)
+  (-1)^{(N(\pi)-1)(N(\theta)-1)/16}$. \emph{Proof pending.}
 \end{theorem}
 
 \begin{lemma}[Biquadratic supplementary laws; Cox (4.22)]
@@ -2059,7 +2064,7 @@ and equality of discriminants fixes the final coefficient.
   \leanok
   \notready
   \uses{def:quartic_char, def:gaussian_primary}
-  $(i/\pi)_4 = i^{-(a-1)/2}$, $((1+i)/\pi)_4 = i^{(a-b-1-b^2)/4}$. (Deep; GAP.)
+  $(i/\pi)_4 = i^{-(a-1)/2}$, $((1+i)/\pi)_4 = i^{(a-b-1-b^2)/4}$. \emph{Proof pending.}
 \end{lemma}
 
 \begin{theorem}[Quartic character of $2$; Cox Thm 4.23(i)]
@@ -2068,7 +2073,7 @@ and equality of discriminants fixes the final coefficient.
   \leanok
   \notready
   \uses{lem:biquadratic_supplementary}
-  For primary $\pi = a+bi$, $(2/\pi)_4 = i^{ab/2}$. (Deep; GAP.)
+  For primary $\pi = a+bi$, $(2/\pi)_4 = i^{ab/2}$. \emph{Proof pending.}
 \end{theorem}
 
 \begin{theorem}[$p = x^2 + 64y^2$; Cox Thm 4.23(ii)]
@@ -2078,7 +2083,7 @@ and equality of discriminants fixes the final coefficient.
   \notready
   \uses{thm:biquadratic_reciprocity, thm:quartic_char_two}
   $p = x^2 + 64y^2$ iff $p \equiv 1 \pmod 4$ and $2$ is a biquadratic residue mod
-  $p$. (Deep; GAP, never an axiom.)
+  $p$. \emph{Proof pending.}
 \end{theorem}
 
 \subsection{Exercises}
@@ -2088,7 +2093,7 @@ and equality of discriminants fixes the final coefficient.
   \notready
   \uses{def:eisenstein_int}
   $\mathbb Z[\omega]$ and $\mathbb Z[i]$ are subrings of $\mathbb C$ closed under
-  conjugation. (Needs the $\mathbb C$-embedding; deferred.)
+  conjugation. \emph{Formalization is pending; it requires the $\mathbb C$-embedding.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.2(i)]
@@ -2112,8 +2117,8 @@ and equality of discriminants fixes the final coefficient.
 \begin{theorem}[Exercise 4.3]
   \label{exr:s4_3}
   \notready
-  The ideal $(x,y)$ shows $\mathbb C[x,y]$ is a UFD but not a PID. (Needs
-  multivariate polynomial ideals; deferred.)
+  The ideal $(x,y)$ shows $\mathbb C[x,y]$ is a UFD but not a PID. \emph{Formalization is
+  pending; it requires multivariate polynomial ideals.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.4]
@@ -2129,7 +2134,7 @@ and equality of discriminants fixes the final coefficient.
   \label{exr:s4_5}
   \notready
   \uses{lem:l4_5_i, lem:l4_5_ii}
-  Prove Lemma 4.5. (Proof of a spine lemma; deferred.)
+  Prove Lemma 4.5. \emph{No separate Lean declaration yet.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.6(a)]
@@ -2158,21 +2163,21 @@ and equality of discriminants fixes the final coefficient.
   \label{exr:s4_7_a}
   \notready
   \uses{prop:p4_7_split}
-  Prove the split case of Proposition 4.7. (Deferred.)
+  Prove the split case of Proposition 4.7. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.7(b)]
   \label{exr:s4_7_b}
   \notready
   \uses{prop:p4_7_inert}
-  Prove the inert case of Proposition 4.7. (Deferred.)
+  Prove the inert case of Proposition 4.7. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.8]
   \label{exr:s4_8}
   \notready
   \uses{lem:l4_8}
-  Complete the proof of Lemma 4.8. (Deferred.)
+  Complete the proof of Lemma 4.8. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.9(a)]
@@ -2187,7 +2192,7 @@ and equality of discriminants fixes the final coefficient.
   \label{exr:s4_9_b}
   \notready
   \uses{def:cubic_char}
-  $1,\omega,\omega^2$ are distinct modulo $\pi$. (Deferred.)
+  $1,\omega,\omega^2$ are distinct modulo $\pi$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.10(a)]
@@ -2210,21 +2215,21 @@ and equality of discriminants fixes the final coefficient.
   \label{exr:s4_11}
   \notready
   \uses{lem:cubic_residue_iff}
-  Verify (4.11) when $(\mathbb Z[\omega]/\pi)^\times$ is cyclic. (Deferred.)
+  Verify (4.11) when $(\mathbb Z[\omega]/\pi)^\times$ is cyclic. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.12]
   \label{exr:s4_12}
   \notready
   \uses{def:primary_eisenstein}
-  Exactly two of the six associates of $\pi$ are primary. (Deferred.)
+  Exactly two of the six associates of $\pi$ are primary. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.13]
   \label{exr:s4_13}
   \notready
   \uses{lem:cubic_supplementary}
-  Prove the first supplementary law (4.13). (Deferred.)
+  Prove the first supplementary law (4.13). \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.14]
@@ -2238,21 +2243,22 @@ and equality of discriminants fixes the final coefficient.
   \label{exr:s4_15_a}
   \notready
   \uses{thm:x2_27y2}
-  $4p = a^2 + 27b^2$ gives a primary prime $\pi$ with $p = \pi\bar\pi$. (Deferred.)
+  $4p = a^2 + 27b^2$ gives a primary prime $\pi$ with $p = \pi\bar\pi$.
+  \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.15(b)]
   \label{exr:s4_15_b}
   \notready
   \uses{lem:cubic_supplementary}
-  Rewrite the supplementary laws (4.13) in terms of $a$. (Deferred.)
+  Rewrite the supplementary laws (4.13) in terms of $a$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.15(c)]
   \label{exr:s4_15_c}
   \notready
   \uses{lem:cubic_supplementary}
-  $(3/\pi)_3 = \omega^{2b}$. (Deferred.)
+  $(3/\pi)_3 = \omega^{2b}$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.15(d)]
@@ -2262,39 +2268,40 @@ and equality of discriminants fixes the final coefficient.
   \notready
   \uses{thm:cubic_reciprocity, lem:cubic_int_residue}
   $4p = x^2 + 243y^2$ iff $p \equiv 1 \pmod 3$ and $3$ is a cubic residue mod $p$.
-  (Deep; GAP.)
+  \emph{Proof pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.16(a)]
   \label{exr:s4_16_a}
   \notready
-  Prove $\mathbb Z[i]$ is Euclidean. (Deferred; Mathlib provides this.)
+  Prove $\mathbb Z[i]$ is Euclidean. Mathlib supplies this result.
+  \emph{No separate Lean declaration yet.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.16(b)]
   \label{exr:s4_16_b}
   \notready
-  Prove the $\mathbb Z[i]$ analogs of Lemmas 4.5 and 4.6. (Deferred.)
+  Prove the $\mathbb Z[i]$ analogs of Lemmas 4.5 and 4.6. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.16(c)]
   \label{exr:s4_16_c}
   \notready
   \uses{prop:p4_18_split}
-  Prove Proposition 4.18. (Deferred.)
+  Prove Proposition 4.18. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.16(d)]
   \label{exr:s4_16_d}
   \notready
-  Prove the $\mathbb Z[i]$ analog of Lemma 4.8. (Deferred.)
+  Prove the $\mathbb Z[i]$ analog of Lemma 4.8. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.16(e)]
   \label{exr:s4_16_e}
   \notready
   \uses{lem:gaussian_fermat}
-  Prove (4.19). (Deferred.)
+  Prove (4.19). \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.17]
@@ -2308,7 +2315,7 @@ and equality of discriminants fixes the final coefficient.
   \label{exr:s4_18_a}
   \notready
   \uses{def:quartic_char}
-  The quartic character is well-defined (4.20). (Deferred.)
+  The quartic character is well-defined (4.20). \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.18(b)]
@@ -2323,21 +2330,21 @@ and equality of discriminants fixes the final coefficient.
   \label{exr:s4_18_c}
   \notready
   \uses{lem:quartic_residue_iff}
-  $(\alpha/\pi)_4 = 1$ iff $x^4 \equiv \alpha \pmod \pi$ solvable. (Deferred.)
+  $(\alpha/\pi)_4 = 1$ iff $x^4 \equiv \alpha \pmod \pi$ solvable. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.19(a)]
   \label{exr:s4_19_a}
   \notready
   \uses{def:quartic_char}
-  $(a/\pi)_4 = \pm1$ and $= \pm1$ iff $(a/p) = 1$. (Deferred.)
+  $(a/\pi)_4 = \pm1$ and $= \pm1$ iff $(a/p) = 1$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.19(b)]
   \label{exr:s4_19_b}
   \notready
   \uses{def:quartic_char}
-  Verify the congruence (4.20). (Deferred.)
+  Verify the congruence (4.20). \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.20(a)]
@@ -2345,41 +2352,41 @@ and equality of discriminants fixes the final coefficient.
   \notready
   \uses{def:quartic_char}
   For $p \equiv 3 \pmod 4$, $a$ is a fourth power mod $p$ in $\mathbb Z[i]$.
-  (Deferred.)
+  \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.20(b)]
   \label{exr:s4_20_b}
   \notready
-  $a$ is a biquadratic residue mod $p$ iff $(a/p) = 1$. (Deferred.)
+  $a$ is a biquadratic residue mod $p$ iff $(a/p) = 1$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.21]
   \label{exr:s4_21}
   \notready
   \uses{def:gaussian_primary}
-  $\pi$ has a unique primary associate. (Deferred.)
+  $\pi$ has a unique primary associate. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.22]
   \label{exr:s4_22}
   \notready
   \uses{lem:biquadratic_supplementary}
-  Prove the first supplementary law (4.22). (Deferred.)
+  Prove the first supplementary law (4.22). \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.23]
   \label{exr:s4_23}
   \notready
   \uses{thm:quartic_char_two}
-  Prove Theorem 4.23(i) from (4.22). (Deferred.)
+  Prove Theorem 4.23(i) from (4.22). \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.24(a)]
   \label{exr:s4_24_a}
   \notready
   \uses{thm:quadratic_reciprocity}
-  $(a/p) = 1$ via Jacobi reciprocity. (Deferred.)
+  $(a/p) = 1$ via Jacobi reciprocity. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.24(b)]
@@ -2394,7 +2401,7 @@ and equality of discriminants fixes the final coefficient.
   \label{exr:s4_24_c}
   \notready
   \uses{lem:biquadratic_supplementary}
-  $((a+b)/p) = (i/\pi)_4 i^{ab/2}$. (Deferred.)
+  $((a+b)/p) = (i/\pi)_4 i^{ab/2}$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.24(d)]
@@ -2402,136 +2409,138 @@ and equality of discriminants fixes the final coefficient.
   \notready
   \uses{def:quartic_char}
   $(a+b)^{(p-1)/2} \equiv (2ab)^{(p-1)/4}$ and $((a+b)/\pi)_4 = (2ab/\pi)_4$.
-  (Deferred.)
+  \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.24(e)]
   \label{exr:s4_24_e}
   \notready
   \uses{def:quartic_char}
-  $(2ab/\pi)_4 = (2i/\pi)_4$. (Deferred.)
+  $(2ab/\pi)_4 = (2i/\pi)_4$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.24(f)]
   \label{exr:s4_24_f}
   \notready
   \uses{thm:quartic_char_two}
-  Combine to obtain $(2/\pi)_4 = i^{ab/2}$. (Deferred.)
+  Combine to obtain $(2/\pi)_4 = i^{ab/2}$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.25(a)]
   \label{exr:s4_25_a}
   \notready
   \uses{def:gaussian_primary}
-  A primary $\pi$ is $\equiv 1$ or $3 + 2i \pmod 4$. (Deferred.)
+  A primary $\pi$ is $\equiv 1$ or $3 + 2i \pmod 4$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.25(b)]
   \label{exr:s4_25_b}
   \notready
   \uses{thm:biquadratic_reciprocity}
-  Gauss's form of biquadratic reciprocity. (Deferred.)
+  Gauss's form of biquadratic reciprocity. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.26]
   \label{exr:s4_26}
   \notready
   \uses{def:quartic_char}
-  If $2$ is a biquadratic residue mod $p$ then $p \equiv \pm1 \pmod 8$. (Deferred.)
+  If $2$ is a biquadratic residue mod $p$ then $p \equiv \pm1 \pmod 8$.
+  \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.27(a)]
   \label{exr:s4_27_a}
   \notready
   \uses{def:quartic_char}
-  $(-1/\pi)_4 = 1$ when $p \equiv 1 \pmod 4$. (Deferred.)
+  $(-1/\pi)_4 = 1$ when $p \equiv 1 \pmod 4$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.27(b)]
   \label{exr:s4_27_b}
   \notready
   \uses{thm:quadratic_reciprocity}
-  $(a/p) = (-1)^{(a^2-1)/8}$. (Deferred.)
+  $(a/p) = (-1)^{(a^2-1)/8}$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.27(c)]
   \label{exr:s4_27_c}
   \notready
   \uses{thm:quadratic_reciprocity}
-  $(b/p) = 1$. (Deferred.)
+  $(b/p) = 1$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.27(d)]
   \label{exr:s4_27_d}
   \notready
   \uses{thm:quartic_char_two}
-  $(2/\pi)_4 = (-1)^{(a^2-1)/8}$, Gauss's claim. (Deferred.)
+  $(2/\pi)_4 = (-1)^{(a^2-1)/8}$, Gauss's claim. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.28]
   \label{exr:s4_28}
   \notready
   Gaussian period multiplication $(f,\lambda)(f,\mu) = \sum_j (f,\lambda+\mu_j)$.
-  (Needs Gaussian periods; deferred.)
+  \emph{Formalization is pending; it requires Gaussian periods.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.29(a)]
   \label{exr:s4_29_a}
   \notready
   \uses{exr:s4_28}
-  The count $N = 9(00) + 6$ of solutions of $x^3 - y^3 \equiv 1$. (Deferred.)
+  The count $N = 9(00) + 6$ of solutions of $x^3 - y^3 \equiv 1$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.29(b)]
   \label{exr:s4_29_b}
   \notready
   \uses{exr:s4_28}
-  Period products via Exercise 4.28. (Deferred.)
+  Period products via Exercise 4.28. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.29(c)]
   \label{exr:s4_29_c}
   \notready
-  The nine $(ij)$ reduce to three quantities $\alpha,\beta,\gamma$. (Deferred.)
+  The nine $(ij)$ reduce to three quantities $\alpha,\beta,\gamma$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.29(d)]
   \label{exr:s4_29_d}
   \notready
-  Definitions of $\alpha,\beta,\gamma$. (Deferred.)
+  Definitions of $\alpha,\beta,\gamma$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.29(e)]
   \label{exr:s4_29_e}
   \notready
   $\alpha^2+\beta^2+\gamma^2-\alpha = \alpha\beta+\beta\gamma+\gamma\alpha$.
-  (Deferred.)
+  \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.29(f)]
   \label{exr:s4_29_f}
   \notready
   $(6\alpha-3\beta-3\gamma-2)^2 + 27(\beta-\gamma)^2 = 12(\alpha+\beta+\gamma)-4$.
-  (Deferred.)
+  \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.29(g)]
   \label{exr:s4_29_g}
   \notready
-  $4p = a^2 + 27b^2$ with $a = 6\alpha-3\beta-3\gamma-2$. (Deferred.)
+  $4p = a^2 + 27b^2$ with $a = 6\alpha-3\beta-3\gamma-2$. \emph{Formalization pending.}
 \end{theorem}
 
 \begin{theorem}[Exercise 4.29(h)]
   \label{exr:s4_29_h}
   \notready
-  $a = N - p + 2$, proving (4.24). (Deferred.)
+  $a = N - p + 2$, proving (4.24). \emph{Formalization pending.}
 \end{theorem}
 
 \chapter{Part II - Class Field Theory}
 
-This part states the structural bridge between forms and ideals, then the deep
-class field theory inputs (Artin reciprocity, Čebotarev) that current Mathlib does
-not yet provide; those are stated to be cited or assumed. See ROADMAP.md.
+The correspondence between forms and ideals connects representation by quadratic
+forms to splitting in class fields. The class field theory results used here,
+including Artin reciprocity and Čebotarev's theorem, are stated in Lean but still
+require proofs. See ROADMAP.md for their status.
 
 \section{Orders in imaginary quadratic fields}
 
@@ -2567,9 +2576,9 @@ not yet provide; those are stated to be cited or assumed. See ROADMAP.md.
   The ideal class group of an order is a finite abelian group.
 \end{theorem}
 
-\section{The bridge: forms and ideals}
+\section{The correspondence between forms and ideals}
 
-\begin{theorem}[Bridge; Cox Thm 7.7]
+\begin{theorem}[Forms and ideals; Cox Thm 7.7]
   \label{thm:form_ideal_bridge}
   \lean{PrimesX2NY2.Bridge.formClassGroup_equiv_idealClassGroup}
   \leanok
@@ -2580,17 +2589,17 @@ not yet provide; those are stated to be cited or assumed. See ROADMAP.md.
   \uses{def:form_class_group, def:ideal_class_group_order, def:order_discriminant}
 \end{proof}
 
-\begin{theorem}[Bridge respects composition]
+\begin{theorem}[The correspondence respects composition]
   \label{thm:bridge_composition}
   \lean{PrimesX2NY2.Bridge.bridge_respects_composition}
   \leanok
-  The bridge intertwines Dirichlet composition with ideal multiplication.
+  The correspondence takes Dirichlet composition to ideal multiplication.
 \end{theorem}
 \begin{proof}
   \uses{thm:form_ideal_bridge, def:dirichlet_composition}
 \end{proof}
 
-\section{Class fields, Artin reciprocity, Čebotarev (deep)}
+\section{Class fields and reciprocity}
 
 \begin{definition}[Hilbert class field]
   \label{def:hilbert_class_field}
@@ -2608,12 +2617,12 @@ not yet provide; those are stated to be cited or assumed. See ROADMAP.md.
   The abelian extension $L/K$ with $\mathrm{Gal}(L/K) \cong C(\mathcal O)$.
 \end{definition}
 
-\begin{theorem}[Artin reciprocity; Cox Thm 8.2 - deep]
+\begin{theorem}[Artin reciprocity; Cox Thm 8.2]
   \label{thm:artin_reciprocity}
   \lean{PrimesX2NY2.RingClassField.artinReciprocity}
   \leanok
   The Artin map induces an isomorphism $C(\mathcal O) \cong \mathrm{Gal}(L/K)$.
-  \emph{Deep: cite or assume.}
+  \emph{Proof pending.}
 \end{theorem}
 \begin{proof}
   \uses{def:ring_class_field, def:ideal_class_group_order}
@@ -2627,12 +2636,12 @@ not yet provide; those are stated to be cited or assumed. See ROADMAP.md.
   A prime $p$ splits completely in the ring class field of $\mathcal O$.
 \end{definition}
 
-\begin{theorem}[Čebotarev density; deep]
+\begin{theorem}[Čebotarev density]
   \label{thm:chebotarev}
   \lean{PrimesX2NY2.RingClassField.chebotarev_splitting}
   \leanok
   The primes splitting completely in the ring class field are infinite (density
-  $1/|C(\mathcal O)|$). \emph{Deep: cite or assume.}
+  $1/|C(\mathcal O)|$). \emph{Proof pending.}
 \end{theorem}
 \begin{proof}
   \uses{def:splits_completely}
@@ -2672,10 +2681,11 @@ not yet provide; those are stated to be cited or assumed. See ROADMAP.md.
 
 \chapter{Part III - Complex Multiplication}
 
-The deepest part: elliptic functions, the $j$-invariant, modular functions for
-$\mathrm{SL}_2(\mathbb Z)$, complex multiplication, and Weber functions with
-explicit class polynomials and Shimura reciprocity (2nd ed.). Almost entirely
-to be formalized; see ROADMAP.md.
+Elliptic functions and the $j$-invariant lead to modular functions for
+$\mathrm{SL}_2(\mathbb Z)$ and complex multiplication. Weber functions then give
+explicit class polynomials, with Shimura reciprocity describing the Galois
+action as in Cox's second edition. Most of this part is not yet formalized;
+see ROADMAP.md.
 
 \section{Elliptic functions and the j-invariant}
 
@@ -2800,7 +2810,7 @@ to be formalized; see ROADMAP.md.
   \lean{PrimesX2NY2.Weber.shimuraReciprocity}
   \leanok
   The idele class group acts on CM values of modular functions, computing the
-  Galois action on Weber values. \emph{Deep: cite or assume.}
+  Galois action on Weber values. \emph{Proof pending.}
 \end{theorem}
 \begin{proof}
   \uses{def:cm_point, thm:artin_reciprocity}
