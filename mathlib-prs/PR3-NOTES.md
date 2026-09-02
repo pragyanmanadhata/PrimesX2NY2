@@ -1,65 +1,75 @@
-# PR3 notes — Binary quadratic forms
+# Notes on binary quadratic forms
 
 [Proposed series](PR3-binary-quadratic-forms-reduction.md) · [All proposals](README.md)
 
-**Claim.** The pinned Mathlib revision has no binary quadratic forms in the classical
-Gauss sense; this proposal covers definitions and reduction theory.
-**Risk: high.** The proposed library design needs discussion with the Mathlib community.
+I could not find a Mathlib development of binary quadratic forms in the classical
+Gauss sense. This proposal covers the basic definitions, equivalence, reduction,
+and finiteness of reduced forms.
 
-## Scope and review
+## What I am proposing
 
-This proposal adds a library of definitions and theorems. I developed its
-structure and proof approach, with technical input from Claude.
-Discuss the scope and conventions in `#mathlib` on Zulip. An RFC can be used
-for unresolved design questions; review and maintainer approval are part of
-the PR process.
+I developed the definitions and proof structure in this project, with Claude
+helping me work through technical details. Since this would introduce a fairly
+large new API, I would first ask in `#mathlib` about its scope and conventions.
 
-## Design choices and unresolved questions
+## Design choices I would like feedback on
 
-**D3.1 — Standalone `structure BinaryQF` with fields `a b c : ℤ`.** Direct coefficient
-access supports the `omega`, `interval_cases`, and `decide` arguments used throughout
-the reduction proofs. A bundled `QuadraticForm ℤ (Fin 2 → ℤ)` would connect to
-`LinearAlgebra.QuadraticForm` but would need an interface for those arguments. The
-choice of primary definition remains unresolved and is a first question for Zulip.
+### How should a form be represented?
 
-**D3.2 — Action convention.** The project proves
+The project uses a standalone `BinaryQF` structure with fields `a b c : ℤ`. Direct
+access to the coefficients is useful for the `omega`, `interval_cases`, and `decide`
+arguments in the reduction proofs. Using `QuadraticForm ℤ (Fin 2 → ℤ)` would connect
+the development to Mathlib's linear-algebra library, but it would need a convenient
+coefficient API. I am not sure which should be the primary definition.
+
+### Which action convention fits Mathlib best?
+
+The project proves
 
 ```
 action_mul : action N (action M f) = action (M * N) f
 ```
 
-This is a right action. A `MulAction` of `SpecialLinearGroup (Fin 2) ℤ` is a left
-action, so that interface would require changing the convention or acting through
-`Mᵀ`. Such a change affects downstream proofs. This is the second unresolved
-question for Zulip.
+This is a right action. A conventional `MulAction` of
+`Matrix.SpecialLinearGroup (Fin 2) ℤ` is a left action, so I could change the
+convention, act through the opposite group, or transpose the matrices. I would like
+to settle this before moving the proofs because it affects the later development.
 
-**D3.3 — `action` takes an arbitrary `Matrix (Fin 2) (Fin 2) ℤ`.** Consequently
-`ProperlyEquivalent` carries `M.det = 1` as a side condition rather than using
-`Matrix.SpecialLinearGroup`. Bundling the matrices in the group would be a separate
-change to the interface.
+### Should the matrices be bundled?
 
-**D3.4 — `Reduced` includes the boundary condition.**
-`|b| ≤ a ∧ a ≤ c ∧ ((|b| = a ∨ a = c) → 0 ≤ b)`. The third clause is exactly what makes
-the reduced representative unique; without it `exists_unique_reduced` is false. Some
-textbooks use a separate normalization step. The clause distinguishes `⟨3,2,3⟩` from
-`⟨3,-2,3⟩`, the boundary case in the calculation `h(−32) = 2`.
+At present, `action` accepts any `Matrix (Fin 2) (Fin 2) ℤ`, and
+`ProperlyEquivalent` separately asks for determinant `1`. Taking an element of the
+special linear group instead would put that condition in the type.
 
-**D3.5 — `PosDef f := 0 < f.a ∧ f.discr < 0`.** The project defines positive
-definiteness by a coefficient criterion. `eval_pos_of_posDef` proves that it implies
-`f(x,y) > 0` for `(x,y) ≠ 0`. A reviewer may prefer positivity as the definition,
-with the coefficient criterion stated as an equivalence lemma.
+### Boundary convention for reduced forms
 
-**D3.6 — `Primitive f := Int.gcd (Int.gcd f.a f.b) f.c = 1`.** Nested `Int.gcd`, which
-returns `ℕ`, so downstream proofs need coercions. Alternatives based on `IsCoprime`
-or `Finset.gcd` are available.
+The project defines reduction by
+`|b| ≤ a ∧ a ≤ c ∧ ((|b| = a ∨ a = c) → 0 ≤ b)`. The last condition chooses one
+representative on the boundary and is needed for uniqueness. For example, it
+distinguishes `⟨3,2,3⟩` from `⟨3,-2,3⟩`. Some texts treat this as a separate
+normalization step.
 
-**D3.7 — Scope of a first PR.** Definitions, action, and equivalence. Reduction proofs
-would follow once the conventions are settled.
+### How should positive definiteness be defined?
 
-## Recorded verification
+I currently use `0 < f.a ∧ f.discr < 0` and prove that every nonzero input has
+positive value. Another reasonable choice is to define positivity through evaluation
+and prove the coefficient condition as an equivalence.
 
-The results proposed for this series have recorded axiom checks listing
-`[propext, Classical.choice, Quot.sound]`, without `sorryAx`, under the pinned
-Lean v4.31.0 / Mathlib setup. `class_number_one` remains outside the series.
-These checks establish proof completeness for the proposed results, while
-library integration and suitability remain matters for Mathlib review.
+### How should primitiveness be expressed?
+
+The current definition is `Int.gcd (Int.gcd f.a f.b) f.c = 1`. Because `Int.gcd`
+returns a natural number, this introduces coercions later. `IsCoprime` or
+`Finset.gcd` may give a cleaner interface.
+
+### What belongs in the first PR?
+
+I would probably begin with the definitions, action, and equivalence. The reduction
+proofs can follow after the conventions are settled.
+
+## Proof check
+
+I first checked these results with the project's pinned Lean v4.31.0 toolchain and
+Mathlib revision. I then tested the extracted core against Mathlib commit `1055fdaf`
+with Lean v4.34.0-rc2. That revision uses `Int.emod_add_mul_ediv` in place of
+`Int.emod_add_ediv`; after that one change, all 23 `#print axioms` checks passed
+without `sorryAx`. `class_number_one` is unfinished and is not part of this proposal.

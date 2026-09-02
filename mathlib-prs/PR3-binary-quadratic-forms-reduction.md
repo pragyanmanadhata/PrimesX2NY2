@@ -1,52 +1,50 @@
-# Mathlib PR draft #3 — Gauss reduction theory of binary quadratic forms
+# Proposed Mathlib series: binary quadratic forms and Gauss reduction
 
 [Design notes](PR3-NOTES.md) · [Contribution overview](README.md)
 
-**Status:** Draft; not submitted. The proposed results are proved in
-`PrimesX2NY2/PartI_Forms/Forms.lean` without `sorryAx` dependencies. The contribution
-would add definitions, equivalence, reduction, and finiteness results across a series
-of PRs. Its design needs discussion; independent review takes place during the PR process.
+The results are proved in `PrimesX2NY2/PartI_Forms/Forms.lean` without `sorryAx`.
+Because the development runs from basic definitions through reduction and finiteness,
+I expect to split it across several PRs and ask for feedback on the design first.
 
-## Titles (a series, in dependency order)
+## Possible PR sequence
 
 1. `feat(NumberTheory): binary quadratic forms — definition, discriminant, SL₂(ℤ) action`
 2. `feat(NumberTheory): proper equivalence of binary quadratic forms`
 3. `feat(NumberTheory): reduced positive definite forms and Gauss reduction`
 4. `feat(NumberTheory): finiteness of reduced forms of fixed discriminant`
 
-## Target files
+## Possible file layout
 
-New directory `Mathlib/NumberTheory/BinaryQuadraticForm/` with `Defs.lean`,
-`Equivalence.lean`, `Reduction.lean`, `Finiteness.lean`.
+I would put these files in a new
+`Mathlib/NumberTheory/BinaryQuadraticForm/` directory: `Defs.lean`,
+`Equivalence.lean`, `Reduction.lean`, and `Finiteness.lean`.
 
 ## Motivation
 
-The search of the pinned Mathlib tree found no treatment of binary quadratic forms
-in the classical Gauss sense:
+I could not find an existing Mathlib development of binary quadratic forms in the
+classical Gauss sense:
 
-- `Mathlib/LinearAlgebra/QuadraticForm/*` — abstract quadratic forms over modules.
-  Nothing about integral binary forms, their discriminant `b² − 4ac`, the
-  `SL₂(ℤ)`-action, reduction, or class numbers.
-- `Mathlib/NumberTheory/ClassNumber/*`, `Mathlib/RingTheory/ClassGroup/*` — class
-  groups of Dedekind domains (i.e. *maximal* orders), via ideals. This is the
-  ideal-theoretic side of the correspondence; the form-theoretic side is absent.
-- A search for "binary quadratic" found only an unrelated comment in
-  `LegendreSymbol/Basic.lean`.
+- `Mathlib/LinearAlgebra/QuadraticForm/*` develops abstract quadratic forms over
+  modules. These files do not appear to cover integral binary forms, their
+  discriminant `b² − 4ac`, the `SL₂(ℤ)` action, reduction, or class numbers.
+- `Mathlib/NumberTheory/ClassNumber/*` and `Mathlib/RingTheory/ClassGroup/*` develop
+  class numbers and ideal class groups for Dedekind domains, including rings of
+  integers in number fields. I did not find the corresponding classical theory of
+  forms.
+- A text search found a brief mention in `LegendreSymbol/Basic.lean`, but no
+  development of the subject.
 
-This proposal covers the classical theory in Gauss's *Disquisitiones*, Art. 171 ff.,
-and Cox, *Primes of the Form x²+ny²*, §2.
-
-This provides a basis for computable class numbers `h(D)`, the form/ideal class
-group correspondence with Mathlib's `ClassGroup`, genus theory, and representation
-theorems `p = x² + ny²`. The project already uses the reduction results to prove two
-such representation theorems, listed below.
+This proposal formalizes the basic definitions and reduction theory used in Gauss's
+*Disquisitiones*, Art. 171 ff., and Cox, *Primes of the Form x²+ny²*, §2. I already
+use the results for small-discriminant calculations and representation theorems.
+They could later support work on class numbers, ideal classes, genus theory, and
+representation by forms.
 
 ## Contents
 
-The statements below summarize results proved in the project, with proposed
-Mathlib names (`BinaryQF` → `BinaryQuadraticForm`, namespaced lemmas). Some snippets
-abbreviate arguments and definitions; they are an API outline, not a standalone
-Lean file.
+Below are the main statements I would like to contribute. I have expanded `BinaryQF`
+to `BinaryQuadraticForm` and shortened some arguments, so the snippets show the
+proposed API rather than a standalone Lean file.
 
 ### 1. Definitions
 
@@ -97,7 +95,8 @@ theorem exists_unique_reduced (f : BinaryQuadraticForm) (hf : f.PosDef) :
     ∃! g, g.Reduced ∧ ProperlyEquivalent f g
 ```
 
-The uniqueness result and the elementary equivalences are also available separately:
+The project also proves the uniqueness theorem and the two elementary equivalences
+separately:
 
 ```lean
 theorem reduced_eq_of_properlyEquivalent (f g) (hf : f.Reduced) (hg : g.Reduced)
@@ -116,57 +115,51 @@ and `±(0,1)`.
 
 ```lean
 theorem finite_reduced_of_discr (D : ℤ) (hD : D < 0) :
-    {f : BinaryQuadraticForm | f.discr = D ∧ f.Reduced ∧ f.PosDef}.Finite
+    {f : BinaryQuadraticForm | f.discr = D ∧ f.Reduced}.Finite
 ```
 
-Together with reduction, this gives finiteness of the class number `h(D)`, the
-form-side analogue of Mathlib's `NumberField.classNumber` finiteness.
+Together with reduction, this is the finiteness result needed to define the form
+class number `h(D)`.
 
 ## Uses in this project
 
-The project uses these lemmas in the following results, all checked without
-`sorryAx` dependencies:
+I already use these lemmas in the following results, whose axiom checks do not
+include `sorryAx`:
 
 - `p = x² + 2y² ↔ p ≡ 1, 3 (mod 8)` for odd primes `p`;
 - `p = x² + 3y² ↔ p ≡ 1 (mod 3)` for primes `p > 3`;
-- `(D/p) = 1 ↔ p` is represented by a primitive form of discriminant `D` (Cox Lemma 2.3);
-- distinctness of the four composition classes of discriminant `−1076`.
+- for `D ≡ 0` or `1 (mod 4)` and an odd prime `p ∤ D`, `D` is a square modulo `p`
+  exactly when `p` is represented by a primitive form of discriminant `D`
+  (Cox, Exercise 2.5);
+- three explicit non-equivalence results among four forms of discriminant `−1076`
+  (Cox, Exercise 2.26).
 
-The first two combine reduction with an enumeration of reduced forms of
-discriminant `−8` and `−12`. They exercise the proposed interface in concrete
-representation proofs, though the interface still needs upstream review.
+The first two use reduction together with an enumeration of the reduced forms of
+discriminants `−8` and `−12`. Working through those examples also helped me test the
+interface, though it still needs upstream feedback.
 
-## Verification status
+## Proof check
 
-The proposed `Mathlib/NumberTheory/BinaryQuadraticForm/` content comes from
-`PrimesX2NY2/PartI_Forms/Forms.lean`. That file still contains one `sorry`, in
-Landau's theorem `class_number_one` (`h(−4n) = 1 ↔ n ∈ {1,2,3,4,7}`), which is
-outside this proposed series. The supporting results listed here compile in the
-project; their recorded `#print axioms` checks report
-`[propext, Classical.choice, Quot.sound]`. The renamed and reorganized upstream
-files have not yet been prepared or checked.
+The code is currently in `PrimesX2NY2/PartI_Forms/Forms.lean`. The only `sorry` in
+that file is in `class_number_one`, which is outside this series. For the results
+listed here, `#print axioms` reports only `propext`, `Classical.choice`, and
+`Quot.sound`.
 
-## Open questions for the reviewer
+I also tested the extracted core against Mathlib commit `1055fdaf` with Lean
+v4.34.0-rc2. That revision uses `Int.emod_add_mul_ediv` in place of
+`Int.emod_add_ediv`. After that one name change, all 23 `#print axioms` checks passed
+without `sorryAx`. I still need to split and rename the code into the proposed
+Mathlib files.
 
-1. **Structure vs. abstract `QuadraticForm`.** Should `BinaryQuadraticForm` be a
-   standalone structure (as here, matching the classical literature and keeping
-   `a, b, c` accessible for `decide`/`omega`-style arguments), or a bundled
-   `QuadraticForm ℤ (Fin 2 → ℤ)` with an API layer? The standalone version made the
-   reduction proofs tractable; the bundled version integrates with existing
-   `LinearAlgebra` machinery. A conversion between the two may be useful, but the
-   choice of primary definition still matters for naming and the interface.
-2. **The action's variance.** This project uses
-   `action N (action M f) = action (M * N) f` (contravariant). Mathlib may prefer a
-   `MulAction` of `SL(2, ℤ)` (or its opposite) on forms; that means either
-   changing the convention or acting through `Mᵀ`. This needs settling before the
-   first PR because it affects downstream proofs.
-3. **`Reduced`'s boundary condition.** The `((|b| = a ∨ a = c) → 0 ≤ b)` clause is
-   what makes the reduced representative *unique*. Some sources fold this into a
-   normalization instead. The definition needs to make this convention clear
-   whichever formulation is chosen.
-4. **Indefinite forms.** This project's `Reduced` is the positive-definite notion.
-   The indefinite theory (period/cycle of reduced forms, continued fractions) is a
-   separate and larger development, not proposed here — but the naming should leave
-   room for it (`Reduced` vs. `PosDef.Reduced`?).
-5. **Scope of the first PR.** Probably (1) + (2) only, to settle conventions before
-   the reduction proofs land.
+## Questions I would like feedback on
+
+- Should `BinaryQuadraticForm` be a standalone coefficient structure, or should it
+  be built on `QuadraticForm ℤ (Fin 2 → ℤ)` with an API for `a`, `b`, and `c`?
+- Should the change of variables be a right action, an action of the opposite group,
+  or a conventional left `MulAction`?
+- Is the boundary condition in `Reduced` best kept in the definition, or should it
+  be a separate normalization?
+- Should this positive-definite reduction predicate be called `Reduced`, or something
+  like `PosDef.Reduced` to leave room for reduction of indefinite forms?
+- I would start with the definitions, action, and proper equivalence, then add
+  reduction later. Does that seem like the right first slice?

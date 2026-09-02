@@ -1,18 +1,12 @@
-# Mathlib PR draft #2 — sharp periodicity of `J(D | ·)` for discriminants
+# Proposed Mathlib contribution: periodicity of `J(D | ·)` for discriminants
 
 [Design notes](PR2-NOTES.md) · [Contribution overview](README.md)
 
-**Status:** Draft; not submitted. The project proves the result as
-`PrimesX2NY2.PartI.S1.mod_right_of_discr` in
-`PrimesX2NY2/PartI_Forms/Exercises/S1.lean`; `ex_1_11` restates it with explicit binders.
-The proof below was developed and verified in a file importing only `Mathlib`.
-Its recorded `#print axioms` check reports `[propext, Classical.choice, Quot.sound]`.
-Placement, helper visibility, and namespace assumptions still need review in
-`JacobiSymbol.lean`.
-
-Downstream in this project it yields Cox Exercise 1.12(a) — that `m ↦ J(D | m)` is a
-Dirichlet character mod `|D|` — and Exercise 1.14, the mod-`n` (rather than mod-`4n`)
-criterion for `n ≡ 3 (mod 4)`.
+This theorem is already proved in the project as
+`PrimesX2NY2.PartI.S1.mod_right_of_discr`. I also checked the standalone proof below
+against Mathlib commit `1055fdaf` with Lean v4.34.0-rc2; it passed without warnings
+or `sorryAx`. In the project, I use it in Cox Exercises 1.12(a) and 1.14. I would
+still like advice on the best interface and placement.
 
 ## Title
 
@@ -25,25 +19,20 @@ after `mod_right`, which gives a coarser version of the same fact.
 
 ## Motivation
 
-The pinned Mathlib revision gives periodicity in the denominator through
+Mathlib's `jacobiSym.mod_right` gives periodicity in the denominator through
 
 ```lean
 theorem mod_right (a : ℤ) {b : ℕ} (hb : Odd b) : J(a | b) = J(a | b % (4 * a.natAbs))
 ```
 
-i.e. `J(a | ·)` has period `4|a|` on odd arguments. That factor of `4` is necessary
-in general (`J(2 | ·)` has period `8`). For a discriminant, however, `D ≡ 0` or
-`1 mod 4`, and `J(D | ·)` already has period `|D|` on odd arguments.
+In other words, `J(a | ·)` has period `4|a|` on odd arguments. That factor of `4`
+is needed in general because `J(2 | ·)` has period `8`. For a discriminant,
+where `D ≡ 0` or `1 mod 4`, the period drops to `|D|`.
 
-This sharper period is used to construct the Dirichlet character modulo `|D|`
-whose values on odd arguments are `χ_D(m) := J(D | m)`, associated with the
-Kronecker symbol of a quadratic field. Applications include:
-
-- genus theory of binary quadratic forms (the congruence conditions "`p = x² + ny²`
-  iff `p ≡ …  mod 4n`" are all instances),
-- the class-number formula and quadratic `L`-functions,
-- the Kronecker symbol as a character (Mathlib has `kroneckerSym`/`jacobiSym` but no
-  statement in the pinned revision that it is `|D|`-periodic).
+This sharper period is useful when constructing the quadratic character modulo
+`|D|` and in genus-theoretic congruence arguments for binary quadratic forms.
+Mathlib has `jacobiSym`, but I did not find this period theorem or an existing
+`kroneckerSym` definition in the versions I checked.
 
 The existing `mod_right` lemma leaves the reduction from period `4|D|` to `|D|`
 to each application.
@@ -59,23 +48,22 @@ theorem mod_right_of_discr {D : ℤ} (hD : D % 4 = 0 ∨ D % 4 = 1) {m n : ℕ}
     J(D | m) = J(D | n)
 ```
 
-An earlier sketch proposed a `%` form matching `mod_right`:
+A remainder statement closer to `mod_right` would look like this:
 
 ```lean
 theorem mod_right_discr {D : ℤ} (hD : D % 4 = 0 ∨ D % 4 = 1) {b : ℕ} (hb : Odd b) :
     J(D | b) = J(D | b % D.natAbs)
 ```
 
-This sketch is not valid as stated and has not been proved. Deriving it from the
-congruence theorem requires `Odd (b % D.natAbs)`, which follows when `D` is even
-but can fail when `D ≡ 1 mod 4`. The proved contribution is the congruence form;
-a `%` form would need an additional condition or a different formulation.
+I am not proposing this version because `b % D.natAbs` need not be odd when
+`D ≡ 1 mod 4`. The congruence statement avoids that problem and is the form used in
+the project.
 
-## Proof strategy
+## How the proof works
 
 Write `D = ε · 2^e · D₀` with `D₀` odd positive and `ε = ±1`. Then
 `J(D | m) = J(ε | m) · J(2 | m)^e · J(D₀ | m)` by `jacobiSym.mul_left` and
-`jacobiSym.pow_left`. Each factor is analysed:
+`jacobiSym.pow_left`. I compare these three factors separately:
 
 - `J(D₀ | m)` flips by Jacobi reciprocity (`jacobiSym.quadratic_reciprocity'`) to
   `qrSign · J(m | D₀)`, and `J(m | D₀)` depends only on `m mod D₀`
@@ -84,7 +72,7 @@ Write `D = ε · 2^e · D₀` with `D₀` odd positive and `ε = ±1`. Then
 - `J(2 | m)^e` is `χ₈ m ^ e` (`jacobiSym.at_two`), depending on `m mod 8`.
 - `qrSign` depends on `m mod 4` and `D₀ mod 4`.
 
-The hypothesis `D ≡ 0, 1 mod 4` is what makes the leftover sign factors collapse:
+The discriminant condition makes the remaining signs cancel:
 
 | case | why the signs cancel |
 |---|---|
@@ -93,20 +81,17 @@ The hypothesis `D ≡ 0, 1 mod 4` is what makes the leftover sign factors collap
 | `D ≡ 0 mod 4`, `e = 2` | `J(2 \| m)² = 1` since `J(2 \| m) = ±1` for odd `m`; remaining `χ₄` factor is fixed by `m ≡ n mod 4`, which follows from `4 ∣ D`. |
 | `D ≡ 0 mod 4`, `e ≥ 3` | `8 ∣ D`, so `m ≡ n mod 8` and the `χ₈` factor matches. |
 
-Degenerate cases: `D = 0` (then `m ≡ n mod 0` forces `m = n`); and arguments not
-coprime to `D`, where both sides are `0` — handled automatically because each factor
-above matches, `J(m | D₀) = J(n | D₀)` by `mod_left` including the zero case.
+The case `D = 0` is immediate, since congruence modulo zero forces `m = n`. If the
+arguments are not coprime to `D`, both sides vanish; `mod_left` already includes
+that case.
 
-## Verified proof
+## Proof
 
-The proof handles the reciprocity sign through `qrSign m d = J(χ₄ m | d)`.
-This expresses its dependence on `m mod 4` directly and avoids the quotient-parity
-arithmetic in `(-1) ^ (d / 2 * (m / 2))`. It also excludes `e = 1` immediately using
-`D ≡ 0, 1 (mod 4)`. The `e ≥ 2` branch then works for either sign of `D`, with a
-split between `e = 2` (`J(2 | m)² = 1`) and `e ≥ 3` (`m ≡ n mod 8`).
-
-The verification file has `open ZMod`, so the two χ helpers use unqualified names
-below. A target context without that declaration will need names such as `ZMod.χ₄`.
+I handle the reciprocity sign through `qrSign m d = J(χ₄ m | d)`, which makes its
+dependence on `m mod 4` explicit. The case `e = 1` is impossible under the
+discriminant hypothesis. For `e ≥ 2`, the proof separates `e = 2` from `e ≥ 3`.
+The verification file opens `ZMod`; the final placement may need qualified names
+such as `ZMod.χ₄`.
 
 ```lean
 private theorem chi4_congr {m n : ℕ} (h : m % 4 = n % 4) :
@@ -146,8 +131,7 @@ private theorem case_neg_odd {d m : ℕ} (hd3 : d % 4 = 3) (hm : Odd m) :
       jacobiSym.at_neg_one hdodd, ZMod.χ₄_nat_three_mod_four hd3]
     ring
 
-/-- **Sharp periodicity of the Jacobi symbol for discriminants.**
-For `D ≡ 0` or `1 mod 4` the symbol `J(D | ·)` has period `|D|` on odd arguments. -/
+/-- If `D ≡ 0` or `1 mod 4`, then `J(D | ·)` has period `|D|` on odd arguments. -/
 theorem mod_right_of_discr {D : ℤ} (hD : D % 4 = 0 ∨ D % 4 = 1) {m n : ℕ}
     (hm : Odd m) (hn : Odd n) (h : (m : ℤ) ≡ (n : ℤ) [ZMOD D]) :
     jacobiSym D m = jacobiSym D n := by
@@ -206,18 +190,10 @@ theorem mod_right_of_discr {D : ℤ} (hD : D % 4 = 0 ∨ D % 4 = 1) {m n : ℕ}
         jacobiSym.pow_left, jacobiSym.pow_left, hj2, hjd, chi4_congr h4]
 ```
 
-This proof establishes only the congruence form. The `%` sketch above remains
-unproved and needs the parity issue resolved. The project's applications use the
-congruence form.
+## Questions I would like feedback on
 
-## Open questions for the reviewer
-
-1. **Which form is canonical** — the `Int.ModEq` version, the `b % D.natAbs`
-   version, or a `Function.Periodic`-flavoured statement about
-   `fun m => J(D | m)` restricted to odds?
-2. **Should this be phrased via the Kronecker symbol** (`kroneckerSym`) instead,
-   where the discriminant condition is more natural, and specialized to `jacobiSym`?
-3. **Should the contribution include a character modulo `|D|`?** A broader statement is
-   `∃ χ : DirichletCharacter ℤ D.natAbs, ∀ m, Odd m → χ m = J(D | m)`, i.e. the
-   quadratic character attached to a discriminant, which the pinned Mathlib revision
-   also lacks. That would be a larger contribution, using this lemma for periodicity.
+- Is the `Int.ModEq` statement the most useful form, or would a periodicity statement
+  on odd arguments fit the API better?
+- Should `D` be explicit, as it is in the nearby `mod_right` theorem?
+- Would it be useful to include the corresponding quadratic character modulo `|D|`,
+  or should that be a later contribution?

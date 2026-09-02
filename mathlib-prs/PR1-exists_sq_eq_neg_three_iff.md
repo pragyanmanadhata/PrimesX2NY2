@@ -1,12 +1,11 @@
-# Mathlib PR draft #1 — `ZMod.exists_sq_eq_neg_three_iff`
+# Proposed Mathlib contribution: `ZMod.exists_sq_eq_neg_three_iff`
 
 [Design notes](PR1-NOTES.md) · [Contribution overview](README.md)
 
-**Status:** Draft; not submitted. The project proves the result as
-`PrimesX2NY2.Fermat.neg_three_isSquare_iff` in `PrimesX2NY2/PartI_Forms/Fermat.lean`,
-with no `sorryAx` dependency. `PrimesX2NY2.PartI.S1.neg_three_isSquare_iff`
-re-exports it. It is used in `prime_sq_add_three_sq` (`p = x² + 3y²` iff
-`p ≡ 1 mod 3`) and Cox Exercises 1.5, 1.9(a), and 1.4(b).
+This result is already proved in the project as
+`PrimesX2NY2.Fermat.neg_three_isSquare_iff`, with no `sorryAx` dependency. I use it
+in `prime_sq_add_three_sq` and several of Cox's exercises. This page sketches how
+the lemma might fit into Mathlib.
 
 ## Title
 
@@ -14,14 +13,13 @@ re-exports it. It is used in `prime_sq_add_three_sq` (`p = x² + 3y²` iff
 
 ## Target file
 
-`Mathlib/NumberTheory/LegendreSymbol/QuadraticReciprocity.lean`, in the existing
-`namespace ZMod` block of the `Values` section — immediately after
-`exists_sq_eq_neg_two_iff`, so the four small-value characterizations sit together.
+`Mathlib/NumberTheory/LegendreSymbol/QuadraticReciprocity.lean`, in a `ZMod` section
+after `legendreSym.quadratic_reciprocity'` has been defined. The proof uses that
+theorem, so it cannot sit directly beside the earlier `2` and `-2` lemmas.
 
 ## Motivation
 
-The pinned Mathlib revision characterizes several small quadratic residues modulo
-an odd prime:
+Mathlib already has similar results for several small values modulo an odd prime:
 
 | value | lemma | location |
 |---|---|---|
@@ -30,16 +28,14 @@ an odd prime:
 | `-2` | `ZMod.exists_sq_eq_neg_two_iff (hp : p ≠ 2) : IsSquare (-2 : ZMod p) ↔ p % 8 = 1 ∨ p % 8 = 3` | `QuadraticReciprocity.lean:80` |
 | `-3` | **missing** | — |
 
-The corresponding result for `-3` is missing. This discriminant case is used for the
-Eisenstein integers `ℤ[ω]`, the representation `p = x² + 3y²`, cubic reciprocity,
-and (via `p ≡ 1 mod 3`) the theory of cubic residues. This project derives it from
-`legendreSym.quadratic_reciprocity'`.
+I could not find the corresponding result for `-3`. It comes up naturally for
+Eisenstein integers, representations by `x² + 3y²`, and cubic reciprocity. My proof
+uses `legendreSym.quadratic_reciprocity'`.
 
-The pinned revision also lacks `FiniteField.isSquare_neg_three_iff`;
-`-1`, `2`, `-2` all have `FiniteField.isSquare_*_iff` counterparts
-(`FiniteField.isSquare_two_iff`, `FiniteField.isSquare_neg_two_iff`). A reviewer may
-prefer the general finite-field version first, with the `ZMod p` statement derived
-from it — see "Open questions" below.
+Mathlib's finite-field treatment of `2` and `-2` lives in
+`Mathlib/NumberTheory/LegendreSymbol/QuadraticChar/GaussSum.lean`. It may make more
+sense to prove a finite-field result for `-3` there first and derive the `ZMod`
+statement from it.
 
 ## Statement
 
@@ -63,11 +59,9 @@ and `= -1` iff `p ≡ 2 mod 3`, by `decide` on `ZMod 3`.
 
 ## Proof
 
-The project proof was verified with Lean v4.31.0 and the pinned Mathlib revision;
-its `#print axioms` check reports `[propext, Classical.choice, Quot.sound]`.
-The version below restates the hypotheses in the style of the neighbouring `ZMod`
-lemmas, using `p ≠ 2` in place of `Odd p`. The adapted statement, casts, and proof
-still need checking in the proposed target file.
+I checked the proof below against Mathlib commit `1055fdaf` with Lean v4.34.0-rc2.
+It compiles unchanged, without warnings or `sorryAx`. I use `p ≠ 2` instead of
+`Odd p` to match the nearby `ZMod` lemmas.
 
 ```lean
 /-- `-3` is a square modulo a prime `p ≠ 2, 3` iff `p` is congruent to `1` mod `3`. -/
@@ -113,22 +107,13 @@ theorem exists_sq_eq_neg_three_iff (hp2 : p ≠ 2) (hp3 : p ≠ 3) :
     omega
 ```
 
-The proof uses existing Mathlib declarations: `legendreSym.eq_one_iff`,
-`legendreSym.eq_neg_one_iff`, `legendreSym.mul`, `legendreSym.at_neg_one`,
-`legendreSym.quadratic_reciprocity'`, `ZMod.χ₄_eq_neg_one_pow`,
-`ZMod.intCast_zmod_eq_zero_iff_dvd`, `ZMod.natCast_mod`, and the global instance
-`Nat.fact_prime_three`.
+The main inputs are quadratic reciprocity for `legendreSym` and the supplementary
+law for `-1`.
 
-## Open questions for the reviewer
+## Questions I would like feedback on
 
-1. **Placement/shape.** Should this instead be `FiniteField.isSquare_neg_three_iff`
-   over a general finite field (matching `isSquare_two_iff` / `isSquare_neg_two_iff`,
-   which are stated in `Mathlib/FieldTheory/Finite/Basic.lean` in terms of
-   `Fintype.card F % 8`), with the `ZMod p` version derived? The `-3` condition is
-   `card F % 3 = 1`, and the proof would go through `quadraticChar_neg_three` — a
-   character-level lemma that would also need adding.
-2. **Hypothesis style.** Neighbours use `(hp : p ≠ 2)`; `-3` needs `p ≠ 3` as well.
-   Two separate hypotheses (as here) or a single `3 < p`?
-3. **Naming.** `exists_sq_eq_neg_three_iff` follows the existing family, though the
-   `exists_sq_eq_` prefix is now a slight misnomer for an `IsSquare` statement — the
-   proposed name keeps the family consistent.
+- Would a finite-field theorem be a better starting point? The expected condition is
+  `Fintype.card F % 3 = 1`, with suitable exclusions for characteristics `2` and `3`.
+- Should the assumptions be `p ≠ 2` and `p ≠ 3`, or simply `3 < p`?
+- I used `exists_sq_eq_neg_three_iff` to match the nearby names. Is that still the
+  preferred convention?

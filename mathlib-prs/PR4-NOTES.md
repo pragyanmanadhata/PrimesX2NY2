@@ -1,47 +1,46 @@
-# PR4 notes — `prime_of_norm_prime`
+# Notes on `prime_of_norm_prime`
 
-[Proposal overview](README.md)
+[All proposals](README.md)
 
-**Claim as drafted.** An element of `ℤ[i]` whose norm is a rational prime is prime.
-**In-repo:** `PrimesX2NY2.BiquadraticReciprocity.prime_of_norm_prime`.
+The project proves that a Gaussian integer whose norm is a rational prime is prime.
+The theorem is `PrimesX2NY2.BiquadraticReciprocity.prime_of_norm_prime`.
 
-## Correction to the proposed generalization
+## Scope
 
-An earlier version of `mathlib-prs/README.md` claimed that this proof "generalizes
-verbatim to any `ℤ√d` with `d ≤ 0`". That claim was incorrect.
+The proof works for `ℤ[i]` because `irreducible_iff_prime` is available there through
+the `EuclideanDomain → PID → UFD` instances. The same argument works for a `ℤ√d`
+that is known to be a UFD, but it does not automatically apply for every `d ≤ 0`.
 
-The proof opens with `rw [← irreducible_iff_prime]`. In the pinned Mathlib revision,
-`irreducible_iff_prime` requires a `[DecompositionMonoid M]` instance. `ℤ[i]` has it, via
-`EuclideanDomain → PID → UFD`. A general `ℤ√d` with `d ≤ 0` need not have it.
-The project proves a counterexample: `ex_4_6_b` shows `2` is irreducible but not prime
-in `ℤ[√−3]`, so `ℤ[√−3]` is not a UFD and `irreducible_iff_prime` fails there.
+The project theorem `ex_4_6_b` shows why the assumption matters: `2` is irreducible
+but not prime in `ℤ[√−3]`. I have not settled whether the norm statement itself has
+a different proof in that ring.
 
-The correct scope of this proof is `ℤ[i]`, or a `ℤ√d` known to be a UFD. Whether
-the statement still holds in `ℤ[√−3]` by another proof remains unresolved here.
-The README now records this correction.
+## Statement
 
-## Decisions
+The project uses `q : ℕ`, a hypothesis `q.Prime`, and
+`Zsqrtd.norm π = (q : ℤ)` because its call sites already have a natural prime. A
+version stated directly with `Prime (Zsqrtd.norm π)` in `ℤ` would avoid the cast and
+may fit Mathlib better.
 
-**D4.1 — Hypothesis shape `(hq : q.Prime) (h : Zsqrtd.norm π = (q : ℤ))` with `q : ℕ`.**
-The alternative `(h : Prime (Zsqrtd.norm π))` stated in `ℤ` avoids the cast. The `ℕ`
-version was chosen because the call sites had `p : ℕ` prime in hand. For Mathlib the
-`ℤ`-native form is another option for review.
+## Proof idea
 
-**D4.2 — Proof structure.** The element is not a unit by `Zsqrtd.norm_eq_one_iff'`
-(norm `q ≠ 1`). The factorization case uses multiplicativity of the norm plus
-`Nat.Prime.eq_one_or_self_of_dvd` to force one factor to have norm 1.
+The proof first shows that `π` is not a unit because its norm is the prime `q`, not
+`1`. If `π` factors, multiplicativity of the norm and
+`Nat.Prime.eq_one_or_self_of_dvd` force one factor to have norm `1`, so that factor
+is a unit.
 
-**D4.3 — Placement.** `Mathlib/NumberTheory/Zsqrtd/Basic.lean` beside `norm_eq_one_iff'`
-**only if** the UFD hypothesis is made explicit; otherwise
-`Mathlib/NumberTheory/Zsqrtd/GaussianInt.lean` where the instance is available.
+## Possible location
 
-The argument is short enough that a reviewer may prefer to inline it at the use site.
-A separate lemma would support other arguments from a prime norm and sit alongside
-`norm_eq_one_iff'`. Whether that warrants an addition remains a review question.
+With an explicit `DecompositionMonoid` assumption, the lemma could sit in
+`Mathlib/NumberTheory/Zsqrtd/Basic.lean` near `norm_eq_one_iff'`. For a statement only
+about Gaussian integers, `Mathlib/NumberTheory/Zsqrtd/GaussianInt.lean` is the more
+natural location.
 
-## Recorded verification
+The proof is short enough to inline, but a named lemma could still be useful anywhere
+a prime norm is used to prove primality.
 
-The existing `prime_of_norm_prime` proof was checked for `ℤ[i]` with the pinned
-Lean v4.31.0 / Mathlib versions. Its recorded axioms are
-`[propext, Classical.choice, Quot.sound]`, with no `sorryAx`. This verification
-does not extend its scope to arbitrary `ℤ√d`.
+## Proof check
+
+I checked the existing Gaussian-integer proof against Mathlib commit `1055fdaf` with
+Lean v4.34.0-rc2. It passed without warnings or `sorryAx`; its axiom report contains
+only `propext`, `Classical.choice`, and `Quot.sound`.
